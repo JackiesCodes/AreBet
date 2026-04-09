@@ -1,11 +1,14 @@
 "use client"
 
+import { useMemo } from "react"
 import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
 import { statusLabel } from "@/lib/utils/match-status"
 import { formatTime } from "@/lib/utils/time"
+import { calculateValueEdge } from "@/lib/utils/value-bet"
 import { ConfidenceHeat } from "@/components/primitives/ConfidenceHeat"
 import { Badge } from "@/components/primitives/Badge"
+import { ValueBadge } from "@/components/primitives/ValueBadge"
 import { FavoritesSwitcher } from "./FavoritesSwitcher"
 
 interface MatchCardProps {
@@ -17,23 +20,29 @@ interface MatchCardProps {
 export function MatchCard({ match, selected, onSelect }: MatchCardProps) {
   const isLive = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
+
+  const valueEdge = useMemo(() => calculateValueEdge(match), [match])
+
   return (
     <article
-      className={cn("cc-match-card", selected && "cc-match-card--selected")}
+      className={cn(
+        "cc-match-card",
+        selected && "cc-match-card--selected",
+        valueEdge?.isValue && "cc-match-card--value",
+      )}
       onClick={() => onSelect?.(match)}
       role="button"
       tabIndex={0}
     >
       <div className="cc-match-meta">
-        <Badge
-          tone={isLive ? "live" : isFinished ? "finished" : "upcoming"}
-        >
+        <Badge tone={isLive ? "live" : isFinished ? "finished" : "upcoming"}>
           {isLive ? "LIVE" : isFinished ? "FT" : statusLabel({ status: "UPCOMING" })}
         </Badge>
         <span className="cc-match-time">
           {isLive ? `${match.minute ?? 0}'` : isFinished ? "FT" : formatTime(match.kickoffISO)}
         </span>
         <span className="cc-match-league">{match.league}</span>
+        {valueEdge?.isValue && <ValueBadge edge={valueEdge} showEdge={false} />}
       </div>
       <div className="cc-match-teams">
         <div className="cc-match-team">

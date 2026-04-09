@@ -35,10 +35,35 @@ export interface BookmakerOdds {
   away: number
 }
 
+export interface ModelProbabilities {
+  home: number // 0-1
+  draw: number // 0-1
+  away: number // 0-1
+}
+
+export interface PredictionFactor {
+  label: string
+  impact: "positive" | "negative" | "neutral"
+  detail: string
+  side: "home" | "away" | "both"
+}
+
+export interface ValueEdge {
+  selection: "home" | "draw" | "away"
+  modelProb: number    // 0-1
+  impliedProb: number  // 0-1 fair (margin removed)
+  edge: number         // percentage points, positive = value
+  isValue: boolean     // edge >= VALUE_THRESHOLD (5%)
+  odds: number         // the odds for this selection
+}
+
 export interface MatchPrediction {
   confidence: number // 0..100
   advice: string
   expectedGoals: { home: number; away: number }
+  modelProbs?: ModelProbabilities
+  valueEdge?: ValueEdge
+  factors?: PredictionFactor[]
 }
 
 export type MatchEventType = "goal" | "card" | "sub"

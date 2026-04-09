@@ -154,6 +154,12 @@ function mapPrediction(pred: ApiPredictionFixture): MatchPrediction {
   const homeGoals = parseFloat(pred.predictions.goals?.home ?? "1.3")
   const awayGoals = parseFloat(pred.predictions.goals?.away ?? "1.0")
 
+  // Store all three probabilities for value bet calculation
+  const total = homeP + drawP + awayP
+  const modelProbs = total > 0
+    ? { home: homeP / total, draw: drawP / total, away: awayP / total }
+    : undefined
+
   return {
     confidence: Math.round(confidence),
     advice: pred.predictions.advice ?? "",
@@ -161,6 +167,7 @@ function mapPrediction(pred: ApiPredictionFixture): MatchPrediction {
       home: isNaN(homeGoals) ? 1.3 : homeGoals,
       away: isNaN(awayGoals) ? 1.0 : awayGoals,
     },
+    modelProbs,
   }
 }
 
