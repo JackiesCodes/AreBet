@@ -16,7 +16,7 @@ const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "live", label: "Live" },
   { key: "soon", label: "Soon" },
-  { key: "favorites", label: "Favorites" },
+  { key: "favorites", label: "Watchlist" },
   { key: "high", label: "High Conf." },
 ]
 

@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth/context"
 import { ThemeToggle } from "@/components/features/ThemeToggle"
 import { ProfilePanel } from "@/components/features/ProfilePanel"
 import { GlobalSearch } from "@/components/features/GlobalSearch"
+import { AlertBell } from "@/components/features/AlertBell"
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -16,6 +17,7 @@ const NAV_LINKS = [
   { href: "/predictions", label: "Predictions" },
   { href: "/odds-comparison", label: "Odds" },
   { href: "/insights", label: "Insights" },
+  { href: "/trust", label: "Track Record" },
 ]
 
 export function MainNav() {
@@ -71,6 +73,7 @@ export function MainNav() {
               tabIndex={-1}
             />
           </button>
+          <AlertBell />
           <ThemeToggle />
           {user ? (
             <ProfilePanel />

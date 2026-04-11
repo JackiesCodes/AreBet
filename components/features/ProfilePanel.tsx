@@ -60,7 +60,7 @@ export function ProfilePanel() {
           <Link href="/user/dashboard" className="nav-link" style={{ display: "block" }}>Dashboard</Link>
           <Link href="/settings" className="nav-link" style={{ display: "block" }}>Settings</Link>
           <Link href="/subscription" className="nav-link" style={{ display: "block" }}>Subscription</Link>
-          <Link href="/favorites" className="nav-link" style={{ display: "block" }}>Favorites</Link>
+          <Link href="/favorites" className="nav-link" style={{ display: "block" }}>Watchlist</Link>
           <form action={signOutAction}>
             <button
               type="submit"

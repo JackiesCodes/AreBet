@@ -9,6 +9,7 @@ import { DensityShell } from "@/components/layout/DensityShell"
 import { StickinessSync } from "@/components/features/StickinessSync"
 import { PwaRegister } from "@/components/features/PwaRegister"
 import { ErrorBoundary } from "@/components/primitives/ErrorBoundary"
+import { MatchIntelligenceProvider } from "@/contexts/MatchIntelligenceContext"
 
 export const metadata: Metadata = {
   title: "AreBet — Smart Betting. Simple Insights.",
@@ -49,17 +50,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <AuthProvider>
           <ToastProvider>
-            <DensityShell>
-              <StickinessSync />
-              <PwaRegister />
-              <div className="site-shell">
-                <MainNav />
-                <main className="site-main">
-                  <ErrorBoundary>{children}</ErrorBoundary>
-                </main>
-                <MobileBottomNav />
-              </div>
-            </DensityShell>
+            <MatchIntelligenceProvider>
+              <DensityShell>
+                <StickinessSync />
+                <PwaRegister />
+                <div className="site-shell">
+                  <MainNav />
+                  <main className="site-main">
+                    <ErrorBoundary>{children}</ErrorBoundary>
+                  </main>
+                  <MobileBottomNav />
+                </div>
+              </DensityShell>
+            </MatchIntelligenceProvider>
           </ToastProvider>
         </AuthProvider>
       </body>

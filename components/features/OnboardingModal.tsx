@@ -14,8 +14,8 @@ const STEPS = [
     text: "Each match shows our model confidence (low/mid/high). Use it to filter the noise quickly.",
   },
   {
-    title: "Build Your Slip",
-    text: "Click any match to inspect details, then add your favourite picks to the bet slip.",
+    title: "Track Your Picks",
+    text: "Click any match to see signals and insights, then add picks to your slip to track your decisions.",
   },
 ]
 

@@ -38,7 +38,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
 
   async function handlePlaceBet() {
     if (!user) {
-      setErrorMsg("Sign in to place bets")
+      setErrorMsg("Sign in to track your picks")
       setSlipState("error")
       return
     }
@@ -51,7 +51,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
       setItems([])
       setSlipState("success")
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "Failed to place bet")
+      setErrorMsg(e instanceof Error ? e.message : "Failed to save pick")
       setSlipState("error")
     }
   }
@@ -59,7 +59,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
   return (
     <aside className={`bet-slip ${open ? "bet-slip--open" : ""}`} aria-hidden={!open}>
       <div className="bet-slip-head">
-        <strong>Bet Slip ({items.length})</strong>
+        <strong>Pick Slip ({items.length})</strong>
         <button type="button" className="md-btn md-btn--ghost md-btn--sm" onClick={onClose}>
           ✕
         </button>
@@ -69,9 +69,9 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
         {slipState === "success" ? (
           <div style={{ padding: 24, textAlign: "center" }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Bet Placed!</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Pick Tracked!</div>
             <div className="md-text-muted" style={{ fontSize: 12 }}>
-              Stake ${stakeNum.toFixed(2)} · Potential ${payout.toFixed(2)}
+              Stake ${stakeNum.toFixed(2)} · Potential return ${payout.toFixed(2)}
             </div>
             <button
               type="button"
@@ -83,7 +83,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
             </button>
           </div>
         ) : items.length === 0 ? (
-          <EmptyState title="Empty slip" text="Add picks from any match to build your slip." />
+          <EmptyState title="No picks yet" text="Add a pick from any match card to start tracking." />
         ) : (
           items.map((item) => (
             <div key={`${item.matchId}-${item.market}`} className="bet-slip-row">
@@ -109,7 +109,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
       {slipState !== "success" && (
         <div className="bet-slip-foot">
           <div className="md-field" style={{ marginBottom: 12 }}>
-            <label className="md-field-label" htmlFor="stake">Stake ($)</label>
+            <label className="md-field-label" htmlFor="stake">Your Stake ($)</label>
             <input
               id="stake"
               type="number"
@@ -135,7 +135,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
           )}
           {!user && (
             <div style={{ fontSize: 11, marginBottom: 8 }} className="md-text-muted">
-              Sign in to record your bets and track performance.
+              Sign in to save your picks and track performance over time.
             </div>
           )}
           <Button
@@ -144,7 +144,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
             disabled={items.length === 0 || stakeNum <= 0 || slipState === "placing"}
             onClick={handlePlaceBet}
           >
-            {slipState === "placing" ? "Placing..." : user ? "Place Bet" : "Place Bet (Guest)"}
+            {slipState === "placing" ? "Saving..." : user ? "Track Pick" : "Track Pick (Guest)"}
           </Button>
         </div>
       )}

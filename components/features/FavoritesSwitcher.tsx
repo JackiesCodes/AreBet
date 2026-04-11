@@ -17,8 +17,8 @@ export function FavoritesSwitcher({ type, id, label, meta }: FavoritesSwitcherPr
   return (
     <button
       type="button"
-      aria-label={active ? "Remove favorite" : "Add favorite"}
-      title={active ? "Remove favorite" : "Add favorite"}
+      aria-label={active ? "Remove from watchlist" : "Add to watchlist"}
+      title={active ? "Remove from watchlist" : "Add to watchlist"}
       onClick={(e) => {
         e.stopPropagation()
         toggleFavorite({ entity_type: type, entity_id: id, label, meta })

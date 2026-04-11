@@ -8,7 +8,7 @@ const ITEMS = [
   { href: "/", label: "Home", icon: "⌂" },
   { href: "/live-matches", label: "Live", icon: "●" },
   { href: "/predictions", label: "Picks", icon: "✦" },
-  { href: "/favorites", label: "Faves", icon: "♥" },
+  { href: "/favorites", label: "Watch", icon: "♥" },
   { href: "/user/dashboard", label: "Me", icon: "◉" },
 ]
 

@@ -5,14 +5,14 @@ const TIERS = [
   {
     name: "Free",
     price: "$0",
-    features: ["Live matches", "Basic predictions", "Up to 5 favorites"],
+    features: ["Live matches", "Basic predictions", "Up to 5 watchlist items"],
     cta: "Current plan",
     featured: false,
   },
   {
     name: "Pro",
     price: "$7.99",
-    features: ["Full predictions", "Odds comparison", "Bet slip", "Unlimited favorites"],
+    features: ["Full predictions", "Odds comparison", "Pick slip", "Unlimited watchlist items"],
     cta: "Upgrade to Pro",
     featured: true,
   },

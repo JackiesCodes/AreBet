@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import type { Match, SortKey, StatusFilter } from "@/types/match"
-import { useMatchFeed } from "@/hooks/useMatchFeed"
+import type { Match, SortKey } from "@/types/match"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { useFavorites } from "@/hooks/useFavorites"
 import { rankMatches } from "@/lib/utils/rank-matches"
 import { BUCKET_LABELS, BUCKET_ORDER, bucketFor, type TimeBucket } from "@/lib/utils/time"
@@ -10,6 +10,7 @@ import { LeaguePanel } from "./LeaguePanel"
 import { MatchCard } from "./MatchCard"
 import { MatchTableRow } from "./MatchTableRow"
 import { MatchInsightPanel } from "./MatchInsightPanel"
+import { IntelligenceBar } from "./IntelligenceBar"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { ErrorState } from "@/components/primitives/ErrorState"
@@ -17,8 +18,17 @@ import { cn } from "@/lib/utils/cn"
 import { loadUiState, saveUiState, type UiState } from "@/lib/storage/ui-state"
 
 export function HomeBoard() {
-  const { matches, loading, error } = useMatchFeed({ pollIntervalMs: 30_000 })
-  const { isFavorite } = useFavorites()
+  const {
+    matches,
+    loading,
+    error,
+    fetchedAt,
+    latestChangeMap,
+    changedMatchIds,
+    setWatchedMatchIds,
+  } = useMatchIntelligence()
+
+  const { favorites, isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
   const [sort, setSort] = useState<SortKey>("kickoff")
   const [selected, setSelected] = useState<Match | null>(null)
@@ -26,6 +36,17 @@ export function HomeBoard() {
   useEffect(() => {
     saveUiState(ui)
   }, [ui])
+
+  // Sync watched match IDs into the intelligence context so change
+  // detection knows which matches are on the user's watchlist
+  useEffect(() => {
+    const ids = new Set(
+      favorites
+        .filter((f) => f.entity_type === "match")
+        .map((f) => f.entity_id),
+    )
+    setWatchedMatchIds(ids)
+  }, [favorites, setWatchedMatchIds])
 
   const filtered = useMemo(() => {
     let list = matches
@@ -57,8 +78,18 @@ export function HomeBoard() {
       default:
         break
     }
-    return rankMatches(list, sort)
-  }, [matches, ui, sort, isFavorite])
+
+    // Watchlist-aware sort: watched matches with new changes float to top
+    // within their status group
+    const sorted = rankMatches(list, sort)
+    return sorted.sort((a, b) => {
+      const aChanged = changedMatchIds.has(a.id) ? 0 : 1
+      const bChanged = changedMatchIds.has(b.id) ? 0 : 1
+      // Only float within the same status
+      if (a.status !== b.status) return 0
+      return aChanged - bChanged
+    })
+  }, [matches, ui, sort, isFavorite, changedMatchIds])
 
   const grouped = useMemo(() => {
     const groups: Record<TimeBucket, Match[]> = {
@@ -86,6 +117,7 @@ export function HomeBoard() {
       />
 
       <section className="cc-feed">
+        <IntelligenceBar matches={matches} fetchedAt={fetchedAt ?? undefined} />
         <div className="cc-toolbar">
           <div className="cc-search">
             <input
@@ -154,6 +186,7 @@ export function HomeBoard() {
                         match={m}
                         selected={selected?.id === m.id}
                         onSelect={setSelected}
+                        latestChange={latestChangeMap.get(m.id)}
                       />
                     ))}
                   </div>

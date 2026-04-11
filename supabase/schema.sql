@@ -15,6 +15,9 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+drop policy if exists "Users can view their own profile" on public.profiles;
+drop policy if exists "Users can update their own profile" on public.profiles;
+
 create policy "Users can view their own profile"
   on public.profiles for select
   using (auth.uid() = id);
@@ -56,6 +59,8 @@ create table if not exists public.favorites (
 
 alter table public.favorites enable row level security;
 
+drop policy if exists "Users manage their own favorites" on public.favorites;
+
 create policy "Users manage their own favorites"
   on public.favorites for all
   using (auth.uid() = user_id);
@@ -63,8 +68,10 @@ create policy "Users manage their own favorites"
 -- =====================
 -- USER BET HISTORY
 -- Records every bet placed via BetSlipPanel
+-- Drop and recreate because the old schema used a single jsonb column
 -- =====================
-create table if not exists public.user_bets (
+drop table if exists public.user_bets cascade;
+create table public.user_bets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   fixture_id integer not null,
@@ -81,6 +88,8 @@ create table if not exists public.user_bets (
 );
 
 alter table public.user_bets enable row level security;
+
+drop policy if exists "Users manage their own bets" on public.user_bets;
 
 create policy "Users manage their own bets"
   on public.user_bets for all
@@ -103,6 +112,8 @@ create table if not exists public.user_predictions (
 
 alter table public.user_predictions enable row level security;
 
+drop policy if exists "Users manage their own predictions" on public.user_predictions;
+
 create policy "Users manage their own predictions"
   on public.user_predictions for all
   using (auth.uid() = user_id);
@@ -120,6 +131,8 @@ create table if not exists public.match_ratings (
 );
 
 alter table public.match_ratings enable row level security;
+
+drop policy if exists "Users manage their own ratings" on public.match_ratings;
 
 create policy "Users manage their own ratings"
   on public.match_ratings for all
@@ -142,9 +155,81 @@ create table if not exists public.preferences (
 
 alter table public.preferences enable row level security;
 
+drop policy if exists "Users manage their own preferences" on public.preferences;
+
 create policy "Users manage their own preferences"
   on public.preferences for all
   using (auth.uid() = user_id);
+
+-- =====================
+-- CLEANUP OLD TABLES (from schema v1)
+-- =====================
+drop table if exists public.user_favorites cascade;
+
+-- =====================
+-- SIGNAL SNAPSHOTS
+-- System-generated model predictions, one per fixture per kickoff date.
+-- Signals are locked at generation time; outcome fields filled post-match.
+-- This is the source of truth for the Trust Layer / Track Record page.
+-- =====================
+create table if not exists public.signal_snapshots (
+  -- Stable primary key: sig_{fixture_id}_{kickoff_date}
+  -- Allows safe upsert from multiple clients without duplicates.
+  signal_id           text        primary key,
+
+  -- Match identity
+  fixture_id          integer     not null,
+  home_team           text        not null,
+  away_team           text        not null,
+  league              text        not null,
+  kickoff_at          timestamptz not null,
+
+  -- Prediction (locked at generation time — never updated)
+  predicted_outcome   text        not null,  -- 'Home Win' | 'Draw' | 'Away Win'
+  confidence          smallint    not null,  -- 0-100
+  confidence_tier     text        not null,  -- 'high' | 'mid' | 'low'
+
+  -- Model probabilities (0-1, from prediction API or inference)
+  model_prob_home     numeric(5,4),
+  model_prob_draw     numeric(5,4),
+  model_prob_away     numeric(5,4),
+
+  -- Market fair probabilities (margin-stripped implied probs, 0-1)
+  market_prob_home    numeric(5,4),
+  market_prob_draw    numeric(5,4),
+  market_prob_away    numeric(5,4),
+
+  -- Odds snapshot at signal generation time
+  odds_home           numeric(7,3),
+  odds_draw           numeric(7,3),
+  odds_away           numeric(7,3),
+
+  -- Value edge (null if no edge detected)
+  value_selection     text,          -- 'home' | 'draw' | 'away' | null
+  value_edge_pct      numeric(6,3),  -- edge % (e.g. 6.2 means 6.2%)
+
+  -- Signal generation metadata
+  created_at          timestamptz not null default now(),
+
+  -- Outcome resolution (filled after match finishes)
+  actual_outcome      text,          -- 'Home Win' | 'Draw' | 'Away Win' | null (pending)
+  score_home          smallint,
+  score_away          smallint,
+  is_correct          boolean,       -- null until resolved
+  resolved_at         timestamptz
+);
+
+alter table public.signal_snapshots enable row level security;
+
+-- Public read: Trust page works without authentication
+drop policy if exists "Anyone can read signal snapshots" on public.signal_snapshots;
+create policy "Anyone can read signal snapshots"
+  on public.signal_snapshots for select
+  using (true);
+
+-- No direct client INSERT/UPDATE via RLS — all writes go through
+-- server route handlers that use the service-role key.
+-- This prevents clients from fabricating or modifying track record data.
 
 -- =====================
 -- INDEXES
@@ -155,3 +240,11 @@ create index if not exists idx_user_bets_fixture on public.user_bets(fixture_id)
 create index if not exists idx_user_bets_result on public.user_bets(result);
 create index if not exists idx_user_predictions_user on public.user_predictions(user_id);
 create index if not exists idx_match_ratings_fixture on public.match_ratings(fixture_id);
+
+-- Signal snapshot indexes
+create index if not exists idx_signals_fixture    on public.signal_snapshots(fixture_id);
+create index if not exists idx_signals_league     on public.signal_snapshots(league);
+create index if not exists idx_signals_kickoff    on public.signal_snapshots(kickoff_at desc);
+create index if not exists idx_signals_created    on public.signal_snapshots(created_at desc);
+create index if not exists idx_signals_resolved   on public.signal_snapshots(resolved_at) where resolved_at is not null;
+create index if not exists idx_signals_is_correct on public.signal_snapshots(is_correct)  where is_correct is not null;
