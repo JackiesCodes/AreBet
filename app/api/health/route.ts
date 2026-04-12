@@ -26,21 +26,26 @@ interface HealthCheck {
 
 async function checkSupabase(): Promise<"ok" | "error" | "unconfigured"> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY // service key works with all key formats
   if (!url || !key) return "unconfigured"
 
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 3000)
 
-    const res = await fetch(`${url}/rest/v1/`, {
-      headers: { apikey: key },
-      signal: controller.signal,
-    })
+    // Query a known system table — works regardless of anon key format
+    const res = await fetch(
+      `${url}/rest/v1/signal_snapshots?select=signal_id&limit=1`,
+      {
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+        },
+        signal: controller.signal,
+      },
+    )
     clearTimeout(timeout)
-
-    // PostgREST returns 200 on the root endpoint when reachable
-    return res.ok ? "ok" : "error"
+    return res.ok || res.status === 406 ? "ok" : "error"
   } catch {
     return "error"
   }
