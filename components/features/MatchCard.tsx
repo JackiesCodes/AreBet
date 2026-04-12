@@ -36,6 +36,10 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
   const isFinished = match.status === "FINISHED"
   const conf = match.prediction.confidence
   const tier = confTier(conf)
+  const hasForm = Boolean(match.home.form || match.away.form)
+  const hasPrediction = match.prediction.advice && match.prediction.advice !== "No prediction available"
+  // In compact mode, skip the footer row entirely when there's nothing to show
+  const showFooter = !compact || hasForm || hasPrediction
 
   const valueEdge = useMemo(() => calculateValueEdge(match), [match])
   const isValue = valueEdge?.isValue === true
@@ -101,17 +105,23 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
         </div>
       </div>
 
-      {/* Row 3: form guides + prediction advice */}
-      <div className="cc-match-footer">
-        <div className="cc-match-forms">
-          <FormGuide form={match.home.form} />
-          <span className="cc-match-forms-sep">vs</span>
-          <FormGuide form={match.away.form} />
+      {/* Row 3: form guides + prediction advice — omitted in compact mode when empty */}
+      {showFooter && (
+        <div className="cc-match-footer">
+          {hasForm && (
+            <div className="cc-match-forms">
+              <FormGuide form={match.home.form} />
+              <span className="cc-match-forms-sep">vs</span>
+              <FormGuide form={match.away.form} />
+            </div>
+          )}
+          {hasPrediction && (
+            <div className={cn("cc-conf-tag", `cc-conf-tag--${tier}`)}>
+              {shortAdvice(match.prediction.advice)}
+            </div>
+          )}
         </div>
-        <div className={cn("cc-conf-tag", `cc-conf-tag--${tier}`)}>
-          {shortAdvice(match.prediction.advice)}
-        </div>
-      </div>
+      )}
 
       {/* Row 4: change alert strip — only when there's a new unread change */}
       {latestChange && (

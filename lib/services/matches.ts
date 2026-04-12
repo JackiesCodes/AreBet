@@ -9,6 +9,8 @@ import {
   fetchLiveFixtures,
   fetchInjuries,
   fetchHeadToHead,
+  fetchAllStandings,
+  TOP_LEAGUES,
 } from "@/lib/api-football/client"
 import {
   mapFixtureToMatch,
@@ -17,6 +19,7 @@ import {
   enrichWithInjuries,
   enrichWithH2H,
 } from "@/lib/api-football/mapper"
+import type { ApiFixture } from "@/lib/api-football/types"
 
 export function shouldUseDemoMode(): boolean {
   if (process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true") return true
@@ -27,6 +30,23 @@ export function shouldUseDemoMode(): boolean {
 
 // Demo mode in-memory state
 let liveMatches: Match[] | null = null
+
+/** Build a teamId → last-5-form map from standings (non-critical, silently fails) */
+async function buildFormMap(): Promise<Map<number, string>> {
+  const map = new Map<number, string>()
+  try {
+    const standings = await fetchAllStandings()
+    for (const item of standings) {
+      const group = item.league.standings[0] ?? []
+      for (const row of group) {
+        if (row.form) map.set(row.team.id, row.form)
+      }
+    }
+  } catch {
+    // Form data is supplementary — don't fail the feed
+  }
+  return map
+}
 
 export async function fetchMatchFeed(): Promise<MatchFeed> {
   if (shouldUseDemoMode()) {
@@ -39,44 +59,77 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     }
   }
 
-  // Real API mode: fetch scheduled + live fixtures
-  const [scheduled, live] = await Promise.allSettled([
-    fetchFixturesFeed(),
-    fetchLiveFixtures(),
+  // Fetch fixtures + standings (for form) in parallel
+  const [scheduled, live, formMap] = await Promise.all([
+    fetchFixturesFeed().catch(() => [] as ApiFixture[]),
+    fetchLiveFixtures().catch(() => [] as ApiFixture[]),
+    buildFormMap(),
   ])
 
-  const fixtureMap = new Map<number, Match>()
+  // Keep a raw fixture map so we can look up teamIds later for form enrichment
+  const rawFixtures = new Map<number, ApiFixture>()
+  const matchMap = new Map<number, Match>()
 
-  if (scheduled.status === "fulfilled") {
-    for (const f of scheduled.value) {
-      fixtureMap.set(f.fixture.id, mapFixtureToMatch(f))
-    }
+  for (const f of scheduled) {
+    rawFixtures.set(f.fixture.id, f)
+    matchMap.set(f.fixture.id, mapFixtureToMatch(f))
   }
 
-  // Live fixtures override scheduled (fresher data)
-  if (live.status === "fulfilled") {
-    for (const f of live.value) {
-      fixtureMap.set(f.fixture.id, mapFixtureToMatch(f))
-    }
+  // Live fixtures override scheduled AND are filtered to top 5 leagues only
+  // (/fixtures?live=all returns every live match globally; we only want the leagues we cover)
+  const topLeagueSet = new Set(TOP_LEAGUES)
+  for (const f of live) {
+    if (!topLeagueSet.has(f.league.id)) continue
+    rawFixtures.set(f.fixture.id, f)
+    matchMap.set(f.fixture.id, mapFixtureToMatch(f))
   }
 
-  const matches = Array.from(fixtureMap.values())
+  // Apply form data from standings to all matches
+  const matchesWithForm: Match[] = Array.from(matchMap.entries()).map(([id, match]) => {
+    const fixture = rawFixtures.get(id)
+    if (!fixture) return match
+    const homeForm = formMap.get(fixture.teams.home.id) ?? ""
+    const awayForm = formMap.get(fixture.teams.away.id) ?? ""
+    if (!homeForm && !awayForm) return match
+    return {
+      ...match,
+      home: { ...match.home, form: homeForm },
+      away: { ...match.away, form: awayForm },
+    }
+  })
 
-  // Enrich all matches with odds (no cap — paid tier)
+  // Enrich all matches with odds (paid tier — no cap)
   const oddsResults = await Promise.allSettled(
-    matches.map((m) => fetchOdds(m.id)),
+    matchesWithForm.map((m) => fetchOdds(m.id)),
+  )
+  const withOdds = matchesWithForm.map((match, i) => {
+    const r = oddsResults[i]
+    return r?.status === "fulfilled" && r.value ? enrichWithOdds(match, r.value) : match
+  })
+
+  // Pre-fetch predictions for the 20 soonest upcoming matches
+  const upcomingForPreds = withOdds
+    .filter((m) => m.status === "UPCOMING")
+    .sort((a, b) => new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime())
+    .slice(0, 20)
+
+  const predResults = await Promise.allSettled(
+    upcomingForPreds.map((m) => fetchPrediction(m.id)),
   )
 
-  const enriched = matches.map((match, i) => {
-    const result = oddsResults[i]
-    if (result?.status === "fulfilled" && result.value) {
-      return enrichWithOdds(match, result.value)
-    }
-    return match
+  const predMap = new Map<number, Parameters<typeof enrichWithPrediction>[1]>()
+  upcomingForPreds.forEach((m, i) => {
+    const r = predResults[i]
+    if (r.status === "fulfilled" && r.value) predMap.set(m.id, r.value)
+  })
+
+  const finalMatches = withOdds.map((match) => {
+    const pred = predMap.get(match.id)
+    return pred ? enrichWithPrediction(match, pred) : match
   })
 
   return {
-    matches: enriched,
+    matches: finalMatches,
     fetchedAt: new Date().toISOString(),
     source: "api",
   }
@@ -88,7 +141,6 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
     return feed.matches.find((m) => m.id === id) ?? null
   }
 
-  // Full detail fetch: events, stats, lineups
   const fixture = await fetchFixtureDetail(id)
   if (!fixture) return null
 
@@ -96,7 +148,7 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
   const homeTeamId = fixture.teams.home.id
   const awayTeamId = fixture.teams.away.id
 
-  // Enrich with odds, prediction, injuries, and H2H in parallel
+  // Full enrichment: odds + prediction + injuries + H2H in parallel
   const [oddsResult, predResult, injuriesResult, h2hResult] = await Promise.allSettled([
     fetchOdds(id),
     fetchPrediction(id),
@@ -107,17 +159,12 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
   if (oddsResult.status === "fulfilled" && oddsResult.value) {
     match = enrichWithOdds(match, oddsResult.value)
   }
-
   if (predResult.status === "fulfilled" && predResult.value) {
     match = enrichWithPrediction(match, predResult.value)
-    // If prediction returned h2h, keep it; otherwise use dedicated H2H endpoint
   }
-
   if (injuriesResult.status === "fulfilled" && injuriesResult.value.length > 0) {
     match = enrichWithInjuries(match, injuriesResult.value, homeTeamId)
   }
-
-  // Use H2H from dedicated endpoint if prediction didn't supply it
   if (
     h2hResult.status === "fulfilled" &&
     h2hResult.value.length > 0 &&
@@ -126,8 +173,6 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
     match = enrichWithH2H(match, h2hResult.value)
   }
 
-  // Suppress homeTeamId/awayTeamId unused-warning — they drive enrichment above
   void awayTeamId
-
   return match
 }
