@@ -3816,3 +3816,607 @@ svg {
   color: var(--color-text-muted);
   margin-top: var(--space-2);
 }
+
+/* ============================================================================
+ * 3-Column App Shell
+ * ============================================================================ */
+
+/* site-main holds the AppShell (full bleed, starts below nav) */
+.site-main {
+  padding-top: var(--nav-height);
+  padding-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .site-main {
+    padding-bottom: var(--bottom-nav-height);
+  }
+}
+
+/* 3-col grid: sidebar | main | right panel */
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  min-height: calc(100vh - var(--nav-height));
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .app-shell {
+    grid-template-columns: 240px 1fr;
+  }
+  .app-right {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+  .app-sidebar {
+    display: none;
+  }
+}
+
+/* Center column */
+.app-main {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+/* ============================================================================
+ * Left Sidebar
+ * ============================================================================ */
+
+.app-sidebar {
+  position: sticky;
+  top: var(--nav-height);
+  height: calc(100vh - var(--nav-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-header-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sidebar-clear-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.08);
+  transition: all var(--t-fast);
+}
+
+.sidebar-clear-btn:hover {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebar-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* League rows */
+.sidebar-league-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--t-fast);
+}
+
+.sidebar-league-row:hover {
+  background: var(--surface-3);
+}
+
+.sidebar-league-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sidebar-league-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-league-live {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-live, #ef4444);
+  white-space: nowrap;
+}
+
+/* Toggle switch */
+.sidebar-toggle {
+  flex-shrink: 0;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--surface-4);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+
+.sidebar-toggle--on {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: var(--primary);
+}
+
+.sidebar-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform var(--t-fast), background var(--t-fast);
+}
+
+.sidebar-toggle--on .sidebar-toggle-knob {
+  transform: translateX(14px);
+  background: var(--primary);
+}
+
+/* Status filter buttons */
+.sidebar-status-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--t-fast);
+  text-align: left;
+}
+
+.sidebar-status-btn:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.sidebar-status-btn--active {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--primary);
+}
+
+.sidebar-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Active filters summary */
+.sidebar-active-filters {
+  padding: var(--space-3);
+  background: var(--surface-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebar-active-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sidebar-active-chip {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  background: var(--surface-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* ============================================================================
+ * Right Panel
+ * ============================================================================ */
+
+.app-right {
+  position: sticky;
+  top: var(--nav-height);
+  height: calc(100vh - var(--nav-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.rp-header-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rp-header-badge {
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+.rp-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rp-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.rp-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: rp-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes rp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.rp-live-count {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Live ticker */
+.rp-ticker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rp-ticker-item {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  transition: all var(--t-fast);
+  text-decoration: none;
+}
+
+.rp-ticker-item:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-4);
+}
+
+.rp-ticker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.rp-ticker-minute {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: #ef4444;
+}
+
+.rp-live-pip {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: rp-pulse 1.5s ease-in-out infinite;
+}
+
+.rp-ticker-league {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rp-ticker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.rp-ticker-team {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rp-ticker-team--away {
+  text-align: right;
+}
+
+.rp-ticker-score {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Mini standings */
+.rp-standings-tabs {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.rp-standings-tab {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  transition: all var(--t-fast);
+}
+
+.rp-standings-tab:hover {
+  color: var(--text-secondary);
+  background: var(--surface-3);
+}
+
+.rp-standings-tab--active {
+  color: var(--primary);
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.rp-standings-row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  transition: background var(--t-fast);
+}
+
+.rp-standings-row:hover {
+  background: var(--surface-3);
+}
+
+.rp-standings-rank {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.rp-standings-team {
+  font-weight: 500;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rp-standings-pts {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.rp-standings-gd {
+  font-size: 10px;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.rp-standings-gd--pos {
+  color: var(--primary);
+}
+
+/* Today's insights */
+.rp-insight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+
+.rp-insight-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.rp-insight-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.rp-insight-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Loading / empty states */
+.rp-loading {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px;
+  text-align: center;
+}
+
+.rp-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px;
+  text-align: center;
+}
+
+/* ============================================================================
+ * Team circles (colored initials)
+ * ============================================================================ */
+
+.cc-team-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--tc) 20%, transparent);
+  color: var(--tc);
+  border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent);
+}
+
+.cc-match-card--compact .cc-team-circle {
+  width: 22px;
+  height: 22px;
+  font-size: 8px;
+}
+
+/* ============================================================================
+ * Nav icon + label layout
+ * ============================================================================ */
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-link-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nav-link--active .nav-link-icon {
+  opacity: 1;
+}
+
+/* ============================================================================
+ * Match card link overlay (for card-level navigation)
+ * ============================================================================ */
+
+.cc-match-card {
+  position: relative;
+}
+
+.cc-match-card-link {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* Ensure interactive elements inside the card sit above the link overlay */
+.cc-match-card .cc-signal-pills,
+.cc-match-card [role="button"],
+.cc-match-card button,
+.cc-match-card a:not(.cc-match-card-link) {
+  position: relative;
+  z-index: 1;
+}

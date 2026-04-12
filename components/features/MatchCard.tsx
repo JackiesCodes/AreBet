@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
 import { formatTime } from "@/lib/utils/time"
@@ -11,6 +12,39 @@ import { FormGuide } from "@/components/primitives/FormGuide"
 import { FavoritesSwitcher } from "./FavoritesSwitcher"
 import type { MatchChange } from "@/types/alerts"
 import { CHANGE_ICONS } from "@/lib/utils/match-changes"
+
+// Deterministic color from team name — cycles through 8 distinct hues
+const TEAM_COLORS = [
+  "#3b82f6", // blue
+  "#f59e0b", // amber
+  "#10b981", // emerald
+  "#ef4444", // red
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#f97316", // orange
+]
+
+function teamColor(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff
+  return TEAM_COLORS[hash % TEAM_COLORS.length]
+}
+
+function TeamCircle({ name }: { name: string }) {
+  const initials = name
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+  const color = teamColor(name)
+  return (
+    <span className="cc-team-circle" style={{ "--tc": color } as React.CSSProperties}>
+      {initials}
+    </span>
+  )
+}
 
 interface MatchCardProps {
   match: Match
@@ -59,6 +93,10 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
       tabIndex={0}
       aria-label={`${match.home.name} vs ${match.away.name}`}
     >
+      {/* Navigate to match detail on click when no onSelect */}
+      {!onSelect && (
+        <Link href={`/match/${match.id}`} className="cc-match-card-link" aria-hidden tabIndex={-1} />
+      )}
       {/* Row 1: status + league + signal pills */}
       <div className="cc-match-meta">
         <Badge tone={isLive ? "live" : isFinished ? "finished" : "upcoming"}>
@@ -85,9 +123,10 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
         />
       </div>
 
-      {/* Row 2: teams + scores + form guides */}
+      {/* Row 2: teams + scores */}
       <div className="cc-match-body">
         <div className="cc-match-team-row">
+          <TeamCircle name={match.home.name} />
           <span className="cc-match-team-name">{match.home.name}</span>
           {(isLive || isFinished) && (
             <span className={cn("cc-match-team-score", isLive && "cc-match-team-score--live")}>
@@ -96,6 +135,7 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
           )}
         </div>
         <div className="cc-match-team-row">
+          <TeamCircle name={match.away.name} />
           <span className="cc-match-team-name">{match.away.name}</span>
           {(isLive || isFinished) && (
             <span className={cn("cc-match-team-score", isLive && "cc-match-team-score--live")}>

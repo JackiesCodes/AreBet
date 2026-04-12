@@ -6,10 +6,12 @@ import { ToastProvider } from "@/components/primitives/Toast"
 import { MainNav } from "@/components/layout/MainNav"
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav"
 import { DensityShell } from "@/components/layout/DensityShell"
+import { AppShell } from "@/components/layout/AppShell"
 import { StickinessSync } from "@/components/features/StickinessSync"
 import { PwaRegister } from "@/components/features/PwaRegister"
 import { ErrorBoundary } from "@/components/primitives/ErrorBoundary"
 import { MatchIntelligenceProvider } from "@/contexts/MatchIntelligenceContext"
+import { FilterProvider } from "@/contexts/FilterContext"
 
 export const metadata: Metadata = {
   title: "AreBet — Smart Betting. Simple Insights.",
@@ -51,17 +53,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <ToastProvider>
             <MatchIntelligenceProvider>
-              <DensityShell>
-                <StickinessSync />
-                <PwaRegister />
-                <div className="site-shell">
-                  <MainNav />
-                  <main className="site-main">
-                    <ErrorBoundary>{children}</ErrorBoundary>
-                  </main>
-                  <MobileBottomNav />
-                </div>
-              </DensityShell>
+              <FilterProvider>
+                <DensityShell>
+                  <StickinessSync />
+                  <PwaRegister />
+                  <div className="site-shell">
+                    <MainNav />
+                    <div className="site-main">
+                      <AppShell>
+                        <ErrorBoundary>{children}</ErrorBoundary>
+                      </AppShell>
+                    </div>
+                    <MobileBottomNav />
+                  </div>
+                </DensityShell>
+              </FilterProvider>
             </MatchIntelligenceProvider>
           </ToastProvider>
         </AuthProvider>

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import type { Match } from "@/types/match"
-import { useMatchFeed } from "@/hooks/useMatchFeed"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useFilters } from "@/contexts/FilterContext"
 import { rankMatches } from "@/lib/utils/rank-matches"
 import { MatchCard } from "./MatchCard"
 import { Skeleton } from "@/components/primitives/Skeleton"
@@ -16,11 +17,13 @@ interface MatchDirectoryPageProps {
 }
 
 export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPageProps) {
-  const { matches, loading, error } = useMatchFeed({ pollIntervalMs: 30_000 })
+  const { matches, loading, error } = useMatchIntelligence()
+  const { applyToMatches } = useFilters()
   const [search, setSearch] = useState("")
 
   const filtered = useMemo(() => {
-    let list = matches
+    // Apply global sidebar filters, then page-level filter, then search
+    let list = applyToMatches(matches)
     if (filter) list = list.filter(filter)
     if (search) {
       const q = search.toLowerCase()
@@ -32,7 +35,7 @@ export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPag
       )
     }
     return rankMatches(list, "kickoff")
-  }, [matches, filter, search])
+  }, [matches, applyToMatches, filter, search])
 
   return (
     <div className="md-page">

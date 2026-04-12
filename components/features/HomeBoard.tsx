@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState } from "react"
 import type { Match, SortKey } from "@/types/match"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useFilters } from "@/contexts/FilterContext"
 import { useFavorites } from "@/hooks/useFavorites"
 import { rankMatches } from "@/lib/utils/rank-matches"
 import { BUCKET_LABELS, BUCKET_ORDER, bucketFor, type TimeBucket } from "@/lib/utils/time"
-import { LeaguePanel } from "./LeaguePanel"
 import { MatchCard } from "./MatchCard"
 import { MatchTableRow } from "./MatchTableRow"
-import { MatchInsightPanel } from "./MatchInsightPanel"
 import { IntelligenceBar } from "./IntelligenceBar"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
@@ -28,6 +27,7 @@ export function HomeBoard() {
     setWatchedMatchIds,
   } = useMatchIntelligence()
 
+  const { applyToMatches } = useFilters()
   const { favorites, isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
   const [sort, setSort] = useState<SortKey>("kickoff")
@@ -37,8 +37,7 @@ export function HomeBoard() {
     saveUiState(ui)
   }, [ui])
 
-  // Sync watched match IDs into the intelligence context so change
-  // detection knows which matches are on the user's watchlist
+  // Sync watched match IDs into the intelligence context
   useEffect(() => {
     const ids = new Set(
       favorites
@@ -49,8 +48,10 @@ export function HomeBoard() {
   }, [favorites, setWatchedMatchIds])
 
   const filtered = useMemo(() => {
-    let list = matches
-    if (ui.activeLeague) list = list.filter((m) => m.league === ui.activeLeague)
+    // Global sidebar filters applied first
+    let list = applyToMatches(matches)
+
+    // Local search
     if (ui.search) {
       const q = ui.search.toLowerCase()
       list = list.filter(
@@ -60,6 +61,8 @@ export function HomeBoard() {
           m.league.toLowerCase().includes(q),
       )
     }
+
+    // Quick filters (favorites, soon, high confidence)
     switch (ui.quickFilter) {
       case "live":
         list = list.filter((m) => m.status === "LIVE")
@@ -79,17 +82,14 @@ export function HomeBoard() {
         break
     }
 
-    // Watchlist-aware sort: watched matches with new changes float to top
-    // within their status group
     const sorted = rankMatches(list, sort)
     return sorted.sort((a, b) => {
       const aChanged = changedMatchIds.has(a.id) ? 0 : 1
       const bChanged = changedMatchIds.has(b.id) ? 0 : 1
-      // Only float within the same status
       if (a.status !== b.status) return 0
       return aChanged - bChanged
     })
-  }, [matches, ui, sort, isFavorite, changedMatchIds])
+  }, [matches, applyToMatches, ui, sort, isFavorite, changedMatchIds])
 
   const grouped = useMemo(() => {
     const groups: Record<TimeBucket, Match[]> = {
@@ -108,14 +108,6 @@ export function HomeBoard() {
 
   return (
     <div className="cc-root">
-      <LeaguePanel
-        matches={matches}
-        activeLeague={ui.activeLeague}
-        onSelectLeague={(league) => setUi((u) => ({ ...u, activeLeague: league }))}
-        quickFilter={ui.quickFilter}
-        onQuickFilter={(quickFilter) => setUi((u) => ({ ...u, quickFilter }))}
-      />
-
       <section className="cc-feed">
         <IntelligenceBar matches={matches} fetchedAt={fetchedAt ?? undefined} />
         <div className="cc-toolbar">
@@ -187,6 +179,7 @@ export function HomeBoard() {
                         selected={selected?.id === m.id}
                         onSelect={setSelected}
                         latestChange={latestChangeMap.get(m.id)}
+                        compact
                       />
                     ))}
                   </div>
@@ -220,8 +213,6 @@ export function HomeBoard() {
           )}
         </div>
       </section>
-
-      <MatchInsightPanel match={selected ?? filtered[0] ?? null} />
     </div>
   )
 }
