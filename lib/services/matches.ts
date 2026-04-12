@@ -7,11 +7,15 @@ import {
   fetchOdds,
   fetchPrediction,
   fetchLiveFixtures,
+  fetchInjuries,
+  fetchHeadToHead,
 } from "@/lib/api-football/client"
 import {
   mapFixtureToMatch,
   enrichWithOdds,
   enrichWithPrediction,
+  enrichWithInjuries,
+  enrichWithH2H,
 } from "@/lib/api-football/mapper"
 
 export function shouldUseDemoMode(): boolean {
@@ -58,18 +62,15 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
 
   const matches = Array.from(fixtureMap.values())
 
-  // Enrich first 10 matches with odds (stays within free tier rate limits)
-  const enrichTargets = matches.slice(0, 10)
+  // Enrich all matches with odds (no cap — paid tier)
   const oddsResults = await Promise.allSettled(
-    enrichTargets.map((m) => fetchOdds(m.id)),
+    matches.map((m) => fetchOdds(m.id)),
   )
 
   const enriched = matches.map((match, i) => {
-    if (i < enrichTargets.length) {
-      const result = oddsResults[i]
-      if (result.status === "fulfilled" && result.value) {
-        return enrichWithOdds(match, result.value)
-      }
+    const result = oddsResults[i]
+    if (result?.status === "fulfilled" && result.value) {
+      return enrichWithOdds(match, result.value)
     }
     return match
   })
@@ -92,11 +93,15 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
   if (!fixture) return null
 
   let match = mapFixtureToMatch(fixture)
+  const homeTeamId = fixture.teams.home.id
+  const awayTeamId = fixture.teams.away.id
 
-  // Enrich with odds + prediction in parallel
-  const [oddsResult, predResult] = await Promise.allSettled([
+  // Enrich with odds, prediction, injuries, and H2H in parallel
+  const [oddsResult, predResult, injuriesResult, h2hResult] = await Promise.allSettled([
     fetchOdds(id),
     fetchPrediction(id),
+    fetchInjuries(id),
+    fetchHeadToHead(homeTeamId, awayTeamId),
   ])
 
   if (oddsResult.status === "fulfilled" && oddsResult.value) {
@@ -105,7 +110,24 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
 
   if (predResult.status === "fulfilled" && predResult.value) {
     match = enrichWithPrediction(match, predResult.value)
+    // If prediction returned h2h, keep it; otherwise use dedicated H2H endpoint
   }
+
+  if (injuriesResult.status === "fulfilled" && injuriesResult.value.length > 0) {
+    match = enrichWithInjuries(match, injuriesResult.value, homeTeamId)
+  }
+
+  // Use H2H from dedicated endpoint if prediction didn't supply it
+  if (
+    h2hResult.status === "fulfilled" &&
+    h2hResult.value.length > 0 &&
+    (!match.h2h || match.h2h.length === 0)
+  ) {
+    match = enrichWithH2H(match, h2hResult.value)
+  }
+
+  // Suppress homeTeamId/awayTeamId unused-warning — they drive enrichment above
+  void awayTeamId
 
   return match
 }

@@ -1259,7 +1259,7 @@ svg {
 .md-page {
   max-width: 1600px;
   margin: 0 auto;
-  padding: var(--space-6);
+  padding: var(--space-4) var(--space-6);
 }
 
 .md-page-header {
@@ -1682,6 +1682,55 @@ svg {
 .cc-match-card--live {
   border-color: rgba(255, 68, 68, 0.3);
 }
+
+/* Compact variant — tighter padding + smaller text for dense list views */
+.cc-match-card--compact {
+  padding: 8px 12px;
+}
+
+.cc-match-card--compact .cc-match-meta {
+  margin-bottom: 4px;
+}
+
+.cc-match-card--compact .cc-match-league {
+  font-size: 9px;
+}
+
+.cc-match-card--compact .cc-match-body {
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.cc-match-card--compact .cc-match-team-row {
+  font-size: 12px;
+}
+
+.cc-match-card--compact .cc-match-footer {
+  padding-top: 4px;
+}
+
+.cc-match-card--compact .cc-conf-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+}
+
+/* Standings form dots */
+.standings-form {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.standings-form-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.standings-form-dot--w { background: var(--positive); }
+.standings-form-dot--d { background: var(--warning); }
+.standings-form-dot--l { background: var(--negative); opacity: 0.7; }
 
 /* Row 1: meta */
 .cc-match-meta {

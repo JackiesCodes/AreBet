@@ -4,6 +4,7 @@ import type {
   ApiPredictionFixture,
   ApiEvent,
   ApiTeamStatistics,
+  ApiInjury,
 } from "./types"
 import type {
   Match,
@@ -18,6 +19,7 @@ import type {
   MarketHistoryPoint,
   PlayerRatings,
   PlayerRating,
+  MatchInjury,
 } from "@/types/match"
 
 // Map API status short code -> our MatchStatus
@@ -263,4 +265,32 @@ export function enrichWithPrediction(
   const prediction = mapPrediction(predFixture)
   const h2h = mapH2H(predFixture.h2h ?? [])
   return { ...match, prediction, h2h }
+}
+
+/** Enrich a match with H2H fixtures (from dedicated endpoint) */
+export function enrichWithH2H(match: Match, h2hFixtures: ApiFixture[]): Match {
+  const h2h = mapH2H(h2hFixtures)
+  return { ...match, h2h }
+}
+
+/** Map injury API response to typed MatchInjury[], keyed by home/away team id */
+export function mapInjuries(
+  injuries: ApiInjury[],
+  homeTeamId: number,
+): MatchInjury[] {
+  return injuries.map((inj) => ({
+    playerName: inj.player.name,
+    type: inj.player.type,
+    reason: inj.player.reason,
+    team: inj.team.id === homeTeamId ? "home" : "away",
+  }))
+}
+
+/** Enrich a match with injury data */
+export function enrichWithInjuries(
+  match: Match,
+  injuries: ApiInjury[],
+  homeTeamId: number,
+): Match {
+  return { ...match, injuries: mapInjuries(injuries, homeTeamId) }
 }

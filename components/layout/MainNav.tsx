@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { href: "/upcoming-matches", label: "Upcoming" },
   { href: "/predictions", label: "Predictions" },
   { href: "/odds-comparison", label: "Odds" },
-  { href: "/insights", label: "Insights" },
+  { href: "/insights", label: "Intelligence" },
   { href: "/trust", label: "Track Record" },
 ]
 

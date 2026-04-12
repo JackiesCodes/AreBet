@@ -6,6 +6,7 @@ import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
 import { useMatchFeed } from "@/hooks/useMatchFeed"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import type { SignalStatus } from "@/app/api/signals/status/route"
+import type { RateLimitStatus } from "@/app/api/rate-limit/route"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -180,14 +181,20 @@ export default function AdminPage() {
 
   const [signalStatus, setSignalStatus] = useState<SignalStatus | null>(null)
   const [statusLoading, setStatusLoading] = useState(true)
+  const [rateLimit, setRateLimit] = useState<RateLimitStatus | null>(null)
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/signals/status")
-      if (res.ok) {
-        const data = await res.json() as SignalStatus
-        setSignalStatus(data)
+      const [sigRes, rlRes] = await Promise.allSettled([
+        fetch("/api/signals/status"),
+        fetch("/api/rate-limit"),
+      ])
+      if (sigRes.status === "fulfilled" && sigRes.value.ok) {
+        setSignalStatus(await sigRes.value.json() as SignalStatus)
+      }
+      if (rlRes.status === "fulfilled" && rlRes.value.ok) {
+        setRateLimit(await rlRes.value.json() as RateLimitStatus)
       }
     } finally {
       setStatusLoading(false)
@@ -265,6 +272,69 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+      </Card>
+
+      {/* ── API rate budget ───────────────────────────────────────────── */}
+      <Card className="mb-6">
+        <CardTitle>API Rate Budget</CardTitle>
+        <CardSubtitle>API-Football requests remaining for today (resets at midnight UTC)</CardSubtitle>
+
+        {statusLoading ? (
+          <Skeleton variant="list" count={2} />
+        ) : rateLimit ? (
+          <>
+            {rateLimit.remaining === null ? (
+              <div className="admin-warn-box" style={{ marginTop: 8 }}>
+                Rate limit data not yet available — it appears after the first API call (e.g., after the feed loads).
+              </div>
+            ) : (
+              <div className="admin-stat-row" style={{ marginTop: 16 }}>
+                <div className="admin-stat">
+                  <div className="admin-stat-label">Remaining</div>
+                  <div className={`admin-stat-value ${(rateLimit.remaining ?? 0) < 20 ? "admin-stat-value--warn" : "admin-stat-value--positive"}`}>
+                    {rateLimit.remaining?.toLocaleString() ?? "—"}
+                  </div>
+                  <div className="admin-stat-sub">requests left today</div>
+                </div>
+                <div className="admin-stat">
+                  <div className="admin-stat-label">Used</div>
+                  <div className="admin-stat-value">{rateLimit.used?.toLocaleString() ?? "—"}</div>
+                  <div className="admin-stat-sub">of {rateLimit.total?.toLocaleString() ?? "—"} daily limit</div>
+                </div>
+                <div className="admin-stat">
+                  <div className="admin-stat-label">Usage</div>
+                  <div className="admin-stat-value">{rateLimit.pctUsed !== null ? `${rateLimit.pctUsed}%` : "—"}</div>
+                  <div className="admin-stat-sub">of daily quota</div>
+                </div>
+                {rateLimit.total !== null && rateLimit.remaining !== null && (
+                  <div className="admin-stat" style={{ flex: 2 }}>
+                    <div className="admin-stat-label">Budget bar</div>
+                    <div style={{ marginTop: 6, height: 8, borderRadius: 4, background: "var(--border)", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${Math.max(0, 100 - (rateLimit.pctUsed ?? 0))}%`,
+                          background: (rateLimit.pctUsed ?? 0) > 80
+                            ? "var(--negative)"
+                            : (rateLimit.pctUsed ?? 0) > 50
+                              ? "var(--warning)"
+                              : "var(--positive)",
+                          borderRadius: 4,
+                          transition: "width 0.3s",
+                        }}
+                      />
+                    </div>
+                    <div className="admin-stat-sub" style={{ marginTop: 4 }}>
+                      {rateLimit.remaining} req remaining
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="admin-warn-box">Could not load rate limit status.</div>
+        )}
       </Card>
 
       {/* ── Signal persistence ─────────────────────────────────────────── */}

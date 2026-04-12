@@ -12,9 +12,10 @@ import { ErrorState } from "@/components/primitives/ErrorState"
 interface MatchDirectoryPageProps {
   title: string
   filter?: (m: Match) => boolean
+  compact?: boolean
 }
 
-export function MatchDirectoryPage({ title, filter }: MatchDirectoryPageProps) {
+export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPageProps) {
   const { matches, loading, error } = useMatchFeed({ pollIntervalMs: 30_000 })
   const [search, setSearch] = useState("")
 
@@ -56,7 +57,7 @@ export function MatchDirectoryPage({ title, filter }: MatchDirectoryPageProps) {
       )}
       <div className="cc-match-list">
         {filtered.map((m) => (
-          <MatchCard key={m.id} match={m} />
+          <MatchCard key={m.id} match={m} compact={compact} />
         ))}
       </div>
     </div>

@@ -1,4 +1,5 @@
 // API-Football v3 response types (api-sports.io)
+// Full suite — no endpoint restrictions
 
 export interface ApiResponse<T> {
   get: string
@@ -93,6 +94,87 @@ export interface ApiOddsFixture {
       values: Array<{ value: string; odd: string }>
     }>
   }>
+}
+
+// --- Predictions ---
+
+// --- Standings ---
+
+export interface ApiStandingRow {
+  rank: number
+  team: { id: number; name: string; logo: string }
+  points: number
+  goalsDiff: number
+  group: string
+  form: string
+  status: string
+  description: string | null
+  all: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } }
+  home: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } }
+  away: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } }
+}
+
+export interface ApiStandingResponse {
+  league: {
+    id: number
+    name: string
+    country: string
+    logo: string
+    flag: string | null
+    season: number
+    standings: ApiStandingRow[][]
+  }
+}
+
+// --- Injuries ---
+
+export interface ApiInjury {
+  player: { id: number; name: string; photo: string; type: string; reason: string }
+  team: { id: number; name: string; logo: string }
+  fixture: { id: number; timezone: string; date: string; timestamp: number }
+}
+
+// --- Head-to-head: same shape as ApiFixture[], reuse that type ---
+
+// --- Top scorers / player statistics ---
+
+export interface ApiPlayerStat {
+  player: {
+    id: number
+    name: string
+    nationality: string
+    photo: string
+  }
+  statistics: Array<{
+    team: { id: number; name: string; logo: string }
+    league: { id: number; name: string; country: string; logo: string; season: number }
+    games: { appearences: number | null; lineups: number | null; minutes: number | null; rating: string | null }
+    goals: { total: number | null; assists: number | null; conceded: number | null; saves: number | null }
+    shots: { total: number | null; on: number | null }
+    passes: { total: number | null; key: number | null; accuracy: string | null }
+  }>
+}
+
+// --- Transfers ---
+
+export interface ApiTransfer {
+  player: { id: number; name: string }
+  update: string
+  transfers: Array<{
+    date: string
+    type: string
+    teams: {
+      in: { id: number; name: string; logo: string }
+      out: { id: number; name: string; logo: string }
+    }
+  }>
+}
+
+// --- Sidelined ---
+
+export interface ApiSidelined {
+  player: { id: number; name: string; photo: string }
+  sidelined: Array<{ type: string; start: string; end: string | null }>
 }
 
 // --- Predictions ---

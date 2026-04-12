@@ -110,6 +110,13 @@ export interface PlayerRatings {
   away: PlayerRating[]
 }
 
+export interface MatchInjury {
+  playerName: string
+  type: string    // "Missing Fixture" | "Questionable"
+  reason: string
+  team: "home" | "away"
+}
+
 export interface Match {
   id: number
   league: string
@@ -129,6 +136,7 @@ export interface Match {
   stats?: MatchStats
   h2h?: H2HRecord[]
   playerRatings?: PlayerRatings
+  injuries?: MatchInjury[]
 }
 
 export interface MatchFeed {

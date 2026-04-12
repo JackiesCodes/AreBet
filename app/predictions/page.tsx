@@ -7,6 +7,7 @@ export default function PredictionsPage() {
     <MatchDirectoryPage
       title="Predictions"
       filter={(m) => (m.prediction?.confidence ?? 0) >= 60 && m.status !== "FINISHED"}
+      compact
     />
   )
 }

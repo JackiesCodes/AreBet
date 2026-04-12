@@ -3,6 +3,7 @@
 import { useMatchFeed } from "@/hooks/useMatchFeed"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/primitives/Skeleton"
+import { EmptyState } from "@/components/primitives/EmptyState"
 import { FavoritesSwitcher } from "@/components/features/FavoritesSwitcher"
 import { useMemo } from "react"
 import { FormGuide } from "@/components/primitives/FormGuide"
@@ -23,6 +24,12 @@ export default function TeamsPage() {
     <div className="md-page">
       <PageHeader title="Teams" subtitle={`${teams.length} clubs across all leagues`} />
       {loading && <Skeleton variant="list" count={10} />}
+      {!loading && teams.length === 0 && (
+        <EmptyState
+          title="No teams found"
+          text="No upcoming or recent fixtures loaded. Check back when matches are scheduled."
+        />
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
         {teams.map((t) => (
           <div key={t.name} className="md-card" style={{ padding: 16 }}>

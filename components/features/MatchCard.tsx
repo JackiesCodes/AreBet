@@ -17,6 +17,7 @@ interface MatchCardProps {
   selected?: boolean
   onSelect?: (match: Match) => void
   latestChange?: MatchChange
+  compact?: boolean
 }
 
 // Map advice text to a short signal label shown on card
@@ -30,7 +31,7 @@ function shortAdvice(advice: string): string {
   return advice.split(" ").slice(0, 2).join(" ")
 }
 
-export function MatchCard({ match, selected, onSelect, latestChange }: MatchCardProps) {
+export function MatchCard({ match, selected, onSelect, latestChange, compact }: MatchCardProps) {
   const isLive = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
   const conf = match.prediction.confidence
@@ -44,6 +45,7 @@ export function MatchCard({ match, selected, onSelect, latestChange }: MatchCard
     <article
       className={cn(
         "cc-match-card",
+        compact && "cc-match-card--compact",
         selected && "cc-match-card--selected",
         isValue && "cc-match-card--value",
         isLive && "cc-match-card--live",
