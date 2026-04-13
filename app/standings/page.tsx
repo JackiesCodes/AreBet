@@ -19,6 +19,7 @@ function descriptionColor(desc: string | null): string {
 
 function StandingsTable({ rows }: { rows: ApiStandingRow[] }) {
   return (
+    <div className="md-table-wrap">
     <table className="md-table">
       <thead>
         <tr>
@@ -80,6 +81,7 @@ function StandingsTable({ rows }: { rows: ApiStandingRow[] }) {
         ))}
       </tbody>
     </table>
+    </div>
   )
 }
 

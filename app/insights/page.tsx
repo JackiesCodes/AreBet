@@ -82,7 +82,7 @@ function TopScorersSection() {
       )}
 
       {!loading && activeData.length > 0 && (
-        <table className="md-table">
+        <div className="md-table-wrap"><table className="md-table">
           <thead>
             <tr>
               <th style={{ width: 28 }}>#</th>
@@ -112,7 +112,7 @@ function TopScorersSection() {
               )
             })}
           </tbody>
-        </table>
+        </table></div>
       )}
     </Card>
   )
@@ -170,7 +170,7 @@ function FormLeadersSection() {
         <EmptyState title="No form data" text="Form data will appear once match results have been recorded." />
       )}
       {!loading && leaders.length > 0 && (
-        <table className="md-table">
+        <div className="md-table-wrap"><table className="md-table">
           <thead>
             <tr>
               <th style={{ width: 28 }}>#</th>
@@ -214,7 +214,7 @@ function FormLeadersSection() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </Card>
   )
@@ -286,7 +286,7 @@ function InjuryWatchSection() {
         <EmptyState title="No injuries reported" text="No injury reports for upcoming fixtures." />
       )}
       {!loading && injuries.length > 0 && (
-        <table className="md-table">
+        <div className="md-table-wrap"><table className="md-table">
           <thead>
             <tr>
               <th>Player</th>
@@ -324,7 +324,7 @@ function InjuryWatchSection() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </Card>
   )
@@ -341,7 +341,7 @@ export default function InsightsPage() {
       />
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <TopScorersSection />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))", gap: 16 }}>
+        <div className="insights-sections-grid">
           <FormLeadersSection />
           <InjuryWatchSection />
         </div>

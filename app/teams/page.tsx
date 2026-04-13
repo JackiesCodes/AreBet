@@ -30,7 +30,7 @@ export default function TeamsPage() {
           text="No upcoming or recent fixtures loaded. Check back when matches are scheduled."
         />
       )}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+      <div className="teams-grid">
         {teams.map((t) => (
           <div key={t.name} className="md-card" style={{ padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>

@@ -4952,3 +4952,285 @@ svg {
   position: relative;
   z-index: 1;
 }
+
+/* ============================================================================
+ * Mobile Navigation Drawer
+ * ============================================================================ */
+
+.nav-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 199;
+  animation: fade-in 0.15s ease;
+}
+
+.nav-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(300px, 85vw);
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.nav-drawer--open {
+  transform: translateX(0);
+}
+
+.nav-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  height: var(--nav-height);
+  flex-shrink: 0;
+}
+
+.nav-drawer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+}
+
+.nav-drawer-close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.nav-drawer-links {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--t-fast);
+}
+
+.nav-drawer-link:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.nav-drawer-link--active {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--primary);
+}
+
+.nav-drawer-link-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.nav-drawer-link--active .nav-drawer-link-icon {
+  opacity: 1;
+}
+
+.nav-drawer-footer {
+  padding: 16px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Search icon button — mobile only (full search bar is hidden) */
+.nav-search-icon-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all var(--t-fast);
+}
+
+.nav-search-icon-btn:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+@media (max-width: 1023px) {
+  .nav-search-icon-btn {
+    display: flex;
+  }
+}
+
+/* Hamburger animates to X when drawer is open */
+.nav-hamburger {
+  color: var(--text-secondary);
+  transition: color var(--t-fast);
+}
+
+.nav-hamburger:hover {
+  color: var(--text);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ============================================================================
+ * Responsive Table Wrapper
+ * ============================================================================ */
+
+.md-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Negative margin trick to let table bleed to page edge on mobile */
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================================
+ * Responsive Grid Fixes
+ * ============================================================================ */
+
+/* Insights: Form Leaders + Injury Watch side-by-side on desktop, stacked on mobile */
+.insights-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 16px;
+}
+
+/* Teams: card grid — 2-col on tablet, 1-col on mobile */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+/* ============================================================================
+ * Match Hero — <360px fixes
+ * ============================================================================ */
+
+@media (max-width: 360px) {
+  .match-hero-scoreboard {
+    gap: var(--space-2);
+  }
+  .match-hero-score-num {
+    font-size: 24px;
+  }
+  .match-hero-score-sep {
+    font-size: 22px;
+  }
+  .match-hero-team-crest {
+    width: 32px;
+    height: 32px;
+    font-size: 9px;
+  }
+  .match-hero-team-name {
+    font-size: 11px;
+  }
+}
+
+/* ============================================================================
+ * Admin Page Mobile Fixes
+ * ============================================================================ */
+
+@media (max-width: 480px) {
+  .admin-secret-input {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .admin-env-row {
+    grid-template-columns: 1fr auto;
+  }
+  .admin-env-desc {
+    display: none;
+  }
+}
+
+/* ============================================================================
+ * Match Card — narrow screen safety
+ * ============================================================================ */
+
+@media (max-width: 360px) {
+  .cc-card-team {
+    grid-template-columns: 24px 1fr auto 24px;
+    gap: 5px;
+  }
+  .cc-card-team-name {
+    font-size: 11px;
+  }
+  .cc-card-form .md-form-pip {
+    width: 11px;
+    height: 11px;
+    font-size: 7px;
+  }
+  .cc-card-score {
+    font-size: 15px;
+    min-width: 20px;
+  }
+}
+
+/* ============================================================================
+ * Page-level mobile padding
+ * ============================================================================ */
+
+@media (max-width: 767px) {
+  .md-page {
+    padding: var(--space-3) var(--space-3);
+  }
+
+  /* cc-feed fills the full mobile viewport */
+  .cc-feed {
+    padding: var(--space-3);
+  }
+
+  /* Stats grids stack on mobile */
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Price grid full width on very small screens */
+  .price-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Trust stats row wraps */
+  .trust-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Match detail tabs scroll */
+  .match-detail-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Remove side padding on page headers on mobile */
+  .page-header {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
