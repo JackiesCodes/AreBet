@@ -173,6 +173,5 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
     match = enrichWithH2H(match, h2hResult.value)
   }
 
-  void awayTeamId
   return match
 }

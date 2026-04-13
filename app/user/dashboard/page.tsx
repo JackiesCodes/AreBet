@@ -47,7 +47,7 @@ export default function UserDashboard() {
               <div style={{
                 fontSize: 28,
                 fontWeight: 700,
-                color: summary.roi >= 0 ? "var(--md-positive)" : "var(--md-negative)",
+                color: summary.roi >= 0 ? "var(--positive)" : "var(--negative)",
               }}>
                 {summary.roi >= 0 ? "+" : ""}{summary.roi.toFixed(1)}%
               </div>
@@ -57,7 +57,7 @@ export default function UserDashboard() {
               <div style={{
                 fontSize: 28,
                 fontWeight: 700,
-                color: summary.profit >= 0 ? "var(--md-positive)" : "var(--md-negative)",
+                color: summary.profit >= 0 ? "var(--positive)" : "var(--negative)",
               }}>
                 {summary.profit >= 0 ? "+$" : "-$"}{Math.abs(summary.profit).toFixed(2)}
               </div>

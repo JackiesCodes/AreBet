@@ -1623,6 +1623,30 @@ svg {
 .md-text-negative { color: var(--negative); }
 .md-text-warning { color: var(--warning); }
 
+/* Banner / alert strip */
+.md-banner {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+}
+.md-banner--info {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
+  color: var(--text-secondary);
+}
+.md-banner--warn {
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
+  border-color: color-mix(in srgb, var(--warning) 25%, transparent);
+  color: var(--text-secondary);
+}
+.md-banner--error {
+  background: color-mix(in srgb, var(--negative) 8%, transparent);
+  border-color: color-mix(in srgb, var(--negative) 25%, transparent);
+  color: var(--text-secondary);
+}
+
 /* ----- Scrollbar -------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 8px;

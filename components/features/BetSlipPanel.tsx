@@ -129,7 +129,7 @@ export function BetSlipPanel({ open, onClose }: BetSlipPanelProps) {
             <span className="md-mono md-text-positive">${payout.toFixed(2)}</span>
           </div>
           {slipState === "error" && (
-            <div style={{ fontSize: 11, marginBottom: 8, color: "var(--md-negative)" }}>
+            <div style={{ fontSize: 11, marginBottom: 8, color: "var(--negative)" }}>
               {errorMsg || "Something went wrong"}
             </div>
           )}

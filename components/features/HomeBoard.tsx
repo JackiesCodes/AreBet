@@ -107,8 +107,7 @@ export function HomeBoard() {
   }, [filtered])
 
   return (
-    <div className="cc-root">
-      <section className="cc-feed">
+    <section className="cc-feed">
         <IntelligenceBar matches={matches} fetchedAt={fetchedAt ?? undefined} />
         <div className="cc-toolbar">
           <div className="cc-search">
@@ -212,7 +211,6 @@ export function HomeBoard() {
             )
           )}
         </div>
-      </section>
-    </div>
+    </section>
   )
 }

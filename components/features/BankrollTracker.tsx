@@ -91,7 +91,7 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
           <span style={{
             fontSize: 22,
             fontWeight: 700,
-            color: currentBankroll >= bankroll ? "var(--md-positive)" : "var(--md-negative)",
+            color: currentBankroll >= bankroll ? "var(--positive)" : "var(--negative)",
           }}>
             ${currentBankroll.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </span>
@@ -109,7 +109,7 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
           <span style={{
             fontSize: 18,
             fontWeight: 600,
-            color: summary.profit >= 0 ? "var(--md-positive)" : "var(--md-negative)",
+            color: summary.profit >= 0 ? "var(--positive)" : "var(--negative)",
           }}>
             {summary.profit >= 0 ? "+$" : "-$"}{Math.abs(summary.profit).toFixed(2)}
           </span>
@@ -117,13 +117,13 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
       </div>
 
       {kellySuggestion != null && kellySuggestion > 0 && (
-        <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 6, background: "var(--md-surface-2)", fontSize: 12 }}>
+        <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 6, background: "var(--surface-2)", fontSize: 12 }}>
           <div style={{ fontWeight: 600, marginBottom: 2 }}>
             ¼ Kelly Stake Suggestion
           </div>
           <div className="md-text-muted">
             Recommended stake on this value bet:{" "}
-            <span style={{ fontWeight: 700, color: "var(--md-positive)" }}>
+            <span style={{ fontWeight: 700, color: "var(--positive)" }}>
               ${kellySuggestion.toFixed(2)}
             </span>
             {" "}({((kellySuggestion / currentBankroll) * 100).toFixed(1)}% of bankroll)
