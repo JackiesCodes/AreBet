@@ -7,22 +7,16 @@ import type { Match } from "@/types/match"
 import { formatTime } from "@/lib/utils/time"
 import { calculateValueEdge } from "@/lib/utils/value-bet"
 import { confTier } from "@/lib/utils/match-status"
-import { Badge } from "@/components/primitives/Badge"
 import { FormGuide } from "@/components/primitives/FormGuide"
 import { FavoritesSwitcher } from "./FavoritesSwitcher"
 import type { MatchChange } from "@/types/alerts"
 import { CHANGE_ICONS } from "@/lib/utils/match-changes"
 
-// Deterministic color from team name — cycles through 8 distinct hues
+// ── Team circle ────────────────────────────────────────────────────────────────
+
 const TEAM_COLORS = [
-  "#3b82f6", // blue
-  "#f59e0b", // amber
-  "#10b981", // emerald
-  "#ef4444", // red
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#f97316", // orange
+  "#3b82f6", "#f59e0b", "#10b981", "#ef4444",
+  "#8b5cf6", "#ec4899", "#06b6d4", "#f97316",
 ]
 
 function teamColor(name: string): string {
@@ -31,28 +25,20 @@ function teamColor(name: string): string {
   return TEAM_COLORS[hash % TEAM_COLORS.length]
 }
 
-function TeamCircle({ name }: { name: string }) {
-  const initials = name
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
+function TeamCircle({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
+  const initials = name.split(/\s+/).map((w) => w[0] ?? "").slice(0, 2).join("").toUpperCase()
   const color = teamColor(name)
   return (
-    <span className="cc-team-circle" style={{ "--tc": color } as React.CSSProperties}>
+    <span
+      className={cn("cc-team-circle", size === "sm" && "cc-team-circle--sm")}
+      style={{ "--tc": color } as React.CSSProperties}
+    >
       {initials}
     </span>
   )
 }
 
-interface MatchCardProps {
-  match: Match
-  selected?: boolean
-  onSelect?: (match: Match) => void
-  latestChange?: MatchChange
-  compact?: boolean
-}
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function shortAdvice(advice: string): string {
   const a = advice.toLowerCase()
@@ -64,68 +50,74 @@ function shortAdvice(advice: string): string {
   return advice.split(" ").slice(0, 2).join(" ")
 }
 
-function pct(val: number | undefined) {
-  if (val == null) return null
-  return `${Math.round(val * 100)}%`
+// ── Props ──────────────────────────────────────────────────────────────────────
+
+interface MatchCardProps {
+  match: Match
+  selected?: boolean
+  onSelect?: (match: Match) => void
+  latestChange?: MatchChange
+  compact?: boolean
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export function MatchCard({ match, selected, onSelect, latestChange, compact }: MatchCardProps) {
-  const isLive = match.status === "LIVE"
+  const isLive     = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
   const isUpcoming = match.status === "UPCOMING"
-  const conf = match.prediction.confidence
-  const tier = confTier(conf)
-  const hasForm = Boolean(match.home.form || match.away.form)
-  const hasPrediction = match.prediction.advice && match.prediction.advice !== "No prediction available"
-  const showFooter = !compact || hasForm || hasPrediction
+  const conf       = match.prediction.confidence
+  const tier       = confTier(conf)
+  const hasPrediction = Boolean(
+    match.prediction.advice && match.prediction.advice !== "No prediction available"
+  )
 
-  const valueEdge = useMemo(() => calculateValueEdge(match), [match])
-  const isValue = valueEdge?.isValue === true
+  const valueEdge  = useMemo(() => calculateValueEdge(match), [match])
+  const isValue    = valueEdge?.isValue === true
   const isHighConf = conf >= 72 && !isValue
 
-  // Win-probability row for upcoming matches
-  const probs = match.prediction.modelProbs
+  const showFooter = isValue || isHighConf || hasPrediction
+
   const homeScore = isLive || isFinished ? match.score.home : null
   const awayScore = isLive || isFinished ? match.score.away : null
+  const homeWon   = isFinished && homeScore != null && awayScore != null && homeScore > awayScore
+  const awayWon   = isFinished && homeScore != null && awayScore != null && awayScore > homeScore
 
-  // Determine winner for score coloring
-  const homeWon = isFinished && homeScore != null && awayScore != null && homeScore > awayScore
-  const awayWon = isFinished && homeScore != null && awayScore != null && awayScore > homeScore
+  // Win-probability bar data (upcoming only)
+  const probs = isUpcoming && !compact ? match.prediction.modelProbs : null
+
+  const timeLabel = isLive
+    ? `${match.minute ?? 0}′`
+    : isFinished
+      ? "FT"
+      : formatTime(match.kickoffISO)
 
   return (
     <article
       className={cn(
-        "cc-match-card",
-        compact && "cc-match-card--compact",
-        selected && "cc-match-card--selected",
-        isValue && "cc-match-card--value",
-        isLive && "cc-match-card--live",
+        "cc-card",
+        compact      && "cc-card--compact",
+        selected     && "cc-card--selected",
+        isValue      && "cc-card--value",
+        isLive       && "cc-card--live",
+        isFinished   && "cc-card--finished",
       )}
       onClick={() => onSelect?.(match)}
       role="button"
       tabIndex={0}
       aria-label={`${match.home.name} vs ${match.away.name}`}
     >
-      {/* Full-card link overlay — always active for navigation */}
-      <Link href={`/match/${match.id}`} className="cc-match-card-link" aria-hidden tabIndex={-1} />
+      {/* Full-card link — always navigates to match detail */}
+      <Link href={`/match/${match.id}`} className="cc-card-link" aria-hidden tabIndex={-1} />
 
-      {/* Row 1: status badge · league · signal pills · favorite */}
-      <div className="cc-match-meta">
-        <Badge tone={isLive ? "live" : isFinished ? "finished" : "upcoming"}>
-          {isLive ? `${match.minute ?? 0}'` : isFinished ? "FT" : formatTime(match.kickoffISO)}
-        </Badge>
-        <span className="cc-match-league">{match.league}</span>
-        <div className="cc-signal-pills">
-          {isValue && (
-            <span className="cc-signal-pill cc-signal-pill--value">
-              ▲ VALUE +{(valueEdge!.edge * 100).toFixed(0)}%
-            </span>
-          )}
-          {isHighConf && (
-            <span className="cc-signal-pill cc-signal-pill--conf">
-              ✦ {Math.round(conf)}%
-            </span>
-          )}
+      {/* ── Header: league • time ──────────────────── heart ── */}
+      <div className="cc-card-header">
+        <div className="cc-card-header-left">
+          <span className="cc-card-league">{match.league}</span>
+          <span className="cc-card-sep" aria-hidden>•</span>
+          <span className={cn("cc-card-time", isLive && "cc-card-time--live")}>
+            {timeLabel}
+          </span>
         </div>
         <FavoritesSwitcher
           type="match"
@@ -135,69 +127,83 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
         />
       </div>
 
-      {/* Row 2: teams + scores */}
-      <div className="cc-match-body">
-        <div className="cc-match-team-row">
-          <TeamCircle name={match.home.name} />
-          <span className="cc-match-team-name">{match.home.name}</span>
-          {homeScore != null && (
-            <span className={cn(
-              "cc-match-team-score",
-              isLive && "cc-match-team-score--live",
-              homeWon && "cc-match-team-score--winner",
-            )}>
-              {homeScore}
-            </span>
+      {/* ── Teams: circle · name · form · score ──── */}
+      <div className="cc-card-body">
+
+        {/* Home row */}
+        <div className="cc-card-team">
+          <TeamCircle name={match.home.name} size={compact ? "sm" : "md"} />
+          <span className="cc-card-team-name">{match.home.name}</span>
+          {match.home.form && (
+            <FormGuide form={match.home.form} className="cc-card-form" />
           )}
+          <span className={cn(
+            "cc-card-score",
+            homeScore == null && "cc-card-score--empty",
+            isLive    && "cc-card-score--live",
+            homeWon   && "cc-card-score--winner",
+          )}>
+            {homeScore ?? ""}
+          </span>
         </div>
-        <div className="cc-match-team-divider" aria-hidden />
-        <div className="cc-match-team-row">
-          <TeamCircle name={match.away.name} />
-          <span className="cc-match-team-name">{match.away.name}</span>
-          {awayScore != null && (
-            <span className={cn(
-              "cc-match-team-score",
-              isLive && "cc-match-team-score--live",
-              awayWon && "cc-match-team-score--winner",
-            )}>
-              {awayScore}
-            </span>
+
+        {/* Away row */}
+        <div className="cc-card-team">
+          <TeamCircle name={match.away.name} size={compact ? "sm" : "md"} />
+          <span className="cc-card-team-name">{match.away.name}</span>
+          {match.away.form && (
+            <FormGuide form={match.away.form} className="cc-card-form" />
           )}
+          <span className={cn(
+            "cc-card-score",
+            awayScore == null && "cc-card-score--empty",
+            isLive    && "cc-card-score--live",
+            awayWon   && "cc-card-score--winner",
+          )}>
+            {awayScore ?? ""}
+          </span>
         </div>
       </div>
 
-      {/* Win probability bar for upcoming matches */}
-      {isUpcoming && probs && !compact && (
-        <div className="cc-prob-row">
-          <span className="cc-prob-label">{pct(probs.home)}</span>
-          <div className="cc-prob-bar">
-            <div className="cc-prob-bar-home" style={{ width: `${probs.home * 100}%` }} />
-            <div className="cc-prob-bar-draw" style={{ width: `${probs.draw * 100}%` }} />
-            <div className="cc-prob-bar-away" style={{ width: `${probs.away * 100}%` }} />
+      {/* ── Win-probability bar (upcoming, non-compact) ── */}
+      {probs && (
+        <div className="cc-card-prob">
+          <span className="cc-card-prob-label">{Math.round(probs.home * 100)}%</span>
+          <div className="cc-card-prob-track">
+            <div className="cc-card-prob-home" style={{ width: `${probs.home * 100}%` }} />
+            <div className="cc-card-prob-draw" style={{ width: `${probs.draw * 100}%` }} />
+            <div className="cc-card-prob-away" style={{ width: `${probs.away * 100}%` }} />
           </div>
-          <span className="cc-prob-label cc-prob-label--right">{pct(probs.away)}</span>
+          <span className="cc-card-prob-label cc-card-prob-label--r">
+            {Math.round(probs.away * 100)}%
+          </span>
         </div>
       )}
 
-      {/* Row 3: form guides + prediction advice */}
+      {/* ── Footer: pills (left) · advice (right) ── */}
       {showFooter && (
-        <div className="cc-match-footer">
-          {hasForm && (
-            <div className="cc-match-forms">
-              <FormGuide form={match.home.form} />
-              <span className="cc-match-forms-sep">vs</span>
-              <FormGuide form={match.away.form} />
-            </div>
-          )}
+        <div className="cc-card-footer">
+          <div className="cc-card-pills">
+            {isValue && (
+              <span className="cc-card-pill cc-card-pill--value">
+                ▲ VALUE +{(valueEdge!.edge * 100).toFixed(0)}%
+              </span>
+            )}
+            {isHighConf && (
+              <span className="cc-card-pill cc-card-pill--conf">
+                ✦ {Math.round(conf)}%
+              </span>
+            )}
+          </div>
           {hasPrediction && (
-            <div className={cn("cc-conf-tag", `cc-conf-tag--${tier}`)}>
+            <span className={cn("cc-card-advice", `cc-card-advice--${tier}`)}>
               {shortAdvice(match.prediction.advice)}
-            </div>
+            </span>
           )}
         </div>
       )}
 
-      {/* Change alert strip */}
+      {/* ── Change alert strip ── */}
       {latestChange && (
         <div className={cn("cc-change-strip", `cc-change-strip--${latestChange.severity}`)}>
           <span className="cc-change-strip-icon" aria-hidden>
