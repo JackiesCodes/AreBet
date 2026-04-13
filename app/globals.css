@@ -1977,15 +1977,81 @@ svg {
 .cc-match-team-score {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 18px;
   color: var(--text);
-  min-width: 16px;
+  min-width: 22px;
   text-align: right;
   flex-shrink: 0;
 }
 
 .cc-match-team-score--live {
   color: var(--live);
+}
+
+.cc-match-team-score--winner {
+  color: var(--positive);
+}
+
+/* Thin separator between home and away rows */
+.cc-match-team-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0 2px 34px; /* indent past the team circle */
+  opacity: 0.5;
+}
+
+.cc-match-card--compact .cc-match-team-divider {
+  margin-left: 28px;
+}
+
+/* Win probability bar (upcoming matches) */
+.cc-prob-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.cc-prob-label {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted);
+  min-width: 28px;
+}
+
+.cc-prob-label--right {
+  text-align: right;
+}
+
+.cc-prob-bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  background: var(--surface-4);
+}
+
+.cc-prob-bar-home {
+  background: var(--primary);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.cc-prob-bar-draw {
+  background: var(--text-muted);
+  height: 100%;
+  opacity: 0.5;
+  transition: width 0.4s ease;
+}
+
+.cc-prob-bar-away {
+  background: #ef4444;
+  height: 100%;
+  opacity: 0.7;
+  transition: width 0.4s ease;
 }
 
 /* Row 3: form + advice tag */

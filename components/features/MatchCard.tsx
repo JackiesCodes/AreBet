@@ -54,7 +54,6 @@ interface MatchCardProps {
   compact?: boolean
 }
 
-// Map advice text to a short signal label shown on card
 function shortAdvice(advice: string): string {
   const a = advice.toLowerCase()
   if (a.includes("home")) return "Home Win"
@@ -65,19 +64,33 @@ function shortAdvice(advice: string): string {
   return advice.split(" ").slice(0, 2).join(" ")
 }
 
+function pct(val: number | undefined) {
+  if (val == null) return null
+  return `${Math.round(val * 100)}%`
+}
+
 export function MatchCard({ match, selected, onSelect, latestChange, compact }: MatchCardProps) {
   const isLive = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
+  const isUpcoming = match.status === "UPCOMING"
   const conf = match.prediction.confidence
   const tier = confTier(conf)
   const hasForm = Boolean(match.home.form || match.away.form)
   const hasPrediction = match.prediction.advice && match.prediction.advice !== "No prediction available"
-  // In compact mode, skip the footer row entirely when there's nothing to show
   const showFooter = !compact || hasForm || hasPrediction
 
   const valueEdge = useMemo(() => calculateValueEdge(match), [match])
   const isValue = valueEdge?.isValue === true
   const isHighConf = conf >= 72 && !isValue
+
+  // Win-probability row for upcoming matches
+  const probs = match.prediction.modelProbs
+  const homeScore = isLive || isFinished ? match.score.home : null
+  const awayScore = isLive || isFinished ? match.score.away : null
+
+  // Determine winner for score coloring
+  const homeWon = isFinished && homeScore != null && awayScore != null && homeScore > awayScore
+  const awayWon = isFinished && homeScore != null && awayScore != null && awayScore > homeScore
 
   return (
     <article
@@ -93,11 +106,10 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
       tabIndex={0}
       aria-label={`${match.home.name} vs ${match.away.name}`}
     >
-      {/* Navigate to match detail on click when no onSelect */}
-      {!onSelect && (
-        <Link href={`/match/${match.id}`} className="cc-match-card-link" aria-hidden tabIndex={-1} />
-      )}
-      {/* Row 1: status + league + signal pills */}
+      {/* Full-card link overlay — always active for navigation */}
+      <Link href={`/match/${match.id}`} className="cc-match-card-link" aria-hidden tabIndex={-1} />
+
+      {/* Row 1: status badge · league · signal pills · favorite */}
       <div className="cc-match-meta">
         <Badge tone={isLive ? "live" : isFinished ? "finished" : "upcoming"}>
           {isLive ? `${match.minute ?? 0}'` : isFinished ? "FT" : formatTime(match.kickoffISO)}
@@ -128,24 +140,46 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
         <div className="cc-match-team-row">
           <TeamCircle name={match.home.name} />
           <span className="cc-match-team-name">{match.home.name}</span>
-          {(isLive || isFinished) && (
-            <span className={cn("cc-match-team-score", isLive && "cc-match-team-score--live")}>
-              {match.score.home}
+          {homeScore != null && (
+            <span className={cn(
+              "cc-match-team-score",
+              isLive && "cc-match-team-score--live",
+              homeWon && "cc-match-team-score--winner",
+            )}>
+              {homeScore}
             </span>
           )}
         </div>
+        <div className="cc-match-team-divider" aria-hidden />
         <div className="cc-match-team-row">
           <TeamCircle name={match.away.name} />
           <span className="cc-match-team-name">{match.away.name}</span>
-          {(isLive || isFinished) && (
-            <span className={cn("cc-match-team-score", isLive && "cc-match-team-score--live")}>
-              {match.score.away}
+          {awayScore != null && (
+            <span className={cn(
+              "cc-match-team-score",
+              isLive && "cc-match-team-score--live",
+              awayWon && "cc-match-team-score--winner",
+            )}>
+              {awayScore}
             </span>
           )}
         </div>
       </div>
 
-      {/* Row 3: form guides + prediction advice — omitted in compact mode when empty */}
+      {/* Win probability bar for upcoming matches */}
+      {isUpcoming && probs && !compact && (
+        <div className="cc-prob-row">
+          <span className="cc-prob-label">{pct(probs.home)}</span>
+          <div className="cc-prob-bar">
+            <div className="cc-prob-bar-home" style={{ width: `${probs.home * 100}%` }} />
+            <div className="cc-prob-bar-draw" style={{ width: `${probs.draw * 100}%` }} />
+            <div className="cc-prob-bar-away" style={{ width: `${probs.away * 100}%` }} />
+          </div>
+          <span className="cc-prob-label cc-prob-label--right">{pct(probs.away)}</span>
+        </div>
+      )}
+
+      {/* Row 3: form guides + prediction advice */}
       {showFooter && (
         <div className="cc-match-footer">
           {hasForm && (
@@ -163,7 +197,7 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
         </div>
       )}
 
-      {/* Row 4: change alert strip — only when there's a new unread change */}
+      {/* Change alert strip */}
       {latestChange && (
         <div className={cn("cc-change-strip", `cc-change-strip--${latestChange.severity}`)}>
           <span className="cc-change-strip-icon" aria-hidden>
