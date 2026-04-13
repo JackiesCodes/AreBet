@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
-import { useMatchFeed } from "@/hooks/useMatchFeed"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import type { SignalStatus } from "@/app/api/signals/status/route"
 import type { RateLimitStatus } from "@/app/api/rate-limit/route"
@@ -175,9 +175,7 @@ function BackfillPanel({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const { matches, loading: feedLoading, error: feedError, fetchedAt } = useMatchFeed({
-    pollIntervalMs: 30_000,
-  })
+  const { matches, loading: feedLoading, error: feedError, fetchedAt } = useMatchIntelligence()
 
   const [signalStatus, setSignalStatus] = useState<SignalStatus | null>(null)
   const [statusLoading, setStatusLoading] = useState(true)

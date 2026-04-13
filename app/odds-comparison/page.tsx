@@ -1,13 +1,13 @@
 "use client"
 
-import { useMatchFeed } from "@/hooks/useMatchFeed"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { OddsComparison } from "@/components/analytics/OddsComparison"
 import { PageHeader } from "@/components/layout/PageHeader"
 
 export default function OddsComparisonPage() {
-  const { matches, loading } = useMatchFeed({ pollIntervalMs: 30_000 })
+  const { matches, loading } = useMatchIntelligence()
   const upcoming = matches.filter((m) => m.status !== "FINISHED").slice(0, 6)
 
   return (

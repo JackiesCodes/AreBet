@@ -1,6 +1,6 @@
 "use client"
 
-import { useMatchFeed } from "@/hooks/useMatchFeed"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
@@ -9,7 +9,7 @@ import { useMemo } from "react"
 import { FormGuide } from "@/components/primitives/FormGuide"
 
 export default function TeamsPage() {
-  const { matches, loading } = useMatchFeed()
+  const { matches, loading } = useMatchIntelligence()
 
   const teams = useMemo(() => {
     const map = new Map<string, { name: string; league: string; form: string }>()

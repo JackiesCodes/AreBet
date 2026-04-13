@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardTitle, CardSubtitle } from "@/components/primitives/Card"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
-import { useMatchFeed } from "@/hooks/useMatchFeed"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import type { ApiPlayerStat } from "@/lib/api-football/types"
 
 // ── League map ────────────────────────────────────────────────────────────────
@@ -130,11 +130,11 @@ interface TeamFormEntry {
 }
 
 function formScore(form: string): number {
-  return form.split("").reduce((acc, c) => acc + (c === "W" ? 3 : c === "D" ? 1 : 0), 0)
+  return form.split("").reduce((acc: number, c: string) => acc + (c === "W" ? 3 : c === "D" ? 1 : 0), 0)
 }
 
 function FormLeadersSection() {
-  const { matches, loading } = useMatchFeed()
+  const { matches, loading } = useMatchIntelligence()
 
   const leaders: TeamFormEntry[] = (() => {
     const map = new Map<string, TeamFormEntry>()
@@ -231,7 +231,7 @@ interface InjuryEntry {
 }
 
 function InjuryWatchSection() {
-  const { matches } = useMatchFeed()
+  const { matches } = useMatchIntelligence()
   const [injuries, setInjuries] = useState<InjuryEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [fetched, setFetched] = useState(false)
