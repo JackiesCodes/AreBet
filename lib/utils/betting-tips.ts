@@ -15,7 +15,7 @@
  */
 
 import type { Match } from "@/types/match"
-import { VALUE_THRESHOLD } from "./value-bet"
+import { VALUE_THRESHOLD, inferModelProbs } from "./value-bet"
 
 // ── Poisson helpers ───────────────────────────────────────────────────────────
 
@@ -130,7 +130,8 @@ export function generateMatchTips(match: Match): MatchTips {
   const lTotal = lH + lA
 
   // ── 1. Match Result ───────────────────────────────────────────────────────
-  const mp = prediction.modelProbs
+  // Use stored modelProbs from prediction API, or infer from confidence + advice
+  const mp = prediction.modelProbs ?? inferModelProbs(prediction.confidence, prediction.advice)
   if (mp) {
     tips.push(tip(
       "result-home", "Match Result", `${home.name} to Win`,

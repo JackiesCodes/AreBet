@@ -70,16 +70,6 @@ async function apiFetch<T>(path: string, ttlMs: number): Promise<T[]> {
   return json.response
 }
 
-function todayStr(): string {
-  return new Date().toISOString().split("T")[0]
-}
-
-function tomorrowStr(): string {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split("T")[0]
-}
-
 // European season: season=2025 means 2025/26. For April 2026, use currentYear - 1.
 export function currentSeason(): number {
   return new Date().getFullYear() - 1
@@ -90,20 +80,32 @@ export const TOP_LEAGUES = [39, 140, 135, 78, 61] // PL, La Liga, Serie A, Bunde
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
+/**
+ * Fetch the match feed for all top 5 leagues.
+ * Uses next=10 + last=5 per league so we always have fixtures even on
+ * mid-week gaps between matchdays (previously used date=today/tomorrow which
+ * returned empty on days with no scheduled matches).
+ */
 export async function fetchFixturesFeed(): Promise<ApiFixture[]> {
-  const today = todayStr()
-  const tomorrow = tomorrowStr()
   const season = currentSeason()
 
   const requests = TOP_LEAGUES.flatMap((leagueId) => [
-    apiFetch<ApiFixture>(`/fixtures?league=${leagueId}&season=${season}&date=${today}`, FEED_TTL_MS),
-    apiFetch<ApiFixture>(`/fixtures?league=${leagueId}&season=${season}&date=${tomorrow}`, FEED_TTL_MS),
+    apiFetch<ApiFixture>(`/fixtures?league=${leagueId}&season=${season}&next=10`, FEED_TTL_MS),
+    apiFetch<ApiFixture>(`/fixtures?league=${leagueId}&season=${season}&last=5`, FEED_TTL_MS),
   ])
 
   const results = await Promise.allSettled(requests)
+  // Deduplicate by fixture id — next + last may overlap on matchday
+  const seen = new Set<number>()
   const fixtures: ApiFixture[] = []
   for (const result of results) {
-    if (result.status === "fulfilled") fixtures.push(...result.value)
+    if (result.status !== "fulfilled") continue
+    for (const f of result.value) {
+      if (!seen.has(f.fixture.id)) {
+        seen.add(f.fixture.id)
+        fixtures.push(f)
+      }
+    }
   }
   return fixtures
 }
