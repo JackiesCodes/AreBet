@@ -5234,3 +5234,412 @@ svg {
     padding-right: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BETTING TIPS — shared primitives
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Probability bar */
+.tip-prob-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: var(--surface-3, var(--surface-2));
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 60px;
+}
+.tip-prob-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* Confidence badge */
+.tip-conf-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tip-conf--high { background: rgba(16,185,129,0.15); color: var(--positive); }
+.tip-conf--mid  { background: rgba(245,158,11,0.15);  color: var(--warning); }
+.tip-conf--low  { background: rgba(99,102,241,0.10);  color: var(--text-muted); }
+
+/* Value dot (inline) */
+.tip-value-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--positive);
+  flex-shrink: 0;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Live indicator */
+.tip-live-dot {
+  color: var(--negative);
+  font-weight: 600;
+  font-size: 10px;
+}
+
+/* ── Predictions page ────────────────────────────────────────────────────── */
+
+/* Value banner at top of predictions page */
+.tip-value-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.tip-value-banner-icon {
+  color: var(--positive);
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.tip-value-banner > button {
+  margin-left: auto;
+}
+
+/* Category tab strip */
+.tip-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.tip-cat-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tip-cat-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.tip-cat-tab:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+.tip-cat-tab--active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.tip-cat-tab-label {
+  display: none;
+}
+@media (min-width: 480px) {
+  .tip-cat-tab-label { display: inline; }
+}
+
+.tip-conf-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tip-conf-filter-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+/* Tip card grid */
+.tip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 12px;
+}
+
+/* Individual tip card */
+.tip-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  transition: box-shadow 0.15s;
+}
+.tip-card:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.tip-card--value {
+  border-color: rgba(16,185,129,0.35);
+  background: linear-gradient(135deg, var(--surface-1) 85%, rgba(16,185,129,0.06));
+}
+
+/* Value badge top-right */
+.tip-value-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--positive);
+  background: rgba(16,185,129,0.12);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* Match label */
+.tip-match-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tip-match-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.tip-match-link:hover { text-decoration: underline; }
+.tip-match-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Market + selection */
+.tip-market {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.tip-selection {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Prob row */
+.tip-prob-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Footer */
+.tip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+.tip-rationale {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  flex: 1;
+}
+.tip-odds {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  flex-shrink: 0;
+  background: rgba(99,102,241,0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* ── Match detail tips tab ────────────────────────────────────────────────── */
+
+.match-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Value summary strip */
+.match-tips-value-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.match-tips-value-strip-icon {
+  color: var(--positive);
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Category tabs */
+.match-tips-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.match-tips-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  position: relative;
+  white-space: nowrap;
+}
+.match-tips-tab:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+.match-tips-tab--active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+/* Value dot on tab */
+.match-tips-tab-value-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--positive);
+  flex-shrink: 0;
+}
+.match-tips-tab--active .match-tips-tab-value-dot {
+  background: rgba(255,255,255,0.9);
+}
+
+/* Tips list */
+.match-tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Individual tip row */
+.match-tip-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.match-tip-row--value {
+  border-color: rgba(16,185,129,0.3);
+  background: linear-gradient(135deg, var(--surface-2) 80%, rgba(16,185,129,0.07));
+}
+
+.match-tip-row-main {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.match-tip-selection {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.match-tip-prob {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 110px;
+}
+
+.match-tip-odds {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(99,102,241,0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  min-width: 48px;
+  text-align: center;
+}
+.match-tip-odds--value {
+  color: var(--positive);
+  background: rgba(16,185,129,0.12);
+}
+.match-tip-odds--na {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.match-tip-rationale {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.match-tip-edge {
+  font-size: 11px;
+  color: var(--positive);
+}
+
+/* Disclaimer */
+.match-tips-disclaimer {
+  margin-top: 20px;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+/* ── Mobile overrides ────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .tip-grid {
+    grid-template-columns: 1fr;
+  }
+  .match-tip-row-main {
+    grid-template-columns: 1fr auto;
+  }
+  .match-tip-prob {
+    display: none;
+  }
+  .tip-value-banner {
+    font-size: 12px;
+  }
+}

@@ -6,21 +6,22 @@ import { cn } from "@/lib/utils/cn"
 import { MatchStatBar } from "@/components/primitives/MatchStatBar"
 import { Sparkline } from "@/components/primitives/Sparkline"
 import { useFormatOdds } from "@/hooks/useFormatOdds"
+import { MatchTips } from "@/components/features/MatchTips"
 
-type Tab = "overview" | "stats" | "timeline" | "h2h" | "odds"
+type Tab = "tips" | "overview" | "stats" | "timeline" | "h2h" | "odds"
 
 interface MatchDetailTabsProps {
   match: Match
 }
 
 export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
-  const [tab, setTab] = useState<Tab>("overview")
+  const [tab, setTab] = useState<Tab>("tips")
   const fmt = useFormatOdds()
 
   return (
     <div>
       <div className="md-tabs" role="tablist">
-        {(["overview", "stats", "timeline", "h2h", "odds"] as const).map((t) => (
+        {(["tips", "overview", "stats", "timeline", "h2h", "odds"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -32,6 +33,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
         ))}
       </div>
       <div style={{ padding: "var(--space-5) 0" }}>
+        {tab === "tips" && <MatchTips match={match} />}
         {tab === "overview" && (
           <div>
             <h3 className="md-card-title">{match.prediction.advice}</h3>

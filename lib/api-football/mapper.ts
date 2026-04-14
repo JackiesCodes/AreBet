@@ -91,6 +91,12 @@ function mapStats(statistics: ApiTeamStatistics[], homeTeamId: number): MatchSta
   }
 }
 
+function parseOdd(val: string | undefined): number {
+  if (!val) return 0
+  const n = parseFloat(val)
+  return isNaN(n) || n <= 1 ? 0 : n
+}
+
 function mapOdds(oddsFixture: ApiOddsFixture): {
   odds: MatchOdds
   bookmakerOdds: BookmakerOdds[]
@@ -107,27 +113,54 @@ function mapOdds(oddsFixture: ApiOddsFixture): {
     const matchWinner = bm.bets.find((b) => b.name === "Match Winner")
     if (!matchWinner) continue
 
-    const home = parseFloat(matchWinner.values.find((v) => v.value === "Home")?.odd ?? "0")
-    const draw = parseFloat(matchWinner.values.find((v) => v.value === "Draw")?.odd ?? "0")
-    const away = parseFloat(matchWinner.values.find((v) => v.value === "Away")?.odd ?? "0")
+    const home = parseOdd(matchWinner.values.find((v) => v.value === "Home")?.odd)
+    const draw = parseOdd(matchWinner.values.find((v) => v.value === "Draw")?.odd)
+    const away = parseOdd(matchWinner.values.find((v) => v.value === "Away")?.odd)
 
     bookmakerOdds.push({ bookmaker: bm.name, home, draw, away })
   }
 
-  // Use first bookmaker as primary odds
+  // Use first bookmaker for all extended markets
   const primary = bookmakerOdds[0]
-  let over25 = 0
-  let btts = 0
-
   const firstBm = oddsFixture.bookmakers[0]
-  if (firstBm) {
-    const goals = firstBm.bets.find((b) => b.name === "Goals Over/Under")
-    const over25Val = goals?.values.find((v) => v.value === "Over 2.5")
-    if (over25Val) over25 = parseFloat(over25Val.odd)
 
+  let over25 = 0, btts = 0
+  let over15 = 0, over35 = 0, under25 = 0, under35 = 0, bttsNo = 0
+  let dcHomeOrDraw = 0, dcDrawOrAway = 0, dcHomeOrAway = 0
+  let handicapHome = 0, handicapAway = 0
+
+  if (firstBm) {
+    // Goals Over/Under
+    const goals = firstBm.bets.find((b) => b.name === "Goals Over/Under")
+    if (goals) {
+      over15 = parseOdd(goals.values.find((v) => v.value === "Over 1.5")?.odd)
+      over25 = parseOdd(goals.values.find((v) => v.value === "Over 2.5")?.odd)
+      over35 = parseOdd(goals.values.find((v) => v.value === "Over 3.5")?.odd)
+      under25 = parseOdd(goals.values.find((v) => v.value === "Under 2.5")?.odd)
+      under35 = parseOdd(goals.values.find((v) => v.value === "Under 3.5")?.odd)
+    }
+
+    // Both Teams Score
     const bttsMarket = firstBm.bets.find((b) => b.name === "Both Teams Score")
-    const bttsYes = bttsMarket?.values.find((v) => v.value === "Yes")
-    if (bttsYes) btts = parseFloat(bttsYes.odd)
+    if (bttsMarket) {
+      btts = parseOdd(bttsMarket.values.find((v) => v.value === "Yes")?.odd)
+      bttsNo = parseOdd(bttsMarket.values.find((v) => v.value === "No")?.odd)
+    }
+
+    // Double Chance
+    const dcMarket = firstBm.bets.find((b) => b.name === "Double Chance")
+    if (dcMarket) {
+      dcHomeOrDraw = parseOdd(dcMarket.values.find((v) => v.value === "Home/Draw")?.odd)
+      dcDrawOrAway = parseOdd(dcMarket.values.find((v) => v.value === "Draw/Away")?.odd)
+      dcHomeOrAway = parseOdd(dcMarket.values.find((v) => v.value === "Home/Away")?.odd)
+    }
+
+    // Asian Handicap — look for Home -1 and Away +1
+    const ahMarket = firstBm.bets.find((b) => b.name === "Asian Handicap")
+    if (ahMarket) {
+      handicapHome = parseOdd(ahMarket.values.find((v) => v.value === "Home -1")?.odd)
+      handicapAway = parseOdd(ahMarket.values.find((v) => v.value === "Away +1")?.odd)
+    }
   }
 
   const odds: MatchOdds = {
@@ -136,6 +169,16 @@ function mapOdds(oddsFixture: ApiOddsFixture): {
     away: primary?.away ?? 0,
     over25,
     btts,
+    over15: over15 || undefined,
+    over35: over35 || undefined,
+    under25: under25 || undefined,
+    under35: under35 || undefined,
+    bttsNo: bttsNo || undefined,
+    dcHomeOrDraw: dcHomeOrDraw || undefined,
+    dcDrawOrAway: dcDrawOrAway || undefined,
+    dcHomeOrAway: dcHomeOrAway || undefined,
+    handicapHome: handicapHome || undefined,
+    handicapAway: handicapAway || undefined,
   }
 
   // Generate a minimal market history snapshot (API doesn't provide history on free tier)

@@ -1,5 +1,57 @@
-import type { BookmakerOdds, MarketHistoryPoint, Match } from "@/types/match"
+import type { BookmakerOdds, MarketHistoryPoint, Match, MatchOdds } from "@/types/match"
 import { hashString, seededRandom } from "@/lib/utils/seeded-random"
+
+/** Build all odds markets for demo matches using seeded random + xG estimates */
+export function buildExtendedOdds(
+  seed: string,
+  base: { home: number; draw: number; away: number },
+  lH: number,
+  lA: number,
+): MatchOdds {
+  const rand = seededRandom(hashString(seed + "odds"))
+  const lTotal = lH + lA
+  // Slight jitter so each match feels distinct
+  const jitter = () => 0.97 + rand() * 0.06
+
+  // Over/Under — derived from combined xG
+  const over15Base = lTotal > 2.5 ? 1.25 : lTotal > 2.0 ? 1.40 : 1.55
+  const over25Base = lTotal > 2.5 ? 1.72 : lTotal > 2.0 ? 1.90 : 2.10
+  const over35Base = lTotal > 2.5 ? 2.80 : lTotal > 2.0 ? 3.20 : 3.80
+
+  // BTTS — both keepers busy if lH > 0.9 and lA > 0.9
+  const bttsBase = (lH > 0.9 && lA > 0.9) ? 1.75 : 2.10
+  const bttsNoBase = roundOdd(1 / (1 - 1 / bttsBase) * 0.93)
+
+  // Double chance — derived from 1X2
+  const invH = 1 / base.home, invD = 1 / base.draw, invA = 1 / base.away
+  const totalInv = invH + invD + invA
+  const pH = invH / totalInv, pD = invD / totalInv, pA = invA / totalInv
+  const dc1X  = roundOdd(1 / (pH + pD) * 1.03)
+  const dcX2  = roundOdd(1 / (pD + pA) * 1.03)
+  const dc12  = roundOdd(1 / (pH + pA) * 1.03)
+
+  // Asian handicap — home favourite gets -1, away gets +1
+  const hcHome = roundOdd((base.home * 1.6) * jitter())
+  const hcAway = roundOdd((base.away * 0.75) * jitter())
+
+  return {
+    home: base.home,
+    draw: base.draw,
+    away: base.away,
+    over25: roundOdd(over25Base * jitter()),
+    btts: roundOdd(bttsBase * jitter()),
+    over15: roundOdd(over15Base * jitter()),
+    over35: roundOdd(over35Base * jitter()),
+    under25: roundOdd((1 / (1 - 1 / over25Base) * 0.94) * jitter()),
+    under35: roundOdd((1 / (1 - 1 / over35Base) * 0.94) * jitter()),
+    bttsNo: bttsNoBase,
+    dcHomeOrDraw: dc1X,
+    dcDrawOrAway: dcX2,
+    dcHomeOrAway: dc12,
+    handicapHome: hcHome,
+    handicapAway: hcAway,
+  }
+}
 
 const BOOKMAKERS = ["Bet365", "PaddyPower", "William Hill", "Pinnacle", "Betfair"]
 
@@ -84,11 +136,7 @@ export function buildMatch(input: Partial<Match> & {
     home: { name: input.homeName, short: input.homeShort, form: input.homeForm ?? "WWLDW" },
     away: { name: input.awayName, short: input.awayShort, form: input.awayForm ?? "DLWWD" },
     score: input.score ?? { home: 0, away: 0 },
-    odds: {
-      ...input.baseOdds,
-      over25: roundOdd(1.65 + (Math.abs(input.baseOdds.home - input.baseOdds.away) * 0.05)),
-      btts: roundOdd(1.75 + (Math.abs(input.baseOdds.home - input.baseOdds.away) * 0.04)),
-    },
+    odds: buildExtendedOdds(seed, input.baseOdds, expGoalsH, expGoalsA),
     marketHistory: buildMarketHistory(seed, input.baseOdds),
     bookmakerOdds: buildBookmakerOdds(seed, input.baseOdds),
     prediction: {

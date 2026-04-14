@@ -19,6 +19,17 @@ export interface MatchOdds {
   away: number
   over25: number
   btts: number
+  // Extended markets (0 = not available)
+  over15?: number
+  over35?: number
+  under25?: number
+  under35?: number
+  bttsNo?: number
+  dcHomeOrDraw?: number   // Double chance 1X
+  dcDrawOrAway?: number   // Double chance X2
+  dcHomeOrAway?: number   // Double chance 12
+  handicapHome?: number   // Asian handicap Home -1
+  handicapAway?: number   // Asian handicap Away +1
 }
 
 export interface MarketHistoryPoint {
