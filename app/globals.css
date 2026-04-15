@@ -4460,6 +4460,15 @@ svg {
   text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sidebar-section-count {
+  font-weight: 500;
+  color: var(--primary);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 /* League rows */
@@ -4497,6 +4506,52 @@ svg {
   font-weight: 600;
   color: var(--color-live, #ef4444);
   white-space: nowrap;
+}
+
+.sidebar-league-country {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.sidebar-league-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sidebar-league-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 14px;
+  text-align: right;
+}
+
+/* League search input */
+.sidebar-league-search {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12px;
+  margin-bottom: 6px;
+  outline: none;
+}
+.sidebar-league-search:focus {
+  border-color: var(--primary);
+}
+
+.sidebar-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  font-style: italic;
 }
 
 /* Toggle switch */

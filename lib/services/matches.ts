@@ -10,7 +10,6 @@ import {
   fetchInjuries,
   fetchHeadToHead,
   fetchAllStandings,
-  TOP_LEAGUES,
 } from "@/lib/api-football/client"
 import {
   mapFixtureToMatch,
@@ -75,11 +74,8 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     matchMap.set(f.fixture.id, mapFixtureToMatch(f))
   }
 
-  // Live fixtures override scheduled AND are filtered to top 5 leagues only
-  // (/fixtures?live=all returns every live match globally; we only want the leagues we cover)
-  const topLeagueSet = new Set(TOP_LEAGUES)
+  // Live fixtures override scheduled — include all leagues globally
   for (const f of live) {
-    if (!topLeagueSet.has(f.league.id)) continue
     rawFixtures.set(f.fixture.id, f)
     matchMap.set(f.fixture.id, mapFixtureToMatch(f))
   }

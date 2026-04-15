@@ -3,21 +3,12 @@
 import { createContext, useContext, useState, useMemo, type ReactNode } from "react"
 import type { Match } from "@/types/match"
 
-export const LEAGUE_IDS = [39, 140, 135, 78, 61]
-export const LEAGUE_NAMES: Record<number, string> = {
-  39: "Premier League",
-  140: "La Liga",
-  135: "Serie A",
-  78: "Bundesliga",
-  61: "Ligue 1",
-}
-
 export type GlobalStatusFilter = "all" | "live" | "upcoming" | "finished"
 
 interface FilterCtx {
-  enabledLeagues: Set<number>   // empty = all leagues shown
+  enabledLeagues: Set<string>    // empty = all leagues shown; non-empty = only these leagues
   statusFilter: GlobalStatusFilter
-  toggleLeague: (id: number) => void
+  toggleLeague: (name: string) => void
   setStatusFilter: (s: GlobalStatusFilter) => void
   resetFilters: () => void
   activeFilterCount: number
@@ -27,16 +18,15 @@ interface FilterCtx {
 const Ctx = createContext<FilterCtx | null>(null)
 
 export function FilterProvider({ children }: { children: ReactNode }) {
-  const [enabledLeagues, setEnabledLeagues] = useState<Set<number>>(new Set())
+  const [enabledLeagues, setEnabledLeagues] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<GlobalStatusFilter>("all")
 
-  const toggleLeague = (id: number) => {
+  const toggleLeague = (name: string) => {
     setEnabledLeagues((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      // If all toggled on, reset to "all" (empty set)
-      return next.size === LEAGUE_IDS.length ? new Set() : next
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
     })
   }
 
@@ -53,8 +43,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const applyToMatches = (matches: Match[]): Match[] => {
     let list = matches
     if (enabledLeagues.size > 0) {
-      const names = new Set([...enabledLeagues].map((id) => LEAGUE_NAMES[id]).filter(Boolean))
-      list = list.filter((m) => names.has(m.league))
+      list = list.filter((m) => enabledLeagues.has(m.league))
     }
     if (statusFilter !== "all") {
       const s = statusFilter.toUpperCase() as "LIVE" | "UPCOMING" | "FINISHED"

@@ -75,30 +75,30 @@ export function currentSeason(): number {
   return new Date().getFullYear() - 1
 }
 
-// Top 5 European league IDs
+/**
+ * Top 5 European league IDs — kept for standings/form enrichment only.
+ * The fixture feed now uses global queries (all leagues).
+ */
 export const TOP_LEAGUES = [39, 140, 135, 78, 61] // PL, La Liga, Serie A, Bundesliga, Ligue 1
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 /**
- * Fetch the match feed for all top 5 leagues.
- * Uses next=10 + last=5 per league so we always have fixtures even on
- * mid-week gaps between matchdays (previously used date=today/tomorrow which
- * returned empty on days with no scheduled matches).
+ * Fetch the global match feed — all leagues, all continents.
+ * Uses next=100 (upcoming) + last=30 (recently finished) in a single pair
+ * of API calls. Deduplicates by fixture ID in case of overlap.
+ * This is more efficient (2 calls vs 10) AND covers every league globally.
  */
 export async function fetchFixturesFeed(): Promise<ApiFixture[]> {
-  const season = currentSeason()
-
-  const requests = TOP_LEAGUES.flatMap((leagueId) => [
-    apiFetch<ApiFixture>(`/fixtures?league=${leagueId}&season=${season}&next=10`, FEED_TTL_MS),
-    apiFetch<ApiFixture>(`/fixtures?league=${leagueId}&season=${season}&last=5`, FEED_TTL_MS),
+  const [nextResult, lastResult] = await Promise.allSettled([
+    apiFetch<ApiFixture>("/fixtures?next=100", FEED_TTL_MS),
+    apiFetch<ApiFixture>("/fixtures?last=30", FEED_TTL_MS),
   ])
 
-  const results = await Promise.allSettled(requests)
-  // Deduplicate by fixture id — next + last may overlap on matchday
   const seen = new Set<number>()
   const fixtures: ApiFixture[] = []
-  for (const result of results) {
+
+  for (const result of [nextResult, lastResult]) {
     if (result.status !== "fulfilled") continue
     for (const f of result.value) {
       if (!seen.has(f.fixture.id)) {

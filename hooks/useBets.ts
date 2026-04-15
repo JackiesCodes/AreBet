@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth/context"
 import { fetchUserBets, placeBet, calcBetSummary, calcDailyPerf, calcMarketEdge } from "@/lib/services/bets"
-import { DEMO_BETS } from "@/lib/demo/bets"
 import type { BetRecord } from "@/types/bet"
 import type { BetSlipItem } from "@/types/bet"
 
@@ -15,19 +14,17 @@ export function useBets() {
 
   const load = useCallback(async () => {
     if (!user) {
-      // Not signed in — show demo data
-      setBets(DEMO_BETS)
+      // Not signed in — show empty state; sign in to track bets
+      setBets([])
       setLoading(false)
       return
     }
     try {
       setLoading(true)
       const data = await fetchUserBets(user.id)
-      // If user has no bets yet, fall back to demo so the UI isn't empty
-      setBets(data.length > 0 ? data : DEMO_BETS)
+      setBets(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load bets")
-      setBets(DEMO_BETS)
     } finally {
       setLoading(false)
     }
@@ -52,11 +49,7 @@ export function useBets() {
         }),
       )
       const placed = await Promise.all(promises)
-      setBets((prev) => {
-        // Replace demo bets with real ones on first placement
-        const realPrev = prev === DEMO_BETS || prev.every((b) => !b.user_id) ? [] : prev
-        return [...placed, ...realPrev]
-      })
+      setBets((prev) => [...placed, ...prev])
     },
     [user],
   )
