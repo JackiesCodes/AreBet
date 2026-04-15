@@ -36,9 +36,14 @@ function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
 
   return (
     <div className={cn("tip-card", tip.isValue && "tip-card--value")}>
-      {tip.isValue && (
-        <span className="tip-value-badge">▲ VALUE +{(tip.edge * 100).toFixed(1)}%</span>
-      )}
+      <div className="tip-badge-row">
+        {tip.isValue && (
+          <span className="tip-value-badge">▲ VALUE +{(tip.edge * 100).toFixed(1)}%</span>
+        )}
+        {tip.isInferred && (
+          <span className="tip-inferred-badge" title="Probability estimated from advice text — no API prediction data available for this match">~ Estimated</span>
+        )}
+      </div>
 
       <div className="tip-match-label">
         <Link href={`/match/${tip.matchId}`} className="tip-match-link">

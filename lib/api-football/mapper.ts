@@ -213,6 +213,7 @@ function mapPrediction(pred: ApiPredictionFixture): MatchPrediction {
       away: isNaN(awayGoals) ? 1.0 : awayGoals,
     },
     modelProbs,
+    hasRealPrediction: true,
   }
 }
 
@@ -256,6 +257,7 @@ export function mapFixtureToMatch(fixture: ApiFixture): Match {
     confidence: 50,
     advice: "No prediction available",
     expectedGoals: { home: 1.2, away: 1.0 },
+    hasRealPrediction: false,
   }
 
   return {

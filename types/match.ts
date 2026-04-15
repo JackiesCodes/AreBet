@@ -75,6 +75,8 @@ export interface MatchPrediction {
   modelProbs?: ModelProbabilities
   valueEdge?: ValueEdge
   factors?: PredictionFactor[]
+  /** True when prediction data came from the API, false when using defaults */
+  hasRealPrediction?: boolean
 }
 
 export type MatchEventType = "goal" | "card" | "sub"

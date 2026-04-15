@@ -5913,3 +5913,44 @@ svg {
   border-style: dashed;
   opacity: 0.55;
 }
+
+/* ============================================================================
+ * Tip badge row (value + inferred badges side by side)
+ * ============================================================================ */
+
+.tip-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 18px;
+}
+
+/* Inferred / estimated probability badge */
+.tip-inferred-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  cursor: help;
+}
+
+/* Match detail tips — inferred row label */
+.match-tip-inferred {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+  cursor: help;
+}
+
+/* Odds comparison — no data message */
+.odds-no-data {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: var(--space-3) 0;
+  font-style: italic;
+}

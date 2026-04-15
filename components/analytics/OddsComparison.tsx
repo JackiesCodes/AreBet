@@ -9,7 +9,13 @@ interface OddsComparisonProps {
 
 export function OddsComparison({ bookmakerOdds }: OddsComparisonProps) {
   const fmt = useFormatOdds()
-  if (bookmakerOdds.length === 0) return null
+  if (bookmakerOdds.length === 0) {
+    return (
+      <p className="odds-no-data">
+        Odds not yet available for this match — bookmaker prices usually appear 48–72 hours before kick-off.
+      </p>
+    )
+  }
 
   const bestHome = Math.max(...bookmakerOdds.map((b) => b.home))
   const bestDraw = Math.max(...bookmakerOdds.map((b) => b.draw))

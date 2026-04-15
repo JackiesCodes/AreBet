@@ -44,6 +44,12 @@ function TipRow({ tip, fmt }: { tip: BettingTip; fmt: (n: number) => string }) {
           {" "}· <strong>+{(tip.edge * 100).toFixed(1)}% edge</strong>
         </div>
       )}
+
+      {tip.isInferred && (
+        <div className="match-tip-inferred" title="No API prediction data — probability estimated from match advice">
+          ~ Estimated probability
+        </div>
+      )}
     </div>
   )
 }
