@@ -111,8 +111,8 @@ export async function fetchFixturesFeed(): Promise<ApiFixture[]> {
 }
 
 export async function fetchFixtureDetail(fixtureId: number): Promise<ApiFixture | null> {
-  const path = `/fixtures?id=${fixtureId}&statistics=true&events=true&lineups=true`
-  const results = await apiFetch<ApiFixture>(path, DETAIL_TTL_MS)
+  // id must be used alone — stats/events/lineups are embedded in the response automatically
+  const results = await apiFetch<ApiFixture>(`/fixtures?id=${fixtureId}`, DETAIL_TTL_MS)
   return results[0] ?? null
 }
 
