@@ -222,22 +222,11 @@ svg {
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.01em;
+  flex-shrink: 0;
 }
 
-.nav-brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  display: grid;
-  place-items: center;
-  color: #000;
-  font-weight: 800;
-  font-size: 14px;
+.nav-brand svg {
+  display: block;
 }
 
 .nav-links {

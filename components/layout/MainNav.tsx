@@ -123,9 +123,17 @@ export function MainNav() {
             )}
           </button>
 
-          <Link href="/" className="nav-brand">
-            <span className="nav-brand-mark">A</span>
-            <span>AreBet</span>
+          <Link href="/" className="nav-brand" aria-label="AreBet — Home">
+            <svg viewBox="0 0 120 30" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <text x="0" y="24"
+                fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                fontWeight="800"
+                fontSize="28"
+                letterSpacing="-0.8">
+                <tspan fill="currentColor">Are</tspan>
+                <tspan fill="#22c55e">Bet</tspan>
+              </text>
+            </svg>
           </Link>
 
           {/* Desktop nav links */}
@@ -196,9 +204,17 @@ export function MainNav() {
         aria-hidden={!drawerOpen}
       >
         <div className="nav-drawer-header">
-          <Link href="/" className="nav-brand" onClick={() => setDrawerOpen(false)}>
-            <span className="nav-brand-mark">A</span>
-            <span>AreBet</span>
+          <Link href="/" className="nav-brand" aria-label="AreBet — Home" onClick={() => setDrawerOpen(false)}>
+            <svg viewBox="0 0 120 30" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <text x="0" y="24"
+                fontFamily="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                fontWeight="800"
+                fontSize="28"
+                letterSpacing="-0.8">
+                <tspan fill="currentColor">Are</tspan>
+                <tspan fill="#22c55e">Bet</tspan>
+              </text>
+            </svg>
           </Link>
           <button
             className="nav-drawer-close"
