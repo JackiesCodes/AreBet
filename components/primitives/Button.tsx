@@ -8,6 +8,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
   block?: boolean
+  loading?: boolean
   children: ReactNode
 }
 
@@ -15,6 +16,7 @@ export function Button({
   variant = "secondary",
   size = "md",
   block,
+  loading,
   className,
   children,
   ...rest
@@ -27,10 +29,14 @@ export function Button({
         size === "sm" && "md-btn--sm",
         size === "lg" && "md-btn--lg",
         block && "md-btn--block",
+        loading && "md-btn--loading",
         className,
       )}
+      disabled={loading || rest.disabled}
+      aria-busy={loading}
       {...rest}
     >
+      {loading && <span className="btn-spinner" aria-hidden />}
       {children}
     </button>
   )

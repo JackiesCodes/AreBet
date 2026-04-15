@@ -5698,3 +5698,218 @@ svg {
     font-size: 12px;
   }
 }
+
+/* ============================================================================
+ * Button — spinner + loading state
+ * ============================================================================ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: spin 0.55s linear infinite;
+  flex-shrink: 0;
+}
+
+.md-btn--loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+/* ============================================================================
+ * Toast — dismiss button + message layout
+ * ============================================================================ */
+
+.md-toast-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.md-toast-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.md-toast-dismiss:hover {
+  background: var(--surface-4);
+  color: var(--text);
+}
+
+.md-toast-dismiss:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* ============================================================================
+ * Skeleton — card and table variants
+ * ============================================================================ */
+
+.md-skel-table-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.md-skel--table-head {
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-3) 0%, var(--surface-4) 50%, var(--surface-3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  margin-bottom: 4px;
+}
+
+.md-skel--table-row {
+  height: 44px;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(90deg, var(--surface-3) 0%, var(--surface-4) 50%, var(--surface-3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.md-skel-card {
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.md-skel--card-title {
+  height: 18px;
+  width: 60%;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(90deg, var(--surface-3) 0%, var(--surface-4) 50%, var(--surface-3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.md-skel--card-line {
+  height: 13px;
+  width: 90%;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(90deg, var(--surface-3) 0%, var(--surface-4) 50%, var(--surface-3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.md-skel--card-line-short {
+  width: 45%;
+}
+
+/* ============================================================================
+ * Load-more button
+ * ============================================================================ */
+
+.load-more-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5) 0 var(--space-2);
+}
+
+.load-more-btn {
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+
+.load-more-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.load-more-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.load-more-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+ * Form controls — disabled, invalid, error message
+ * ============================================================================ */
+
+.md-input:disabled,
+.md-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--surface-2);
+}
+
+.md-input:invalid {
+  border-color: var(--negative);
+}
+
+.md-input-error {
+  font-size: 11px;
+  color: var(--negative);
+  margin-top: var(--space-1);
+  line-height: 1.4;
+}
+
+/* ============================================================================
+ * Focus ring — search inputs
+ * ============================================================================ */
+
+.cc-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.12);
+}
+
+/* ============================================================================
+ * Hamburger — smooth SVG swap transition
+ * ============================================================================ */
+
+.nav-hamburger svg {
+  transition: opacity var(--t-fast);
+}
+
+/* ============================================================================
+ * Toolbar buttons — aria-pressed support
+ * ============================================================================ */
+
+.cc-toolbar-btn[aria-pressed="true"] {
+  background: var(--primary);
+  color: #000;
+  border-color: var(--primary);
+}
+
+/* ============================================================================
+ * Disabled subscription buttons — visual distinction
+ * ============================================================================ */
+
+.price-card .md-btn:disabled {
+  border-style: dashed;
+  opacity: 0.55;
+}

@@ -1,10 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
+import { usePagination } from "@/hooks/usePagination"
 import {
   generateFeedTips,
   TIP_CATEGORY_LABELS,
@@ -16,6 +17,8 @@ import { useFormatOdds } from "@/hooks/useFormatOdds"
 import { formatTime } from "@/lib/utils/time"
 import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
+
+const TIPS_PAGE_SIZE = 30
 
 const CATEGORIES: Array<{ key: TipCategory | "all"; label: string; icon: string }> = [
   { key: "all", label: "All Tips", icon: "✦" },
@@ -37,7 +40,6 @@ function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
         <span className="tip-value-badge">▲ VALUE +{(tip.edge * 100).toFixed(1)}%</span>
       )}
 
-      {/* Match context */}
       <div className="tip-match-label">
         <Link href={`/match/${tip.matchId}`} className="tip-match-link">
           {tip.home} vs {tip.away}
@@ -47,11 +49,9 @@ function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
         </span>
       </div>
 
-      {/* Market + selection */}
       <div className="tip-market">{tip.market}</div>
       <div className="tip-selection">{tip.selection}</div>
 
-      {/* Probability bar */}
       <div className="tip-prob-row">
         <div className="tip-prob-bar-wrap">
           <div className="tip-prob-bar" style={{ width: `${pct}%` }} />
@@ -59,7 +59,6 @@ function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
         <span className={cn("tip-conf-badge", confClass)}>{pct}%</span>
       </div>
 
-      {/* Odds + rationale */}
       <div className="tip-footer">
         <span className="tip-rationale">{tip.rationale}</span>
         {tip.odds > 0 && (
@@ -88,6 +87,11 @@ export default function PredictionsPage() {
     })
   }, [allTips, category, valueOnly, minConf])
 
+  const { visibleItems, hasMore, remaining, loadMore, reset } = usePagination(filtered, TIPS_PAGE_SIZE)
+
+  // Reset to first page whenever filters change
+  useEffect(() => { reset() }, [category, valueOnly, minConf, reset])
+
   const valueTipCount = allTips.filter((t) => t.isValue).length
 
   return (
@@ -97,7 +101,6 @@ export default function PredictionsPage() {
         subtitle={loading ? "Loading tips…" : `${allTips.length} tips across ${matches.filter(m => m.status !== "FINISHED").length} matches`}
       />
 
-      {/* Value tip banner */}
       {!loading && valueTipCount > 0 && (
         <div className="tip-value-banner">
           <span className="tip-value-banner-icon">▲</span>
@@ -105,6 +108,7 @@ export default function PredictionsPage() {
           <button
             className={cn("md-btn md-btn--sm", valueOnly ? "md-btn--primary" : "md-btn--ghost")}
             onClick={() => setValueOnly((v) => !v)}
+            aria-pressed={valueOnly}
             type="button"
           >
             {valueOnly ? "Show all" : "Value only"}
@@ -112,14 +116,13 @@ export default function PredictionsPage() {
         </div>
       )}
 
-      {/* Filters */}
       <div className="tip-filters">
-        {/* Category tabs */}
-        <div className="tip-cat-tabs">
+        <div className="tip-cat-tabs" role="group" aria-label="Filter by tip category">
           {CATEGORIES.map((c) => (
             <button
               key={c.key}
               type="button"
+              aria-pressed={category === c.key}
               className={cn("tip-cat-tab", category === c.key && "tip-cat-tab--active")}
               onClick={() => setCategory(c.key)}
             >
@@ -129,13 +132,13 @@ export default function PredictionsPage() {
           ))}
         </div>
 
-        {/* Confidence threshold */}
         <div className="tip-conf-filter">
           <span className="tip-conf-filter-label">Min confidence:</span>
           {[45, 55, 65].map((v) => (
             <button
               key={v}
               type="button"
+              aria-pressed={minConf === v}
               className={cn("md-btn md-btn--sm", minConf === v ? "md-btn--primary" : "md-btn--ghost")}
               onClick={() => setMinConf(v)}
             >
@@ -155,11 +158,21 @@ export default function PredictionsPage() {
       )}
 
       {!loading && filtered.length > 0 && (
-        <div className="tip-grid">
-          {filtered.map((t) => (
-            <TipCard key={`${t.matchId}-${t.id}`} tip={t} fmt={fmt} />
-          ))}
-        </div>
+        <>
+          <div className="tip-grid">
+            {visibleItems.map((t) => (
+              <TipCard key={`${t.matchId}-${t.id}`} tip={t} fmt={fmt} />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="load-more-wrap">
+              <button type="button" className="load-more-btn" onClick={loadMore}>
+                Load {remaining} more tips
+              </button>
+              <span className="load-more-count">{visibleItems.length} of {filtered.length}</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
