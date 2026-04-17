@@ -63,6 +63,9 @@ function mapStats(statistics: ApiTeamStatistics[], homeTeamId: number): MatchSta
   const homeStats = statistics.find((s) => s.team.id === homeTeamId)?.statistics ?? []
   const awayStats = statistics.find((s) => s.team.id !== homeTeamId)?.statistics ?? []
 
+  const maybeZero = (h: number, a: number) =>
+    h === 0 && a === 0 ? undefined : { h, a }
+
   return {
     possession: {
       h: getStatValue(homeStats, "Ball Possession"),
@@ -76,6 +79,18 @@ function mapStats(statistics: ApiTeamStatistics[], homeTeamId: number): MatchSta
       h: getStatValue(homeStats, "Shots on Goal"),
       a: getStatValue(awayStats, "Shots on Goal"),
     },
+    shotsInsideBox: maybeZero(
+      getStatValue(homeStats, "Shots insidebox"),
+      getStatValue(awayStats, "Shots insidebox"),
+    ),
+    shotsOutsideBox: maybeZero(
+      getStatValue(homeStats, "Shots outsidebox"),
+      getStatValue(awayStats, "Shots outsidebox"),
+    ),
+    shotsBlocked: maybeZero(
+      getStatValue(homeStats, "Blocked Shots"),
+      getStatValue(awayStats, "Blocked Shots"),
+    ),
     xg: {
       h: getStatValue(homeStats, "expected_goals") || getStatValue(homeStats, "xG"),
       a: getStatValue(awayStats, "expected_goals") || getStatValue(awayStats, "xG"),
@@ -88,6 +103,22 @@ function mapStats(statistics: ApiTeamStatistics[], homeTeamId: number): MatchSta
       h: getStatValue(homeStats, "Corner Kicks"),
       a: getStatValue(awayStats, "Corner Kicks"),
     },
+    fouls: maybeZero(
+      getStatValue(homeStats, "Fouls"),
+      getStatValue(awayStats, "Fouls"),
+    ),
+    offsides: maybeZero(
+      getStatValue(homeStats, "Offsides"),
+      getStatValue(awayStats, "Offsides"),
+    ),
+    yellowCards: maybeZero(
+      getStatValue(homeStats, "Yellow Cards"),
+      getStatValue(awayStats, "Yellow Cards"),
+    ),
+    redCards: maybeZero(
+      getStatValue(homeStats, "Red Cards"),
+      getStatValue(awayStats, "Red Cards"),
+    ),
   }
 }
 
@@ -233,15 +264,32 @@ function mapPlayerRatings(fixture: ApiFixture): PlayerRatings | undefined {
     const team = fixture.players![teamIndex]
     if (!team) return []
     return team.players
-      .filter((p) => p.statistics[0]?.games.minutes != null)
-      .slice(0, 11)
-      .map((p) => ({
-        name: p.player.name,
-        position: p.statistics[0]?.games.position ?? "MF",
-        rating: parseFloat(p.statistics[0]?.games.rating ?? "0") || 0,
-        goals: p.statistics[0]?.goals.total ?? undefined,
-        assists: p.statistics[0]?.goals.assists ?? undefined,
-      }))
+      .filter((p) => (p.statistics[0]?.games.minutes ?? 0) > 0)
+      .map((p) => {
+        const s = p.statistics[0]
+        const passAcc = s?.passes?.accuracy != null
+          ? parseFloat(String(s.passes.accuracy).replace("%", "")) || undefined
+          : undefined
+        return {
+          name: p.player.name,
+          position: s?.games.position ?? "MF",
+          rating: parseFloat(s?.games.rating ?? "0") || 0,
+          minutes: s?.games.minutes ?? undefined,
+          substitute: s?.games.substitute ?? undefined,
+          goals: s?.goals.total ?? undefined,
+          assists: s?.goals.assists ?? undefined,
+          shots: s?.shots?.total ?? undefined,
+          keyPasses: s?.passes?.key ?? undefined,
+          passAccuracy: passAcc,
+          tackles: s?.tackles?.total ?? undefined,
+          interceptions: s?.tackles?.interceptions ?? undefined,
+          dribblesSuccess: s?.dribbles?.success ?? undefined,
+          dribblesAttempted: s?.dribbles?.attempts ?? undefined,
+          foulsCommitted: s?.fouls?.committed ?? undefined,
+          yellowCards: s?.cards?.yellow ?? undefined,
+          redCards: s?.cards?.red ?? undefined,
+        }
+      })
   }
 
   return { home: mapTeam(0), away: mapTeam(1) }
@@ -262,6 +310,7 @@ export function mapFixtureToMatch(fixture: ApiFixture): Match {
 
   return {
     id: fixture.fixture.id,
+    leagueId: fixture.league.id,
     league: fixture.league.name,
     country: fixture.league.country,
     venue: fixture.fixture.venue.name ?? "Unknown Venue",

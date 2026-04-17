@@ -2,6 +2,7 @@ import { fetchAllStandings } from "@/lib/api-football/client"
 import { shouldUseDemoMode } from "@/lib/services/matches"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState } from "@/components/primitives/EmptyState"
+import { LeagueStandingsSearch } from "@/components/features/LeagueStandingsSearch"
 import type { ApiStandingRow } from "@/lib/api-football/types"
 
 export const dynamic = "force-dynamic"
@@ -130,6 +131,8 @@ export default async function StandingsPage() {
           text="Standings data is unavailable for the current season. Try again later."
         />
       )}
+
+      <LeagueStandingsSearch />
 
       {standingsData.map((item) => {
         const league = item.league

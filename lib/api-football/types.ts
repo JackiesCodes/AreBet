@@ -74,8 +74,19 @@ export interface ApiFixturePlayers {
   players: Array<{
     player: { id: number; name: string; photo: string }
     statistics: Array<{
-      games: { minutes: number | null; rating: string | null; position: string | null }
+      games: {
+        minutes: number | null
+        rating: string | null
+        position: string | null
+        substitute: boolean | null
+      }
       goals: { total: number | null; assists: number | null }
+      shots: { total: number | null; on: number | null } | null
+      passes: { total: number | null; key: number | null; accuracy: string | null } | null
+      tackles: { total: number | null; interceptions: number | null } | null
+      dribbles: { attempts: number | null; success: number | null } | null
+      fouls: { committed: number | null; drawn: number | null } | null
+      cards: { yellow: number | null; red: number | null } | null
     }>
   }>
 }

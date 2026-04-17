@@ -98,9 +98,16 @@ export interface MatchStats {
   possession: PairStat
   shots: PairStat
   shotsOnTarget: PairStat
+  shotsInsideBox?: PairStat
+  shotsOutsideBox?: PairStat
+  shotsBlocked?: PairStat
   xg: PairStat
   passAccuracy: PairStat
   corners: PairStat
+  fouls?: PairStat
+  offsides?: PairStat
+  yellowCards?: PairStat
+  redCards?: PairStat
 }
 
 export interface H2HRecord {
@@ -114,8 +121,20 @@ export interface PlayerRating {
   name: string
   position: string
   rating: number
+  minutes?: number
   goals?: number
   assists?: number
+  shots?: number
+  keyPasses?: number
+  passAccuracy?: number
+  tackles?: number
+  interceptions?: number
+  dribblesSuccess?: number
+  dribblesAttempted?: number
+  foulsCommitted?: number
+  yellowCards?: number
+  redCards?: number
+  substitute?: boolean
 }
 
 export interface PlayerRatings {
@@ -132,6 +151,7 @@ export interface MatchInjury {
 
 export interface Match {
   id: number
+  leagueId?: number
   league: string
   country: string
   venue: string

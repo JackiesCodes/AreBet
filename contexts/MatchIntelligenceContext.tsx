@@ -31,7 +31,8 @@ import { readJSON, writeJSON } from "@/lib/storage/stickiness"
 import { recordSignal, resolveSignal, signalIdForFixture } from "@/lib/services/signals"
 
 const PREFS_KEY = "arebet:alert-prefs:v1"
-const POLL_MS = 30_000
+const POLL_MS_IDLE = 30_000
+const POLL_MS_LIVE = 15_000
 const MAX_CHANGES = 60
 
 // Change types that warrant a browser notification (critical + high only)
@@ -216,23 +217,26 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
     }
   }, [watchedMatchIds, alertPrefs])
 
-  // Schedule next tick
-  const schedule = useCallback(() => {
+  // Schedule next tick — adaptive: 15s when live matches exist, 30s otherwise
+  const schedule = useCallback((currentMatches: Match[]) => {
     if (timerRef.current) clearTimeout(timerRef.current)
+    const hasLive = currentMatches.some((m) => m.status === "LIVE")
+    const delay = hasLive ? POLL_MS_LIVE : POLL_MS_IDLE
     timerRef.current = setTimeout(async () => {
       if (typeof document !== "undefined" && document.hidden) {
-        schedule()
+        schedule(currentMatches)
         return
       }
       await tick()
-      schedule()
-    }, POLL_MS)
+      // Re-read prevMatchesRef after tick completes for accurate live detection
+      schedule(prevMatchesRef.current)
+    }, delay)
   }, [tick])
 
   useEffect(() => {
     aliveRef.current = true
     void tick()
-    schedule()
+    schedule(prevMatchesRef.current)
     const onVis = () => { if (!document.hidden) void tick() }
     document.addEventListener("visibilitychange", onVis)
     return () => {
