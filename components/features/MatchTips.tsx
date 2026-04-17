@@ -45,9 +45,13 @@ function TipRow({ tip, fmt }: { tip: BettingTip; fmt: (n: number) => string }) {
         </div>
       )}
 
-      {tip.isInferred && (
-        <div className="match-tip-inferred" title="No API prediction data — probability estimated from match advice">
-          ~ Estimated probability
+      {tip.dataQuality !== "confirmed" && (
+        <div className="match-tip-inferred" title={
+          tip.dataQuality === "model"
+            ? "Result probabilities derived from Poisson model using real xG data"
+            : "No match-specific data — generic average xG used"
+        }>
+          {tip.dataQuality === "model" ? "~ Poisson model" : "⚠ Generic estimate"}
         </div>
       )}
     </div>

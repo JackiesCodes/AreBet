@@ -30,18 +30,39 @@ const CATEGORIES: Array<{ key: TipCategory | "all"; label: string; icon: string 
   { key: "cleansheet", label: TIP_CATEGORY_LABELS.cleansheet, icon: TIP_CATEGORY_ICONS.cleansheet },
 ]
 
+const QUALITY_BADGE: Record<string, { label: string; className: string; title: string }> = {
+  confirmed: {
+    label: "✓ API",
+    className: "tip-quality-badge tip-quality--confirmed",
+    title: "Probabilities from API-Football prediction model",
+  },
+  model: {
+    label: "~ Poisson",
+    className: "tip-quality-badge tip-quality--model",
+    title: "Result probabilities derived from Poisson model using real xG data",
+  },
+  estimated: {
+    label: "⚠ Est.",
+    className: "tip-quality-badge tip-quality--estimated",
+    title: "No match-specific data available — generic average xG used. Not reliable.",
+  },
+}
+
 function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
   const pct = Math.round(tip.probability * 100)
   const confClass = tip.confidence === "high" ? "tip-conf--high" : tip.confidence === "mid" ? "tip-conf--mid" : "tip-conf--low"
+  const qualityBadge = QUALITY_BADGE[tip.dataQuality]
 
   return (
-    <div className={cn("tip-card", tip.isValue && "tip-card--value")}>
+    <div className={cn("tip-card", tip.isValue && "tip-card--value", tip.dataQuality === "estimated" && "tip-card--estimated")}>
       <div className="tip-badge-row">
         {tip.isValue && (
           <span className="tip-value-badge">▲ VALUE +{(tip.edge * 100).toFixed(1)}%</span>
         )}
-        {tip.isInferred && (
-          <span className="tip-inferred-badge" title="Probability estimated from advice text — no API prediction data available for this match">~ Estimated</span>
+        {qualityBadge && (
+          <span className={qualityBadge.className} title={qualityBadge.title}>
+            {qualityBadge.label}
+          </span>
         )}
       </div>
 
@@ -98,13 +119,16 @@ export default function PredictionsPage() {
   useEffect(() => { reset() }, [category, valueOnly, minConf, reset])
 
   const valueTipCount = allTips.filter((t) => t.isValue).length
+  const confirmedCount = allTips.filter((t) => t.dataQuality === "confirmed").length
+  const modelCount = allTips.filter((t) => t.dataQuality === "model").length
+
+  const subtitle = loading
+    ? "Loading tips…"
+    : `${allTips.length} tips · ${confirmedCount} API-confirmed · ${modelCount} Poisson model`
 
   return (
     <div className="md-page">
-      <PageHeader
-        title="Predictions"
-        subtitle={loading ? "Loading tips…" : `${allTips.length} tips across ${matches.filter(m => m.status !== "FINISHED").length} matches`}
-      />
+      <PageHeader title="Predictions" subtitle={subtitle} />
 
       {!loading && valueTipCount > 0 && (
         <div className="tip-value-banner">

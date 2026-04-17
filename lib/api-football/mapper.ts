@@ -227,8 +227,21 @@ function mapPrediction(pred: ApiPredictionFixture): MatchPrediction {
   const awayP = parseFloat(pct.away.replace("%", "")) || 0
   const confidence = Math.max(homeP, drawP, awayP)
 
-  const homeGoals = parseFloat(pred.predictions.goals?.home ?? "1.3")
-  const awayGoals = parseFloat(pred.predictions.goals?.away ?? "1.0")
+  // Prefer prediction-specific goal estimates; fall back to last-5 scoring average
+  // (much better than a hardcoded 1.2/1.0 default that is the same for every match)
+  const last5Home = parseFloat(pred.teams?.home?.last_5?.goals?.for?.total?.average ?? "0") || 0
+  const last5Away = parseFloat(pred.teams?.away?.last_5?.goals?.for?.total?.average ?? "0") || 0
+
+  const rawHomeGoals = parseFloat(pred.predictions.goals?.home ?? "")
+  const rawAwayGoals = parseFloat(pred.predictions.goals?.away ?? "")
+
+  const homeGoals = !isNaN(rawHomeGoals) && rawHomeGoals > 0
+    ? rawHomeGoals
+    : last5Home > 0 ? last5Home : 1.3
+
+  const awayGoals = !isNaN(rawAwayGoals) && rawAwayGoals > 0
+    ? rawAwayGoals
+    : last5Away > 0 ? last5Away : 1.0
 
   // Store all three probabilities for value bet calculation
   const total = homeP + drawP + awayP
@@ -239,10 +252,7 @@ function mapPrediction(pred: ApiPredictionFixture): MatchPrediction {
   return {
     confidence: Math.round(confidence),
     advice: pred.predictions.advice ?? "",
-    expectedGoals: {
-      home: isNaN(homeGoals) ? 1.3 : homeGoals,
-      away: isNaN(awayGoals) ? 1.0 : awayGoals,
-    },
+    expectedGoals: { home: homeGoals, away: awayGoals },
     modelProbs,
     hasRealPrediction: true,
   }

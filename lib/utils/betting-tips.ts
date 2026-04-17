@@ -4,6 +4,11 @@
  * Computes per-match betting tips across multiple markets using a Poisson goal
  * model derived from the prediction's expected goals (xG) values.
  *
+ * Data quality tiers:
+ *  - "confirmed"  API returned both xG and model probabilities for this match
+ *  - "model"      API returned xG only — result probs derived via Poisson
+ *  - "estimated"  No API data — default xG used, all tips are generic estimates
+ *
  * Markets covered:
  *  - Match Result (1X2)
  *  - Double Chance (1X / X2 / 12)
@@ -14,8 +19,8 @@
  *  - Asian Handicap Home -1 / Away +1
  */
 
-import type { Match } from "@/types/match"
-import { VALUE_THRESHOLD, inferModelProbs } from "./value-bet"
+import type { Match, ModelProbabilities } from "@/types/match"
+import { VALUE_THRESHOLD } from "./value-bet"
 
 // ── Poisson helpers ───────────────────────────────────────────────────────────
 
@@ -39,7 +44,7 @@ function poissonSumCDF(lambdaH: number, lambdaA: number, maxTotal: number): numb
   return Math.min(1, p)
 }
 
-/** P(Home Goals - Away Goals = diff) using a score matrix up to 8 goals each */
+/** P(Home Goals - Away Goals = diff) using a score matrix up to 10 goals each */
 function probGoalDiff(lambdaH: number, lambdaA: number, diff: number): number {
   const MAX = 10
   let p = 0
@@ -51,26 +56,50 @@ function probGoalDiff(lambdaH: number, lambdaA: number, diff: number): number {
   return p
 }
 
+/**
+ * Derive home/draw/away probabilities directly from the Poisson score matrix.
+ * Far more accurate than text-heuristic inference — probabilities always sum to 1,
+ * and reflect the actual xG inputs rather than generic patterns.
+ */
+function poissonResultProbs(lambdaH: number, lambdaA: number): ModelProbabilities {
+  const MAX = 10
+  let home = 0, draw = 0, away = 0
+  for (let h = 0; h <= MAX; h++) {
+    for (let a = 0; a <= MAX; a++) {
+      const p = poissonPMF(lambdaH, h) * poissonPMF(lambdaA, a)
+      if (h > a) home += p
+      else if (h === a) draw += p
+      else away += p
+    }
+  }
+  return { home, draw, away }
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type TipCategory = "result" | "goals" | "btts" | "handicap" | "firstgoal" | "cleansheet"
 
 export type TipConfidence = "high" | "mid" | "low"
 
+/** How reliable the tip's underlying data is */
+export type TipDataQuality = "confirmed" | "model" | "estimated"
+
 export interface BettingTip {
   id: string
   market: string
   selection: string
-  probability: number     // model probability 0–1
-  modelProb: number       // alias for probability (used in value display)
-  odds: number            // decimal bookmaker odds (0 = not available)
-  impliedProb: number     // 1/odds market probability (0 if odds unavailable)
-  edge: number            // model prob − implied prob
-  isValue: boolean        // edge ≥ VALUE_THRESHOLD
+  probability: number       // model probability 0–1
+  modelProb: number         // alias for probability (used in value display)
+  odds: number              // decimal bookmaker odds (0 = not available)
+  impliedProb: number       // 1/odds market probability (0 if odds unavailable)
+  edge: number              // model prob − implied prob
+  isValue: boolean          // edge ≥ VALUE_THRESHOLD
   confidence: TipConfidence
   category: TipCategory
-  rationale: string       // human-readable explanation
-  isInferred: boolean     // true when probability is estimated, not from real API data
+  rationale: string         // human-readable explanation
+  dataQuality: TipDataQuality
+  /** kept for backwards compat — prefer dataQuality */
+  isInferred: boolean
 }
 
 export interface MatchTips {
@@ -85,7 +114,11 @@ export interface MatchTips {
 
 // ── Tip builder ───────────────────────────────────────────────────────────────
 
-function conf(prob: number): TipConfidence {
+function conf(prob: number, quality: TipDataQuality): TipConfidence {
+  // Cap confidence at "mid" for estimated tips — default xG produces generic probs
+  if (quality === "estimated") {
+    return prob >= 0.65 ? "mid" : "low"
+  }
   if (prob >= 0.65) return "high"
   if (prob >= 0.50) return "mid"
   return "low"
@@ -99,12 +132,13 @@ function tip(
   odds: number,
   category: TipCategory,
   rationale: string,
-  isInferred: boolean,
+  quality: TipDataQuality,
 ): BettingTip {
   const safeOdds = odds > 1 ? odds : 0
   const impliedProb = safeOdds > 0 ? 1 / safeOdds : 0
   const edge = impliedProb > 0 ? probability - impliedProb : 0
   const safeProp = Math.min(1, Math.max(0, probability))
+  const isInferred = quality !== "confirmed"
   return {
     id,
     market,
@@ -114,12 +148,13 @@ function tip(
     odds: safeOdds,
     impliedProb,
     edge,
-    // Suppress value flags on inferred tips — not reliable enough
-    isValue: !isInferred && edge >= VALUE_THRESHOLD,
-    confidence: conf(probability),
+    // Only flag value on confirmed or model-quality tips — estimated xG is not reliable
+    isValue: quality !== "estimated" && edge >= VALUE_THRESHOLD,
+    confidence: conf(probability, quality),
     category,
     rationale,
     isInferred,
+    dataQuality: quality,
   }
 }
 
@@ -132,58 +167,68 @@ export function generateMatchTips(match: Match): MatchTips {
   const lA = Math.max(0.1, prediction.expectedGoals.away)
   const lTotal = lH + lA
 
-  // Whether xG came from real API prediction or is a fallback default
+  // ── Data quality tier for this match ─────────────────────────────────────
+  // confirmed: API supplied both xG and model probabilities
+  // model:     API supplied xG — result probs derived via Poisson
+  // estimated: default xG (1.2/1.0) — all tips are generic, not match-specific
   const hasRealXg = prediction.hasRealPrediction === true
+  const hasApiProbs = !!prediction.modelProbs
+  const xgQuality: TipDataQuality = hasRealXg ? (hasApiProbs ? "confirmed" : "model") : "estimated"
 
   // ── 1. Match Result ───────────────────────────────────────────────────────
-  // Use stored modelProbs from prediction API, or infer from confidence + advice
-  const hasRealModelProbs = !!prediction.modelProbs
-  const mp = prediction.modelProbs ?? inferModelProbs(prediction.confidence, prediction.advice)
-  const resultInferred = !hasRealModelProbs
+  // Use API model probs when available; otherwise derive from Poisson score matrix.
+  // This replaces the old text-heuristic inferModelProbs which produced non-normalised
+  // probabilities and ignored the actual xG values entirely.
+  const mp = prediction.modelProbs ?? poissonResultProbs(lH, lA)
+  // Result quality: confirmed if API provided probs; model if Poisson-derived from real xG;
+  // estimated if using default xG (all matches will produce the same ~0.42/0.26/0.32 split)
+  const resultQuality: TipDataQuality = hasApiProbs ? "confirmed" : xgQuality === "estimated" ? "estimated" : "model"
 
-  if (mp) {
-    tips.push(tip(
-      "result-home", "Match Result", `${home.name} to Win`,
-      mp.home, odds.home, "result",
-      `Model: ${(mp.home * 100).toFixed(0)}% — ${home.name} averaging ${lH.toFixed(1)} xG`,
-      resultInferred,
-    ))
-    tips.push(tip(
-      "result-draw", "Match Result", "Draw",
-      mp.draw, odds.draw, "result",
-      `Draw probability ${(mp.draw * 100).toFixed(0)}% from xG model (${lH.toFixed(1)}–${lA.toFixed(1)} xG)`,
-      resultInferred,
-    ))
-    tips.push(tip(
-      "result-away", "Match Result", `${away.name} to Win`,
-      mp.away, odds.away, "result",
-      `Model: ${(mp.away * 100).toFixed(0)}% — ${away.name} averaging ${lA.toFixed(1)} xG`,
-      resultInferred,
-    ))
+  const xgLabel = hasRealXg
+    ? `${lH.toFixed(1)}–${lA.toFixed(1)} xG`
+    : `est. xG (avg)`
 
-    // ── 2. Double Chance ─────────────────────────────────────────────────────
-    const dcHD = mp.home + mp.draw
-    const dcDA = mp.draw + mp.away
-    const dcHA = mp.home + mp.away
-    tips.push(tip(
-      "dc-1x", "Double Chance", `${home.name} or Draw`,
-      dcHD, odds.dcHomeOrDraw ?? 0, "result",
-      `${(dcHD * 100).toFixed(0)}% chance ${home.name} doesn't lose`,
-      resultInferred,
-    ))
-    tips.push(tip(
-      "dc-x2", "Double Chance", `Draw or ${away.name}`,
-      dcDA, odds.dcDrawOrAway ?? 0, "result",
-      `${(dcDA * 100).toFixed(0)}% chance ${away.name} doesn't lose`,
-      resultInferred,
-    ))
-    tips.push(tip(
-      "dc-12", "Double Chance", "Either Team Wins",
-      dcHA, odds.dcHomeOrAway ?? 0, "result",
-      `${(dcHA * 100).toFixed(0)}% chance the game won't end in a draw`,
-      resultInferred,
-    ))
-  }
+  tips.push(tip(
+    "result-home", "Match Result", `${home.name} to Win`,
+    mp.home, odds.home, "result",
+    `${(mp.home * 100).toFixed(0)}% — ${xgLabel}${hasApiProbs ? " · API model" : " · Poisson"}`,
+    resultQuality,
+  ))
+  tips.push(tip(
+    "result-draw", "Match Result", "Draw",
+    mp.draw, odds.draw, "result",
+    `Draw ${(mp.draw * 100).toFixed(0)}% — ${xgLabel}${hasApiProbs ? " · API model" : " · Poisson"}`,
+    resultQuality,
+  ))
+  tips.push(tip(
+    "result-away", "Match Result", `${away.name} to Win`,
+    mp.away, odds.away, "result",
+    `${(mp.away * 100).toFixed(0)}% — ${xgLabel}${hasApiProbs ? " · API model" : " · Poisson"}`,
+    resultQuality,
+  ))
+
+  // ── 2. Double Chance ─────────────────────────────────────────────────────
+  const dcHD = mp.home + mp.draw
+  const dcDA = mp.draw + mp.away
+  const dcHA = mp.home + mp.away
+  tips.push(tip(
+    "dc-1x", "Double Chance", `${home.name} or Draw`,
+    dcHD, odds.dcHomeOrDraw ?? 0, "result",
+    `${(dcHD * 100).toFixed(0)}% chance ${home.name} doesn't lose`,
+    resultQuality,
+  ))
+  tips.push(tip(
+    "dc-x2", "Double Chance", `Draw or ${away.name}`,
+    dcDA, odds.dcDrawOrAway ?? 0, "result",
+    `${(dcDA * 100).toFixed(0)}% chance ${away.name} doesn't lose`,
+    resultQuality,
+  ))
+  tips.push(tip(
+    "dc-12", "Double Chance", "Either Team Wins",
+    dcHA, odds.dcHomeOrAway ?? 0, "result",
+    `${(dcHA * 100).toFixed(0)}% chance the game won't end in a draw`,
+    resultQuality,
+  ))
 
   // ── 3. Both Teams to Score ────────────────────────────────────────────────
   const pBTTS = (1 - poissonPMF(lH, 0)) * (1 - poissonPMF(lA, 0))
@@ -192,51 +237,51 @@ export function generateMatchTips(match: Match): MatchTips {
     "btts-yes", "Both Teams to Score", "Yes",
     pBTTS, odds.btts, "btts",
     `${home.name} ${lH.toFixed(1)} xG + ${away.name} ${lA.toFixed(1)} xG — both likely to score`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "btts-no", "Both Teams to Score", "No",
     pBTTSNo, odds.bttsNo ?? 0, "btts",
     `${(pBTTSNo * 100).toFixed(0)}% chance at least one team is kept out`,
-    !hasRealXg,
+    xgQuality,
   ))
 
   // ── 4. Total Goals ────────────────────────────────────────────────────────
   const pOver15 = 1 - poissonSumCDF(lH, lA, 1)
   const pOver25 = 1 - poissonSumCDF(lH, lA, 2)
   const pOver35 = 1 - poissonSumCDF(lH, lA, 3)
-  const pUnder25 = 1 - pOver25
-  const pUnder35 = 1 - pOver35
+  const pUnder25 = poissonSumCDF(lH, lA, 2)
+  const pUnder35 = poissonSumCDF(lH, lA, 3)
 
   tips.push(tip(
     "over-15", "Total Goals", "Over 1.5",
     pOver15, odds.over15 ?? 0, "goals",
     `${lTotal.toFixed(1)} total xG → ${(pOver15 * 100).toFixed(0)}% chance of 2+ goals`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "over-25", "Total Goals", "Over 2.5",
     pOver25, odds.over25, "goals",
     `${lTotal.toFixed(1)} total xG → ${(pOver25 * 100).toFixed(0)}% chance of 3+ goals`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "over-35", "Total Goals", "Over 3.5",
     pOver35, odds.over35 ?? 0, "goals",
     `${lTotal.toFixed(1)} total xG → ${(pOver35 * 100).toFixed(0)}% chance of 4+ goals`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "under-25", "Total Goals", "Under 2.5",
     pUnder25, odds.under25 ?? 0, "goals",
     `${lTotal.toFixed(1)} total xG → ${(pUnder25 * 100).toFixed(0)}% chance of 2 goals or fewer`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "under-35", "Total Goals", "Under 3.5",
     pUnder35, odds.under35 ?? 0, "goals",
     `${lTotal.toFixed(1)} total xG → ${(pUnder35 * 100).toFixed(0)}% chance of 3 goals or fewer`,
-    !hasRealXg,
+    xgQuality,
   ))
 
   // ── 5. First Goal Team ────────────────────────────────────────────────────
@@ -246,13 +291,13 @@ export function generateMatchTips(match: Match): MatchTips {
     "fg-home", "First Goal", `${home.name} to Score First`,
     pHomeFirst, 0, "firstgoal",
     `${home.name} attacking rate ${lH.toFixed(1)} xG vs ${away.name} ${lA.toFixed(1)} xG`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "fg-away", "First Goal", `${away.name} to Score First`,
     pAwayFirst, 0, "firstgoal",
     `${away.name} attacking rate ${lA.toFixed(1)} xG vs ${home.name} ${lH.toFixed(1)} xG`,
-    !hasRealXg,
+    xgQuality,
   ))
 
   // ── 6. Clean Sheet ────────────────────────────────────────────────────────
@@ -262,13 +307,13 @@ export function generateMatchTips(match: Match): MatchTips {
     "cs-home", "Clean Sheet", `${home.name}`,
     pHomeCS, 0, "cleansheet",
     `${away.name} averaging ${lA.toFixed(1)} xG — ${(pHomeCS * 100).toFixed(0)}% chance of shutout`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "cs-away", "Clean Sheet", `${away.name}`,
     pAwayCS, 0, "cleansheet",
     `${home.name} averaging ${lH.toFixed(1)} xG — ${(pAwayCS * 100).toFixed(0)}% chance of shutout`,
-    !hasRealXg,
+    xgQuality,
   ))
 
   // ── 7. Asian Handicap ─────────────────────────────────────────────────────
@@ -286,13 +331,13 @@ export function generateMatchTips(match: Match): MatchTips {
     "hc-home-1", "Asian Handicap", `${home.name} -1`,
     pHomeWinBy2Plus, odds.handicapHome ?? 0, "handicap",
     `${(pHomeWinBy2Plus * 100).toFixed(0)}% for ${home.name} to win by 2+ (push if win by exactly 1)`,
-    !hasRealXg,
+    xgQuality,
   ))
   tips.push(tip(
     "hc-away-1", "Asian Handicap", `${away.name} +1`,
     pAway1Effective, odds.handicapAway ?? 0, "handicap",
     `${away.name} effective win rate ${(pAway1Effective * 100).toFixed(0)}% with +1 goal head start`,
-    !hasRealXg,
+    xgQuality,
   ))
 
   return {
@@ -317,9 +362,17 @@ export type FeedTip = BettingTip & {
   status: string
 }
 
+const QUALITY_ORDER: Record<TipDataQuality, number> = {
+  confirmed: 0,
+  model: 1,
+  estimated: 2,
+}
+
 /**
- * Generate a flat list of tips across all matches, sorted by value edge first,
- * then by model probability. Only returns tips with probability >= 0.45.
+ * Generate a flat list of tips across all matches.
+ * Sort priority: value tips first, then by data quality (confirmed > model > estimated),
+ * then by probability. Tips with probability < 0.45 are excluded.
+ * Estimated-quality tips (generic default xG) are deprioritised to the bottom.
  */
 export function generateFeedTips(matches: Match[]): FeedTip[] {
   const result: FeedTip[] = []
@@ -332,7 +385,12 @@ export function generateFeedTips(matches: Match[]): FeedTip[] {
     }
   }
   return result.sort((a, b) => {
+    // Value tips always surface first
     if (a.isValue !== b.isValue) return a.isValue ? -1 : 1
+    // Then sort by data quality
+    const qDiff = QUALITY_ORDER[a.dataQuality] - QUALITY_ORDER[b.dataQuality]
+    if (qDiff !== 0) return qDiff
+    // Finally by probability
     return b.probability - a.probability
   })
 }
