@@ -5,11 +5,13 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { FavoritesSwitcher } from "@/components/features/FavoritesSwitcher"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { FormGuide } from "@/components/primitives/FormGuide"
+import Link from "next/link"
 
 export default function TeamsPage() {
   const { matches, loading } = useMatchIntelligence()
+  const [search, setSearch] = useState("")
 
   const teams = useMemo(() => {
     const map = new Map<string, { name: string; league: string; form: string }>()
@@ -19,6 +21,12 @@ export default function TeamsPage() {
     }
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
   }, [matches])
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return teams
+    const q = search.toLowerCase()
+    return teams.filter((t) => t.name.toLowerCase().includes(q) || t.league.toLowerCase().includes(q))
+  }, [teams, search])
 
   return (
     <div className="md-page">
@@ -30,19 +38,32 @@ export default function TeamsPage() {
           text="No upcoming or recent fixtures loaded. Check back when matches are scheduled."
         />
       )}
+      {!loading && teams.length > 0 && (
+        <input
+          className="md-input"
+          placeholder="Search teams or leagues…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ marginBottom: 16 }}
+          aria-label="Search teams"
+        />
+      )}
       <div className="teams-grid">
-        {teams.map((t) => (
-          <div key={t.name} className="md-card" style={{ padding: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <strong>{t.name}</strong>
-                <div className="md-text-muted" style={{ fontSize: 11 }}>{t.league}</div>
-                <div style={{ marginTop: 8 }}><FormGuide form={t.form} /></div>
+        {filtered.map((t) => {
+          const slug = encodeURIComponent(t.name)
+          return (
+            <div key={t.name} className="md-card teams-card" style={{ padding: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <Link href={`/teams/${slug}`} className="teams-card-link">
+                  <strong>{t.name}</strong>
+                  <div className="md-text-muted" style={{ fontSize: 11 }}>{t.league}</div>
+                  <div style={{ marginTop: 8 }}><FormGuide form={t.form} /></div>
+                </Link>
+                <FavoritesSwitcher type="team" id={t.name} label={t.name} meta={{ league: t.league }} />
               </div>
-              <FavoritesSwitcher type="team" id={t.name} label={t.name} meta={{ league: t.league }} />
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

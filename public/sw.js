@@ -1,4 +1,4 @@
-/* AreBet service worker — minimal cache-first for static, network-first for API */
+/* AreBet service worker — cache strategy + background push notifications */
 const CACHE = "arebet-v1"
 const PRECACHE = ["/", "/arebet-logo.svg"]
 
@@ -50,4 +50,36 @@ self.addEventListener("fetch", (event) => {
       }),
     )
   }
+})
+
+// ── Push notifications ────────────────────────────────────────────────────────
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return
+  let payload
+  try { payload = event.data.json() } catch { payload = { title: "AreBet", body: event.data.text() } }
+
+  const title = payload.title ?? "AreBet"
+  const options = {
+    body: payload.body ?? "",
+    icon: "/arebet-logo.svg",
+    badge: "/arebet-logo.svg",
+    tag: payload.tag ?? `arebet-${Date.now()}`,
+    data: { url: payload.url ?? "/" },
+    silent: false,
+  }
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+  const url = event.notification.data?.url ?? "/"
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === url && "focus" in client) return client.focus()
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url)
+    }),
+  )
 })

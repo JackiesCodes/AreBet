@@ -232,6 +232,32 @@ create policy "Anyone can read signal snapshots"
 -- This prevents clients from fabricating or modifying track record data.
 
 -- =====================
+-- STRIPE / SUBSCRIPTION
+-- Add stripe_customer_id to profiles if not present
+-- =====================
+alter table public.profiles
+  add column if not exists stripe_customer_id text;
+
+-- =====================
+-- WEB PUSH SUBSCRIPTIONS
+-- Stores browser push subscription objects for background notifications
+-- =====================
+create table if not exists public.push_subscriptions (
+  endpoint          text        primary key,
+  user_id           uuid        references auth.users(id) on delete set null,
+  subscription      jsonb       not null,
+  updated_at        timestamptz not null default now()
+);
+
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists "Service role manages push subscriptions" on public.push_subscriptions;
+-- Only server-side (service role) can read/write push subscriptions
+-- Clients interact via /api/push/* route handlers
+
+create index if not exists idx_push_user on public.push_subscriptions(user_id);
+
+-- =====================
 -- INDEXES
 -- =====================
 create index if not exists idx_favorites_user on public.favorites(user_id);

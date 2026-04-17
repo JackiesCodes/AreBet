@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useAuth } from "@/lib/auth/context"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
@@ -7,23 +8,47 @@ import { TierBadge } from "@/components/primitives/TierBadge"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { useBets } from "@/hooks/useBets"
 import { BankrollTracker } from "@/components/features/BankrollTracker"
+import { LogBetModal } from "@/components/features/LogBetModal"
+import type { BetRecord } from "@/types/bet"
 
 export default function UserDashboard() {
   const { user } = useAuth()
-  const { bets, summary, loading, isDemo } = useBets()
-  const recent = bets.slice(0, 10)
+  const { bets, summary, loading, isLocal, logBet, settleLocalBet, deleteBet } = useBets()
+  // isLocal replaces old isDemo — bets persist in localStorage when not signed in
+  const [showModal, setShowModal] = useState(false)
+  const [settlingId, setSettlingId] = useState<string | null>(null)
+  const recent = bets.slice(0, 20)
+
+  async function handleSettle(id: string, result: BetRecord["result"]) {
+    setSettlingId(id)
+    settleLocalBet(id, result)
+    setSettlingId(null)
+  }
 
   return (
     <div className="md-page">
       <PageHeader
         title="Your Dashboard"
-        subtitle={user?.email ? `Signed in as ${user.email}` : "Sign in to track your bets"}
-        actions={<TierBadge tier="free" />}
+        subtitle={user?.email ? `Signed in as ${user.email}` : "Tracking bets locally — sign in to sync across devices"}
+        actions={
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <TierBadge tier="free" />
+            <button
+              type="button"
+              className="md-btn md-btn--primary md-btn--sm"
+              onClick={() => setShowModal(true)}
+            >
+              + Log Bet
+            </button>
+          </div>
+        }
       />
 
-      {isDemo && (
+      {isLocal && (
         <div className="md-banner md-banner--info" style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, fontSize: 12 }}>
-          Showing demo data. Sign in and place bets to see your real history.
+          Bets are saved locally on this device.{" "}
+          <a href="/auth/login" style={{ color: "var(--primary)", textDecoration: "underline" }}>Sign in</a>
+          {" "}to sync across devices.
         </div>
       )}
 
@@ -69,11 +94,29 @@ export default function UserDashboard() {
           </div>
 
           <Card>
-            <CardTitle>Recent Bets</CardTitle>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <CardTitle>Recent Bets</CardTitle>
+              <button
+                type="button"
+                className="md-btn md-btn--ghost md-btn--sm"
+                onClick={() => setShowModal(true)}
+              >
+                + Log Bet
+              </button>
+            </div>
             {recent.length === 0 ? (
-              <p className="md-text-muted" style={{ fontSize: 13, padding: "16px 0" }}>
-                No bets yet. Add picks to your slip and place a bet.
-              </p>
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <p className="md-text-muted" style={{ fontSize: 13, marginBottom: 12 }}>
+                  No bets yet. Start tracking your picks.
+                </p>
+                <button
+                  type="button"
+                  className="md-btn md-btn--primary md-btn--sm"
+                  onClick={() => setShowModal(true)}
+                >
+                  Log your first bet
+                </button>
+              </div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table className="md-table">
@@ -82,11 +125,12 @@ export default function UserDashboard() {
                       <th>Date</th>
                       <th>Match</th>
                       <th>Market</th>
-                      <th>Selection</th>
+                      <th>Sel.</th>
                       <th>Stake</th>
                       <th>Odds</th>
                       <th>Return</th>
                       <th>Result</th>
+                      {isLocal && <th></th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -95,23 +139,57 @@ export default function UserDashboard() {
                       return (
                         <tr key={b.id}>
                           <td className="md-mono">{b.created_at.slice(0, 10)}</td>
-                          <td>{b.teams}</td>
+                          <td style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.teams}</td>
                           <td>{b.market}</td>
                           <td>{b.selection}</td>
                           <td className="md-mono">${b.stake.toFixed(2)}</td>
                           <td className="md-mono">{b.odds.toFixed(2)}</td>
                           <td className="md-mono">
-                            {ret != null ? `$${ret.toFixed(2)}` : "—"}
+                            {ret != null ? (
+                              <span style={{ color: ret > 0 ? "var(--positive)" : "var(--negative)" }}>
+                                ${ret.toFixed(2)}
+                              </span>
+                            ) : "—"}
                           </td>
                           <td>
-                            <span className={
-                              b.result === "WIN" ? "md-text-positive" :
-                              b.result === "LOSS" ? "md-text-negative" :
-                              b.result === "PENDING" ? "md-text-muted" : ""
-                            }>
-                              {b.result}
-                            </span>
+                            {b.result === "PENDING" && isLocal ? (
+                              <div style={{ display: "flex", gap: 4 }}>
+                                {(["WIN", "LOSS", "PUSH"] as const).map((r) => (
+                                  <button
+                                    key={r}
+                                    type="button"
+                                    disabled={settlingId === b.id}
+                                    className={`md-btn md-btn--sm ${r === "WIN" ? "md-btn--primary" : "md-btn--ghost"}`}
+                                    style={{ padding: "2px 6px", fontSize: 10 }}
+                                    onClick={() => handleSettle(b.id, r)}
+                                  >
+                                    {r}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className={
+                                b.result === "WIN" ? "md-text-positive" :
+                                b.result === "LOSS" ? "md-text-negative" :
+                                b.result === "PENDING" ? "md-text-muted" : ""
+                              }>
+                                {b.result}
+                              </span>
+                            )}
                           </td>
+                          {isLocal && (
+                            <td>
+                              <button
+                                type="button"
+                                className="md-btn md-btn--ghost md-btn--sm"
+                                style={{ padding: "2px 6px", fontSize: 10, color: "var(--negative)" }}
+                                onClick={() => deleteBet(b.id)}
+                                aria-label="Delete bet"
+                              >
+                                ×
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       )
                     })}
@@ -121,6 +199,13 @@ export default function UserDashboard() {
             )}
           </Card>
         </>
+      )}
+
+      {showModal && (
+        <LogBetModal
+          onClose={() => setShowModal(false)}
+          onSave={logBet}
+        />
       )}
     </div>
   )

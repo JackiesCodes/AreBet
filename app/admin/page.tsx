@@ -466,6 +466,41 @@ export default function AdminPage() {
             configured={Boolean(process.env.NEXT_PUBLIC_USE_DEMO_DATA)}
             description="Set to 'true' to force demo/sample mode regardless of API key presence"
           />
+          <EnvRow
+            name="STRIPE_SECRET_KEY"
+            configured={Boolean(process.env.STRIPE_SECRET_KEY)}
+            description="Stripe secret key — required for subscription checkout and webhooks"
+          />
+          <EnvRow
+            name="STRIPE_WEBHOOK_SECRET"
+            configured={Boolean(process.env.STRIPE_WEBHOOK_SECRET)}
+            description="Stripe webhook signing secret — required to verify payment events"
+          />
+          <EnvRow
+            name="STRIPE_PRO_PRICE_ID"
+            configured={Boolean(process.env.STRIPE_PRO_PRICE_ID)}
+            description="Stripe Price ID for Pro plan (e.g. price_xxx)"
+          />
+          <EnvRow
+            name="STRIPE_ELITE_PRICE_ID"
+            configured={Boolean(process.env.STRIPE_ELITE_PRICE_ID)}
+            description="Stripe Price ID for Elite plan"
+          />
+          <EnvRow
+            name="VAPID_PUBLIC_KEY"
+            configured={Boolean(process.env.VAPID_PUBLIC_KEY)}
+            description="VAPID public key for Web Push — generate with: npx web-push generate-vapid-keys"
+          />
+          <EnvRow
+            name="VAPID_PRIVATE_KEY"
+            configured={Boolean(process.env.VAPID_PRIVATE_KEY)}
+            description="VAPID private key for Web Push (keep secret)"
+          />
+          <EnvRow
+            name="NEXT_PUBLIC_VAPID_PUBLIC_KEY"
+            configured={Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY)}
+            description="Same as VAPID_PUBLIC_KEY but exposed to the browser for push subscription"
+          />
         </div>
 
         {signalStatus && !signalStatus.serviceKeyConfigured && (
