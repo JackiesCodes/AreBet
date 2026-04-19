@@ -2198,21 +2198,68 @@ svg {
 
 /* ── Team rows ── */
 .cc-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
-/*
- * Grid: [circle 28px] [name 1fr] [form auto] [score 28px]
- * The 1fr name column ensures both rows align their form+score columns.
- */
-.cc-card-team {
-  display: grid;
-  grid-template-columns: 28px 1fr auto 28px;
+/* Home / away side columns */
+.cc-card-side {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cc-card-side-top {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.cc-card-side--away .cc-card-side-top {
+  flex-direction: row-reverse;
+}
+
+.cc-card-side--away {
+  align-items: flex-end;
+}
+
+.cc-card-form--away {
+  justify-content: flex-end;
+}
+
+/* Centre score column */
+.cc-card-centre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cc-card-score-centre {
+  font-size: 18px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.cc-card-score-centre--live {
+  color: var(--live);
+}
+
+.cc-card-kickoff {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cc-card-team-name--winner {
+  color: var(--positive);
 }
 
 .cc-card-team-name {
@@ -2366,11 +2413,6 @@ svg {
   margin-bottom: 5px;
 }
 
-.cc-card--compact .cc-card-team {
-  grid-template-columns: 22px 1fr auto 22px;
-  gap: 6px;
-}
-
 .cc-card--compact .cc-card-team-name {
   font-size: 12px;
 }
@@ -2381,7 +2423,7 @@ svg {
   font-size: 7px;
 }
 
-.cc-card--compact .cc-card-score {
+.cc-card--compact .cc-card-score-centre {
   font-size: 15px;
 }
 
@@ -5228,12 +5270,11 @@ svg {
  * ============================================================================ */
 
 @media (max-width: 360px) {
-  .cc-card-team {
-    grid-template-columns: 24px 1fr auto 24px;
-    gap: 5px;
-  }
   .cc-card-team-name {
     font-size: 11px;
+  }
+  .cc-card-score-centre {
+    font-size: 15px;
   }
   .cc-card-form .md-form-pip {
     width: 11px;

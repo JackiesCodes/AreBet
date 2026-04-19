@@ -127,41 +127,44 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
         />
       </div>
 
-      {/* ── Teams: circle · name · form · score ──── */}
+      {/* ── Teams: home | score | away ──── */}
       <div className="cc-card-body">
 
-        {/* Home row */}
-        <div className="cc-card-team">
-          <TeamCircle name={match.home.name} size={compact ? "sm" : "md"} />
-          <span className="cc-card-team-name">{match.home.name}</span>
+        {/* Home side */}
+        <div className="cc-card-side cc-card-side--home">
+          <div className="cc-card-side-top">
+            <TeamCircle name={match.home.name} size={compact ? "sm" : "md"} />
+            <span className={cn("cc-card-team-name", homeWon && "cc-card-team-name--winner")}>
+              {match.home.name}
+            </span>
+          </div>
           {match.home.form && (
             <FormGuide form={match.home.form} className="cc-card-form" />
           )}
-          <span className={cn(
-            "cc-card-score",
-            homeScore == null && "cc-card-score--empty",
-            isLive    && "cc-card-score--live",
-            homeWon   && "cc-card-score--winner",
-          )}>
-            {homeScore ?? ""}
-          </span>
         </div>
 
-        {/* Away row */}
-        <div className="cc-card-team">
-          <TeamCircle name={match.away.name} size={compact ? "sm" : "md"} />
-          <span className="cc-card-team-name">{match.away.name}</span>
-          {match.away.form && (
-            <FormGuide form={match.away.form} className="cc-card-form" />
+        {/* Centre score */}
+        <div className="cc-card-centre">
+          {homeScore != null && awayScore != null ? (
+            <span className={cn("cc-card-score-centre", isLive && "cc-card-score-centre--live")}>
+              {homeScore} – {awayScore}
+            </span>
+          ) : (
+            <span className="cc-card-kickoff">{timeLabel}</span>
           )}
-          <span className={cn(
-            "cc-card-score",
-            awayScore == null && "cc-card-score--empty",
-            isLive    && "cc-card-score--live",
-            awayWon   && "cc-card-score--winner",
-          )}>
-            {awayScore ?? ""}
-          </span>
+        </div>
+
+        {/* Away side */}
+        <div className="cc-card-side cc-card-side--away">
+          <div className="cc-card-side-top">
+            <span className={cn("cc-card-team-name", awayWon && "cc-card-team-name--winner")}>
+              {match.away.name}
+            </span>
+            <TeamCircle name={match.away.name} size={compact ? "sm" : "md"} />
+          </div>
+          {match.away.form && (
+            <FormGuide form={match.away.form} className="cc-card-form cc-card-form--away" />
+          )}
         </div>
       </div>
 
