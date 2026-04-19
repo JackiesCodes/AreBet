@@ -8,9 +8,14 @@ import type { ApiStandingRow, ApiPlayerStat } from "@/lib/api-football/types"
 
 // ── Live ticker ───────────────────────────────────────────────────────────────
 
+const LIVE_INITIAL = 3
+
 function LiveTicker() {
   const { matches } = useMatchIntelligence()
+  const [expanded, setExpanded] = useState(false)
   const live = useMemo(() => matches.filter((m) => m.status === "LIVE"), [matches])
+  const visible = expanded ? live : live.slice(0, LIVE_INITIAL)
+  const hidden = live.length - LIVE_INITIAL
 
   if (live.length === 0) {
     return <div className="rp-empty">No live matches right now</div>
@@ -18,7 +23,7 @@ function LiveTicker() {
 
   return (
     <div className="rp-ticker">
-      {live.slice(0, 8).map((m) => (
+      {visible.map((m) => (
         <Link key={m.id} href={`/match/${m.id}`} className="rp-ticker-item">
           <div className="rp-ticker-header">
             <span className="rp-ticker-minute">
@@ -34,6 +39,15 @@ function LiveTicker() {
           </div>
         </Link>
       ))}
+      {hidden > 0 && (
+        <button
+          type="button"
+          className="rp-ticker-toggle"
+          onClick={() => setExpanded((e) => !e)}
+        >
+          {expanded ? "Show less" : `Show ${hidden} more`}
+        </button>
+      )}
     </div>
   )
 }

@@ -4844,6 +4844,26 @@ svg {
   text-align: right;
 }
 
+.rp-ticker-toggle {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.rp-ticker-toggle:hover {
+  background: var(--surface-4);
+  border-color: var(--primary);
+}
+
 .rp-ticker-score {
   font-size: 13px;
   font-weight: 700;
