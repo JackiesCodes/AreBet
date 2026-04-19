@@ -191,7 +191,7 @@ svg {
 
 @media (max-width: 767px) {
   .site-main {
-    padding-bottom: var(--bottom-nav-height);
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
   }
 }
 
@@ -325,6 +325,8 @@ svg {
   left: 0;
   right: 0;
   height: var(--bottom-nav-height);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: content-box;
   background: rgba(5, 5, 5, 0.95);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
@@ -4356,7 +4358,7 @@ svg {
 
 @media (max-width: 767px) {
   .site-main {
-    padding-bottom: var(--bottom-nav-height);
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
   }
 }
 
