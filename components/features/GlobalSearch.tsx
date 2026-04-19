@@ -120,6 +120,12 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           <input
             ref={inputRef}
             type="search"
+            inputMode="search"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            enterKeyHint="search"
             className="gs-input"
             placeholder="Teams, matches, leagues…"
             value={query}
