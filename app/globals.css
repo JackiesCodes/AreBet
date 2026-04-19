@@ -119,6 +119,7 @@ body {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 
@@ -178,6 +179,7 @@ svg {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
 }
 
@@ -348,7 +350,8 @@ svg {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  font-size: 10px;
+  font-size: 12px;
+  min-height: 44px;
   color: var(--text-muted);
 }
 
@@ -365,6 +368,7 @@ svg {
   max-width: 1600px;
   margin: 0 auto;
   min-height: calc(100vh - var(--nav-height));
+  min-height: calc(100dvh - var(--nav-height));
 }
 
 @media (max-width: 1279px) {
@@ -1283,6 +1287,7 @@ svg {
 /* ----- Auth pages ------------------------------------------------------- */
 .auth-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: var(--space-6);
@@ -2919,6 +2924,7 @@ svg {
   width: 380px;
   max-width: calc(100vw - var(--space-8));
   max-height: calc(100vh - var(--nav-height) - 24px);
+  max-height: calc(100dvh - var(--nav-height) - 24px);
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
@@ -4359,6 +4365,7 @@ svg {
   display: grid;
   grid-template-columns: 280px 1fr 300px;
   min-height: calc(100vh - var(--nav-height));
+  min-height: calc(100dvh - var(--nav-height));
   align-items: start;
 }
 
@@ -4395,6 +4402,7 @@ svg {
   position: sticky;
   top: var(--nav-height);
   height: calc(100vh - var(--nav-height));
+  height: calc(100dvh - var(--nav-height));
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--space-4);
@@ -4645,6 +4653,7 @@ svg {
   position: sticky;
   top: var(--nav-height);
   height: calc(100vh - var(--nav-height));
+  height: calc(100dvh - var(--nav-height));
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--space-4);
@@ -6360,4 +6369,39 @@ svg {
 
 .lss-result {
   margin-top: var(--space-4);
+}
+
+/* ============================================================================
+ * Mobile tap targets & iOS input zoom prevention
+ * ============================================================================ */
+@media (max-width: 767px) {
+  .md-btn {
+    min-height: 44px;
+  }
+
+  .md-input,
+  .md-select {
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .gs-input {
+    font-size: 16px;
+  }
+
+  .cc-search input[type="search"],
+  .md-page input[type="search"] {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .md-page > div:first-child {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .md-page .cc-search {
+    width: 100% !important;
+  }
 }
