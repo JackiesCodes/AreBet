@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useAuth } from "@/lib/auth/context"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -39,7 +39,7 @@ const TIERS = [
   },
 ]
 
-export default function SubscriptionPage() {
+function SubscriptionContent() {
   const { user } = useAuth()
   const router = useRouter()
   const params = useSearchParams()
@@ -158,5 +158,13 @@ export default function SubscriptionPage() {
         All paid plans include a 7-day free trial. Cancel anytime from the billing portal.
       </p>
     </div>
+  )
+}
+
+export default function SubscriptionPage() {
+  return (
+    <Suspense>
+      <SubscriptionContent />
+    </Suspense>
   )
 }
