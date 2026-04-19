@@ -3168,7 +3168,8 @@ svg {
     left: var(--space-3);
     width: auto;
     max-width: 100%;
-    top: calc(var(--nav-height) + 6px);
+    top: calc(var(--nav-height) + 6px + env(safe-area-inset-top));
+    max-height: calc(100dvh - var(--nav-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
   }
 }
 
@@ -6394,6 +6395,10 @@ svg {
   .cc-search input[type="search"],
   .md-page input[type="search"] {
     font-size: 16px;
+  }
+
+  .cc-search {
+    height: 44px;
   }
 }
 
