@@ -8,7 +8,7 @@ import type { ApiStandingRow, ApiPlayerStat } from "@/lib/api-football/types"
 
 // ── Live ticker ───────────────────────────────────────────────────────────────
 
-const LIVE_INITIAL = 3
+const LIVE_INITIAL = 2
 
 function LiveTicker() {
   const { matches } = useMatchIntelligence()
@@ -62,24 +62,30 @@ const STANDING_LEAGUES: [number, string][] = [
   [61, "Ligue 1"],
 ]
 
+const STANDINGS_INITIAL = 3
+
 function MiniStandings() {
   const [leagueId, setLeagueId] = useState(39)
   const [rows, setRows] = useState<ApiStandingRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     setLoading(true)
+    setExpanded(false)
     fetch(`/api/standings?league=${leagueId}`)
       .then((r) => r.json())
       .then((d) => {
         const league = d.standings?.[0]?.league
-        setRows(league?.standings?.[0]?.slice(0, 5) ?? [])
+        setRows(league?.standings?.[0] ?? [])
       })
       .catch(() => setRows([]))
       .finally(() => setLoading(false))
   }, [leagueId])
 
   const leagueName = STANDING_LEAGUES.find(([id]) => id === leagueId)?.[1] ?? "League"
+  const visible = expanded ? rows : rows.slice(0, STANDINGS_INITIAL)
+  const hidden = rows.length - STANDINGS_INITIAL
 
   return (
     <div>
@@ -96,7 +102,7 @@ function MiniStandings() {
         ))}
       </div>
 
-      <div className="rp-section-title">{leagueName} Top 5</div>
+      <div className="rp-section-title">{leagueName} Top {expanded ? rows.length : STANDINGS_INITIAL}</div>
 
       {loading && <div className="rp-loading">Loading…</div>}
 
@@ -104,7 +110,7 @@ function MiniStandings() {
         <div className="rp-empty">No standings data</div>
       )}
 
-      {rows.map((row, i) => (
+      {visible.map((row, i) => (
         <div key={row.team.id} className="rp-standings-row">
           <span className="rp-standings-rank">{i + 1}</span>
           <span className="rp-standings-team">{row.team.name}</span>
@@ -114,6 +120,16 @@ function MiniStandings() {
           </span>
         </div>
       ))}
+
+      {!loading && hidden > 0 && (
+        <button
+          type="button"
+          className="rp-ticker-toggle"
+          onClick={() => setExpanded((e) => !e)}
+        >
+          {expanded ? "Show less" : `Show ${hidden} more`}
+        </button>
+      )}
     </div>
   )
 }
