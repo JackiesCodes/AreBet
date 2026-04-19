@@ -33,7 +33,7 @@ function detectArbitrage(bookmakerOdds: BookmakerOdds[]): ArbResult {
   return { exists: margin < 0, margin, bestHome, bestDraw, bestAway, bestHomeBook, bestDrawBook, bestAwayBook }
 }
 
-const ODDS_INITIAL = 2
+const ODDS_INITIAL = 1
 
 export function OddsComparison({ bookmakerOdds }: OddsComparisonProps) {
   const fmt = useFormatOdds()
