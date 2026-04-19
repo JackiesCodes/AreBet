@@ -6793,3 +6793,23 @@ svg {
   background: var(--surface-3);
   border-top: 1px solid var(--border);
 }
+
+.odds-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.odds-toggle:hover {
+  background: var(--surface-4);
+  border-color: var(--primary);
+}

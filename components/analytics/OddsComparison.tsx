@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import type { BookmakerOdds } from "@/types/match"
 import { useFormatOdds } from "@/hooks/useFormatOdds"
 
@@ -32,8 +33,11 @@ function detectArbitrage(bookmakerOdds: BookmakerOdds[]): ArbResult {
   return { exists: margin < 0, margin, bestHome, bestDraw, bestAway, bestHomeBook, bestDrawBook, bestAwayBook }
 }
 
+const ODDS_INITIAL = 2
+
 export function OddsComparison({ bookmakerOdds }: OddsComparisonProps) {
   const fmt = useFormatOdds()
+  const [expanded, setExpanded] = useState(false)
 
   if (bookmakerOdds.length === 0) {
     return (
@@ -44,6 +48,8 @@ export function OddsComparison({ bookmakerOdds }: OddsComparisonProps) {
   }
 
   const arb = detectArbitrage(bookmakerOdds)
+  const visible = expanded ? bookmakerOdds : bookmakerOdds.slice(0, ODDS_INITIAL)
+  const hidden = bookmakerOdds.length - ODDS_INITIAL
 
   return (
     <div className="odds-comp-root">
@@ -73,7 +79,7 @@ export function OddsComparison({ bookmakerOdds }: OddsComparisonProps) {
           </tr>
         </thead>
         <tbody>
-          {bookmakerOdds.map((b) => {
+          {visible.map((b) => {
             const overround = (1 / b.home + 1 / b.draw + 1 / b.away - 1) * 100
             return (
               <tr key={b.bookmaker}>
@@ -106,6 +112,16 @@ export function OddsComparison({ bookmakerOdds }: OddsComparisonProps) {
           </tr>
         </tfoot>
       </table>
+
+      {hidden > 0 && (
+        <button
+          type="button"
+          className="odds-toggle"
+          onClick={() => setExpanded((e) => !e)}
+        >
+          {expanded ? "Show less ↑" : `${hidden} more bookmaker${hidden === 1 ? "" : "s"} ↓`}
+        </button>
+      )}
     </div>
   )
 }
