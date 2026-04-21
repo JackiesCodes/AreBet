@@ -8,16 +8,11 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { fetchAllStandings, fetchStandings, currentSeason } from "@/lib/api-football/client"
-import { shouldUseDemoMode } from "@/lib/services/matches"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export async function GET(req: NextRequest) {
-  if (shouldUseDemoMode()) {
-    return NextResponse.json({ standings: [], demo: true })
-  }
-
   const { searchParams } = req.nextUrl
   const leagueParam = searchParams.get("league")
   const seasonParam = searchParams.get("season")

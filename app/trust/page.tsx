@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardTitle, CardSubtitle } from "@/components/primitives/Card"
-import { DEMO_SIGNAL_HISTORY } from "@/lib/demo/signal-history"
 import { fetchSignalHistory } from "@/lib/services/signals"
 import type { SignalDataState } from "@/lib/services/signals"
 import type { SignalRecord } from "@/types/trust"
@@ -201,11 +200,9 @@ export default function TrustPage() {
     let cancelled = false
     fetchSignalHistory({ limit: 500 }).then((result) => {
       if (cancelled) return
-      // For "collecting" and "no_data" states, show demo records for illustration
-      const records = result.state === "live" ? result.records : DEMO_SIGNAL_HISTORY
       setPageDataState({
         status: "ready",
-        records,
+        records: result.records,
         signalState: result.state,
         total: result.total,
         totalRecorded: result.totalRecorded,

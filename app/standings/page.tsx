@@ -1,5 +1,4 @@
 import { fetchAllStandings } from "@/lib/api-football/client"
-import { shouldUseDemoMode } from "@/lib/services/matches"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { LeagueStandingsSearch } from "@/components/features/LeagueStandingsSearch"
@@ -87,20 +86,6 @@ function StandingsTable({ rows }: { rows: ApiStandingRow[] }) {
 }
 
 export default async function StandingsPage() {
-  const isDemo = shouldUseDemoMode()
-
-  if (isDemo) {
-    return (
-      <div className="md-page">
-        <PageHeader title="Standings" subtitle="Live league tables from API-Football" />
-        <EmptyState
-          title="Live mode required"
-          text="Standings use real API data. Set NEXT_PUBLIC_USE_DEMO_DATA=false and add your API_FOOTBALL_KEY to enable."
-        />
-      </div>
-    )
-  }
-
   let standingsData: Awaited<ReturnType<typeof fetchAllStandings>> = []
   let fetchError: string | null = null
 

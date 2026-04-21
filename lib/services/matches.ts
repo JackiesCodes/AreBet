@@ -1,6 +1,4 @@
 import type { Match, MatchFeed } from "@/types/match"
-import { buildDemoMatches } from "@/lib/demo/matches"
-import { applySimulationTick } from "@/lib/simulation/engine"
 import {
   fetchFixturesFeed,
   fetchFixtureDetail,
@@ -20,16 +18,6 @@ import {
 } from "@/lib/api-football/mapper"
 import type { ApiFixture } from "@/lib/api-football/types"
 
-export function shouldUseDemoMode(): boolean {
-  if (process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true") return true
-  if (process.env.NEXT_PUBLIC_USE_DEMO_DATA === "false" && process.env.API_FOOTBALL_KEY) return false
-  if (!process.env.API_FOOTBALL_KEY) return true
-  return false
-}
-
-// Demo mode in-memory state
-let liveMatches: Match[] | null = null
-
 /** Build a teamId → last-5-form map from standings (non-critical, silently fails) */
 async function buildFormMap(): Promise<Map<number, string>> {
   const map = new Map<number, string>()
@@ -48,16 +36,6 @@ async function buildFormMap(): Promise<Map<number, string>> {
 }
 
 export async function fetchMatchFeed(): Promise<MatchFeed> {
-  if (shouldUseDemoMode()) {
-    if (!liveMatches) liveMatches = buildDemoMatches().map((m) => ({ ...m }))
-    liveMatches = applySimulationTick(liveMatches)
-    return {
-      matches: liveMatches,
-      fetchedAt: new Date().toISOString(),
-      source: "demo",
-    }
-  }
-
   // Fetch fixtures + standings (for form) in parallel
   const [scheduled, live, formMap] = await Promise.all([
     fetchFixturesFeed().catch(() => [] as ApiFixture[]),
@@ -132,11 +110,6 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
 }
 
 export async function fetchMatchById(id: number): Promise<Match | null> {
-  if (shouldUseDemoMode()) {
-    const feed = await fetchMatchFeed()
-    return feed.matches.find((m) => m.id === id) ?? null
-  }
-
   const fixture = await fetchFixtureDetail(id)
   if (!fixture) return null
 
