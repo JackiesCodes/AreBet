@@ -87,7 +87,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
                     <div key={side} className="coach-card">
                       <div className="coach-card-header">
                         {coach?.photo
-                          ? <Image src={coach.photo} alt={coach.name} width={44} height={44} className="coach-photo" unoptimized />
+                          ? <Image src={coach.photo} alt={coach.name ?? "Coach"} width={44} height={44} className="coach-photo" unoptimized />
                           : <div className="coach-photo-placeholder">👤</div>
                         }
                         <div>

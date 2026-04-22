@@ -417,22 +417,22 @@ export function enrichWithInjuries(
 function mapTeamLineup(raw: ApiLineup): TeamLineup {
   return {
     formation: raw.formation ?? "",
-    startXI: raw.startXI.map((p) => ({
+    startXI: (raw.startXI ?? []).map((p) => ({
       id: p.player.id,
       name: p.player.name,
       number: p.player.number,
       position: p.player.pos,
       grid: p.player.grid,
     })),
-    substitutes: raw.substitutes.map((p) => ({
+    substitutes: (raw.substitutes ?? []).map((p) => ({
       id: p.player.id,
       name: p.player.name,
       number: p.player.number,
       position: p.player.pos,
       grid: p.player.grid,
     })),
-    coach: raw.coach.name ?? null,
-    coachPhoto: raw.coach.photo ?? null,
+    coach: raw.coach?.name ?? null,
+    coachPhoto: raw.coach?.photo ?? null,
   }
 }
 
@@ -512,7 +512,7 @@ export function enrichWithTrophies(
 export function mapTransfers(raw: ApiTransfer[]): MatchTransfer[] {
   const result: MatchTransfer[] = []
   for (const t of raw) {
-    for (const move of t.transfers.slice(0, 5)) {
+    for (const move of (t.transfers ?? []).slice(0, 5)) {
       result.push({
         playerName: t.player.name,
         date: move.date,
@@ -546,7 +546,7 @@ export function enrichWithTransfers(
 export function mapSidelined(raw: ApiSidelined[]): MatchSidelined[] {
   const result: MatchSidelined[] = []
   for (const s of raw) {
-    for (const entry of s.sidelined) {
+    for (const entry of (s.sidelined ?? [])) {
       result.push({
         playerName: s.player.name,
         playerPhoto: s.player.photo,
