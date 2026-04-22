@@ -65,23 +65,39 @@ const STANDING_LEAGUES: [number, string][] = [
 const STANDINGS_INITIAL = 3
 
 function MiniStandings() {
+  const { hasLive } = useMatchIntelligence()
   const [leagueId, setLeagueId] = useState(39)
   const [rows, setRows] = useState<ApiStandingRow[]>([])
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
+    let cancelled = false
+
+    const load = () => {
+      setLoading(true)
+      fetch(`/api/standings?league=${leagueId}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (cancelled) return
+          const league = d.standings?.[0]?.league
+          setRows(league?.standings?.[0] ?? [])
+        })
+        .catch(() => { if (!cancelled) setRows([]) })
+        .finally(() => { if (!cancelled) setLoading(false) })
+    }
+
     setExpanded(false)
-    fetch(`/api/standings?league=${leagueId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const league = d.standings?.[0]?.league
-        setRows(league?.standings?.[0] ?? [])
-      })
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false))
-  }, [leagueId])
+    load()
+
+    // Auto-refresh: 3min when live matches are on, 5min otherwise
+    const interval = setInterval(load, hasLive ? 3 * 60 * 1000 : 5 * 60 * 1000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [leagueId, hasLive])
 
   const leagueName = STANDING_LEAGUES.find(([id]) => id === leagueId)?.[1] ?? "League"
   const visible = expanded ? rows : rows.slice(0, STANDINGS_INITIAL)

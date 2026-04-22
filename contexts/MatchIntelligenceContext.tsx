@@ -32,7 +32,7 @@ import { recordSignal, resolveSignal, signalIdForFixture } from "@/lib/services/
 
 const PREFS_KEY = "arebet:alert-prefs:v1"
 const POLL_MS_IDLE = 30_000
-const POLL_MS_LIVE = 15_000
+const POLL_MS_LIVE = 10_000   // 10s when live — edge cache refreshes at 15s
 const MAX_CHANGES = 60
 
 // Change types that warrant a browser notification (critical + high only)
@@ -73,6 +73,8 @@ interface MatchIntelligenceContextValue {
   error: string | null
   fetchedAt: string | null
   refresh: () => void
+  /** True when at least one match is currently live */
+  hasLive: boolean
 
   /** All detected changes this session (newest first) */
   changes: MatchChange[]
@@ -272,12 +274,15 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
     [unreadChanges],
   )
 
+  const hasLive = useMemo(() => matches.some((m) => m.status === "LIVE"), [matches])
+
   const value: MatchIntelligenceContextValue = {
     matches,
     loading,
     error,
     fetchedAt,
     refresh: () => void tick(),
+    hasLive,
     changes,
     unreadCount,
     latestChangeMap,

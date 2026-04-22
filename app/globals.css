@@ -2599,6 +2599,19 @@ svg {
   font-size: 10px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.intel-live-pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 /* ============================================================================

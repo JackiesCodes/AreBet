@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
 import type { Match } from "@/types/match"
 import { calculateValueEdge } from "@/lib/utils/value-bet"
+import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 
 interface IntelligenceBarProps {
   matches: Match[]
@@ -10,6 +11,15 @@ interface IntelligenceBarProps {
 }
 
 export function IntelligenceBar({ matches, fetchedAt }: IntelligenceBarProps) {
+  const { hasLive } = useMatchIntelligence()
+  const [now, setNow] = useState(() => Date.now())
+
+  // Tick every second so "Updated Xs ago" stays live
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
   const stats = useMemo(() => {
     const live = matches.filter((m) => m.status === "LIVE")
     const upcoming = matches.filter((m) => m.status === "UPCOMING")
@@ -24,10 +34,11 @@ export function IntelligenceBar({ matches, fetchedAt }: IntelligenceBarProps) {
 
   const lastUpdated = useMemo(() => {
     if (!fetchedAt) return null
-    const diff = Math.round((Date.now() - new Date(fetchedAt).getTime()) / 1000)
+    const diff = Math.round((now - new Date(fetchedAt).getTime()) / 1000)
+    if (diff < 5) return "just now"
     if (diff < 60) return `${diff}s ago`
     return `${Math.round(diff / 60)}m ago`
-  }, [fetchedAt])
+  }, [fetchedAt, now])
 
   if (matches.length === 0) return null
 
@@ -72,6 +83,7 @@ export function IntelligenceBar({ matches, fetchedAt }: IntelligenceBarProps) {
 
         {lastUpdated && (
           <div className="intel-updated" aria-live="polite">
+            {hasLive && <span className="intel-live-pulse" aria-hidden />}
             Updated {lastUpdated}
           </div>
         )}
