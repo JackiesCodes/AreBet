@@ -5,6 +5,11 @@ import type {
   ApiEvent,
   ApiTeamStatistics,
   ApiInjury,
+  ApiLineup,
+  ApiCoach,
+  ApiTrophy,
+  ApiTransfer,
+  ApiSidelined,
 } from "./types"
 import type {
   Match,
@@ -20,6 +25,12 @@ import type {
   PlayerRatings,
   PlayerRating,
   MatchInjury,
+  MatchLineup,
+  TeamLineup,
+  MatchCoach,
+  MatchTrophy,
+  MatchTransfer,
+  MatchSidelined,
 } from "@/types/match"
 
 // Map API status short code -> our MatchStatus
@@ -331,11 +342,13 @@ export function mapFixtureToMatch(fixture: ApiFixture): Match {
       name: fixture.teams.home.name,
       short: fixture.teams.home.name.slice(0, 3).toUpperCase(),
       form: "",
+      logo: fixture.teams.home.logo || undefined,
     },
     away: {
       name: fixture.teams.away.name,
       short: fixture.teams.away.name.slice(0, 3).toUpperCase(),
       form: "",
+      logo: fixture.teams.away.logo || undefined,
     },
     score: {
       home: fixture.goals.home ?? 0,
@@ -397,4 +410,165 @@ export function enrichWithInjuries(
   homeTeamId: number,
 ): Match {
   return { ...match, injuries: mapInjuries(injuries, homeTeamId) }
+}
+
+// ── Lineup ────────────────────────────────────────────────────────────────────
+
+function mapTeamLineup(raw: ApiLineup): TeamLineup {
+  return {
+    formation: raw.formation ?? "",
+    startXI: raw.startXI.map((p) => ({
+      id: p.player.id,
+      name: p.player.name,
+      number: p.player.number,
+      position: p.player.pos,
+      grid: p.player.grid,
+    })),
+    substitutes: raw.substitutes.map((p) => ({
+      id: p.player.id,
+      name: p.player.name,
+      number: p.player.number,
+      position: p.player.pos,
+      grid: p.player.grid,
+    })),
+    coach: raw.coach.name ?? null,
+    coachPhoto: raw.coach.photo ?? null,
+  }
+}
+
+export function mapLineups(lineups: ApiLineup[]): MatchLineup | undefined {
+  if (lineups.length < 2) return undefined
+  return {
+    home: mapTeamLineup(lineups[0]),
+    away: mapTeamLineup(lineups[1]),
+  }
+}
+
+export function enrichWithLineup(match: Match, lineups: ApiLineup[]): Match {
+  const lineup = mapLineups(lineups)
+  return lineup ? { ...match, lineup } : match
+}
+
+// ── Coach ─────────────────────────────────────────────────────────────────────
+
+export function mapCoach(raw: ApiCoach): MatchCoach {
+  return {
+    id: raw.id,
+    name: raw.name,
+    photo: raw.photo,
+    nationality: raw.nationality ?? null,
+    age: raw.age ?? null,
+    career: (raw.career ?? []).map((c) => ({
+      teamName: c.team.name,
+      teamLogo: c.team.logo,
+      start: c.start,
+      end: c.end ?? null,
+    })),
+  }
+}
+
+export function enrichWithCoaches(
+  match: Match,
+  homeCoach: ApiCoach | null,
+  awayCoach: ApiCoach | null,
+): Match {
+  if (!homeCoach && !awayCoach) return match
+  return {
+    ...match,
+    coaches: {
+      home: homeCoach ? mapCoach(homeCoach) : undefined,
+      away: awayCoach ? mapCoach(awayCoach) : undefined,
+    },
+  }
+}
+
+// ── Trophies ──────────────────────────────────────────────────────────────────
+
+export function mapTrophies(raw: ApiTrophy[]): MatchTrophy[] {
+  return raw.map((t) => ({
+    league: t.league,
+    country: t.country,
+    season: t.season,
+    place: t.place,
+  }))
+}
+
+export function enrichWithTrophies(
+  match: Match,
+  homeTrophies: ApiTrophy[],
+  awayTrophies: ApiTrophy[],
+): Match {
+  return {
+    ...match,
+    trophies: {
+      home: mapTrophies(homeTrophies),
+      away: mapTrophies(awayTrophies),
+    },
+  }
+}
+
+// ── Transfers ─────────────────────────────────────────────────────────────────
+
+export function mapTransfers(raw: ApiTransfer[]): MatchTransfer[] {
+  const result: MatchTransfer[] = []
+  for (const t of raw) {
+    for (const move of t.transfers.slice(0, 5)) {
+      result.push({
+        playerName: t.player.name,
+        date: move.date,
+        type: move.type,
+        teamIn: move.teams.in.name,
+        teamInLogo: move.teams.in.logo,
+        teamOut: move.teams.out.name,
+        teamOutLogo: move.teams.out.logo,
+      })
+    }
+  }
+  return result.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10)
+}
+
+export function enrichWithTransfers(
+  match: Match,
+  homeTransfers: ApiTransfer[],
+  awayTransfers: ApiTransfer[],
+): Match {
+  return {
+    ...match,
+    transfers: {
+      home: mapTransfers(homeTransfers),
+      away: mapTransfers(awayTransfers),
+    },
+  }
+}
+
+// ── Sidelined ─────────────────────────────────────────────────────────────────
+
+export function mapSidelined(raw: ApiSidelined[]): MatchSidelined[] {
+  const result: MatchSidelined[] = []
+  for (const s of raw) {
+    for (const entry of s.sidelined) {
+      result.push({
+        playerName: s.player.name,
+        playerPhoto: s.player.photo,
+        type: entry.type,
+        start: entry.start,
+        end: entry.end ?? null,
+      })
+    }
+  }
+  return result
+}
+
+export function enrichWithSidelined(
+  match: Match,
+  homeSidelined: ApiSidelined[],
+  awaySidelined: ApiSidelined[],
+): Match {
+  return {
+    ...match,
+    sidelined: {
+      home: mapSidelined(homeSidelined),
+      away: mapSidelined(awaySidelined),
+    },
+  }
 }

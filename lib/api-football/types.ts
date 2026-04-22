@@ -1,5 +1,5 @@
 // API-Football v3 response types (api-sports.io)
-// Full suite — no endpoint restrictions
+// Full Pro-tier suite — all endpoints covered
 
 export interface ApiResponse<T> {
   get: string
@@ -10,12 +10,75 @@ export interface ApiResponse<T> {
   response: T[]
 }
 
-// --- Fixtures ---
+// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 export interface ApiFixtureStatus {
   long: string
   short: string
   elapsed: number | null
+}
+
+export interface ApiEvent {
+  time: { elapsed: number; extra: number | null }
+  team: { id: number; name: string; logo: string }
+  player: { id: number; name: string }
+  assist: { id: number | null; name: string | null }
+  type: string // "Goal" | "Card" | "subst" | "Var"
+  detail: string
+  comments: string | null
+}
+
+export interface ApiTeamStatistics {
+  team: { id: number; name: string; logo: string }
+  statistics: Array<{ type: string; value: string | number | null }>
+}
+
+export interface ApiLineupPlayer {
+  player: {
+    id: number
+    name: string
+    number: number
+    pos: string   // "G" | "D" | "M" | "F"
+    grid: string | null  // e.g. "1:1" — row:col on pitch
+  }
+}
+
+export interface ApiLineup {
+  team: {
+    id: number
+    name: string
+    logo: string
+    colors?: {
+      player?: { primary?: string; number?: string; border?: string }
+      goalkeeper?: { primary?: string; number?: string; border?: string }
+    }
+  }
+  coach: { id: number | null; name: string | null; photo: string | null }
+  formation: string   // e.g. "4-3-3"
+  startXI: ApiLineupPlayer[]
+  substitutes: ApiLineupPlayer[]
+}
+
+export interface ApiFixturePlayers {
+  team: { id: number; name: string; logo: string }
+  players: Array<{
+    player: { id: number; name: string; photo: string }
+    statistics: Array<{
+      games: {
+        minutes: number | null
+        rating: string | null
+        position: string | null
+        substitute: boolean | null
+      }
+      goals: { total: number | null; assists: number | null }
+      shots: { total: number | null; on: number | null } | null
+      passes: { total: number | null; key: number | null; accuracy: string | null } | null
+      tackles: { total: number | null; interceptions: number | null } | null
+      dribbles: { attempts: number | null; success: number | null } | null
+      fouls: { committed: number | null; drawn: number | null } | null
+      cards: { yellow: number | null; red: number | null } | null
+    }>
+  }>
 }
 
 export interface ApiFixture {
@@ -50,48 +113,11 @@ export interface ApiFixture {
   }
   events?: ApiEvent[]
   statistics?: ApiTeamStatistics[]
-  lineups?: unknown[]
+  lineups?: ApiLineup[]
   players?: ApiFixturePlayers[]
 }
 
-export interface ApiEvent {
-  time: { elapsed: number; extra: number | null }
-  team: { id: number; name: string; logo: string }
-  player: { id: number; name: string }
-  assist: { id: number | null; name: string | null }
-  type: string // "Goal" | "Card" | "subst" | "Var"
-  detail: string
-  comments: string | null
-}
-
-export interface ApiTeamStatistics {
-  team: { id: number; name: string; logo: string }
-  statistics: Array<{ type: string; value: string | number | null }>
-}
-
-export interface ApiFixturePlayers {
-  team: { id: number; name: string; logo: string }
-  players: Array<{
-    player: { id: number; name: string; photo: string }
-    statistics: Array<{
-      games: {
-        minutes: number | null
-        rating: string | null
-        position: string | null
-        substitute: boolean | null
-      }
-      goals: { total: number | null; assists: number | null }
-      shots: { total: number | null; on: number | null } | null
-      passes: { total: number | null; key: number | null; accuracy: string | null } | null
-      tackles: { total: number | null; interceptions: number | null } | null
-      dribbles: { attempts: number | null; success: number | null } | null
-      fouls: { committed: number | null; drawn: number | null } | null
-      cards: { yellow: number | null; red: number | null } | null
-    }>
-  }>
-}
-
-// --- Odds ---
+// ── Odds ─────────────────────────────────────────────────────────────────────
 
 export interface ApiOddsFixture {
   fixture: { id: number; timezone: string; date: string; timestamp: number }
@@ -107,9 +133,27 @@ export interface ApiOddsFixture {
   }>
 }
 
-// --- Predictions ---
+// ── Predictions ───────────────────────────────────────────────────────────────
 
-// --- Standings ---
+export interface ApiPredictionFixture {
+  predictions: {
+    winner: { id: number | null; name: string | null; comment: string | null } | null
+    win_or_draw: boolean
+    under_over: string | null
+    goals: { home: string | null; away: string | null }
+    advice: string
+    percent: { home: string; draw: string; away: string }
+  }
+  comparison: Record<string, { home: string; away: string }>
+  h2h: ApiFixture[]
+  teams: {
+    home: { id: number; name: string; last_5: { wins: number; draws: number; loses: number; goals: { for: { total: { average: string } }; against: { total: { average: string } } } } }
+    away: { id: number; name: string; last_5: { wins: number; draws: number; loses: number; goals: { for: { total: { average: string } }; against: { total: { average: string } } } } }
+  }
+  league: { id: number; name: string; country: string; logo: string; flag: string | null; season: number }
+}
+
+// ── Standings ─────────────────────────────────────────────────────────────────
 
 export interface ApiStandingRow {
   rank: number
@@ -137,7 +181,7 @@ export interface ApiStandingResponse {
   }
 }
 
-// --- Injuries ---
+// ── Injuries ──────────────────────────────────────────────────────────────────
 
 export interface ApiInjury {
   player: { id: number; name: string; photo: string; type: string; reason: string }
@@ -145,15 +189,67 @@ export interface ApiInjury {
   fixture: { id: number; timezone: string; date: string; timestamp: number }
 }
 
-// --- Head-to-head: same shape as ApiFixture[], reuse that type ---
+// ── Teams ─────────────────────────────────────────────────────────────────────
 
-// --- Top scorers / player statistics ---
+export interface ApiTeam {
+  team: {
+    id: number
+    name: string
+    code: string | null
+    country: string
+    founded: number | null
+    national: boolean
+    logo: string
+  }
+  venue: {
+    id: number | null
+    name: string | null
+    address: string | null
+    city: string | null
+    capacity: number | null
+    surface: string | null
+    image: string | null
+  }
+}
+
+// ── Coach ─────────────────────────────────────────────────────────────────────
+
+export interface ApiCoach {
+  id: number
+  name: string
+  firstname: string | null
+  lastname: string | null
+  age: number | null
+  birth: { date: string | null; place: string | null; country: string | null }
+  nationality: string | null
+  photo: string
+  team: { id: number; name: string; logo: string }
+  career: Array<{
+    team: { id: number; name: string; logo: string }
+    start: string
+    end: string | null
+  }>
+}
+
+// ── Trophies ──────────────────────────────────────────────────────────────────
+
+export interface ApiTrophy {
+  league: string
+  country: string
+  season: string
+  place: string  // "Winner" | "Runner-up"
+}
+
+// ── Players ───────────────────────────────────────────────────────────────────
 
 export interface ApiPlayerStat {
   player: {
     id: number
     name: string
-    nationality: string
+    firstname?: string
+    lastname?: string
+    age?: number | null
+    nationality?: string | null
     photo: string
   }
   statistics: Array<{
@@ -166,7 +262,7 @@ export interface ApiPlayerStat {
   }>
 }
 
-// --- Transfers ---
+// ── Transfers ─────────────────────────────────────────────────────────────────
 
 export interface ApiTransfer {
   player: { id: number; name: string }
@@ -181,29 +277,40 @@ export interface ApiTransfer {
   }>
 }
 
-// --- Sidelined ---
+// ── Sidelined ─────────────────────────────────────────────────────────────────
 
 export interface ApiSidelined {
   player: { id: number; name: string; photo: string }
   sidelined: Array<{ type: string; start: string; end: string | null }>
 }
 
-// --- Predictions ---
+// ── Leagues ───────────────────────────────────────────────────────────────────
 
-export interface ApiPredictionFixture {
-  predictions: {
-    winner: { id: number | null; name: string | null; comment: string | null } | null
-    win_or_draw: boolean
-    under_over: string | null
-    goals: { home: string | null; away: string | null }
-    advice: string
-    percent: { home: string; draw: string; away: string }
+export interface ApiLeague {
+  league: {
+    id: number
+    name: string
+    type: string
+    logo: string
   }
-  comparison: Record<string, { home: string; away: string }>
-  h2h: ApiFixture[]
-  teams: {
-    home: { id: number; name: string; last_5: { wins: number; draws: number; loses: number; goals: { for: { total: { average: string } }; against: { total: { average: string } } } } }
-    away: { id: number; name: string; last_5: { wins: number; draws: number; loses: number; goals: { for: { total: { average: string } }; against: { total: { average: string } } } } }
+  country: {
+    name: string
+    code: string | null
+    flag: string | null
   }
-  league: { id: number; name: string; country: string; logo: string; flag: string | null; season: number }
+  seasons: Array<{
+    year: number
+    start: string
+    end: string
+    current: boolean
+    coverage: Record<string, unknown>
+  }>
+}
+
+// ── Countries ─────────────────────────────────────────────────────────────────
+
+export interface ApiCountry {
+  name: string
+  code: string | null
+  flag: string | null
 }

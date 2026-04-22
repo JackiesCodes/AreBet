@@ -6,6 +6,7 @@ export interface TeamInfo {
   name: string
   short: string
   form: string // e.g. "WWLDW"
+  logo?: string  // URL from API-Football teams endpoint
 }
 
 export interface Score {
@@ -149,6 +150,78 @@ export interface MatchInjury {
   team: "home" | "away"
 }
 
+// ── Lineup ────────────────────────────────────────────────────────────────────
+
+export interface LineupPlayer {
+  id: number
+  name: string
+  number: number
+  position: string  // "G" | "D" | "M" | "F"
+  grid: string | null  // "row:col" on the pitch e.g. "1:1"
+}
+
+export interface TeamLineup {
+  formation: string        // e.g. "4-3-3"
+  startXI: LineupPlayer[]
+  substitutes: LineupPlayer[]
+  coach: string | null
+  coachPhoto: string | null
+}
+
+export interface MatchLineup {
+  home: TeamLineup
+  away: TeamLineup
+}
+
+// ── Coach ─────────────────────────────────────────────────────────────────────
+
+export interface MatchCoach {
+  id: number
+  name: string
+  photo: string
+  nationality: string | null
+  age: number | null
+  career: Array<{
+    teamName: string
+    teamLogo: string
+    start: string
+    end: string | null
+  }>
+}
+
+// ── Trophies ──────────────────────────────────────────────────────────────────
+
+export interface MatchTrophy {
+  league: string
+  country: string
+  season: string
+  place: string  // "Winner" | "Runner-up"
+}
+
+// ── Transfers ─────────────────────────────────────────────────────────────────
+
+export interface MatchTransfer {
+  playerName: string
+  date: string
+  type: string   // "Free" | "Loan" | transfer fee
+  teamIn: string
+  teamInLogo: string
+  teamOut: string
+  teamOutLogo: string
+}
+
+// ── Sidelined ─────────────────────────────────────────────────────────────────
+
+export interface MatchSidelined {
+  playerName: string
+  playerPhoto: string
+  type: string
+  start: string
+  end: string | null
+}
+
+// ── Main Match type ───────────────────────────────────────────────────────────
+
 export interface Match {
   id: number
   leagueId?: number
@@ -170,6 +243,11 @@ export interface Match {
   h2h?: H2HRecord[]
   playerRatings?: PlayerRatings
   injuries?: MatchInjury[]
+  lineup?: MatchLineup
+  coaches?: { home?: MatchCoach; away?: MatchCoach }
+  trophies?: { home?: MatchTrophy[]; away?: MatchTrophy[] }
+  transfers?: { home?: MatchTransfer[]; away?: MatchTransfer[] }
+  sidelined?: { home?: MatchSidelined[]; away?: MatchSidelined[] }
 }
 
 export interface MatchFeed {

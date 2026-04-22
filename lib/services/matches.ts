@@ -3,11 +3,16 @@ import {
   fetchFixturesFeed,
   fetchFixtureDetail,
   fetchOdds,
+  fetchLiveOdds,
   fetchPrediction,
   fetchLiveFixtures,
   fetchInjuries,
   fetchHeadToHead,
   fetchAllStandings,
+  fetchCoach,
+  fetchTrophies,
+  fetchTransfers,
+  fetchSidelinedByTeam,
 } from "@/lib/api-football/client"
 import {
   mapFixtureToMatch,
@@ -15,6 +20,11 @@ import {
   enrichWithPrediction,
   enrichWithInjuries,
   enrichWithH2H,
+  enrichWithLineup,
+  enrichWithCoaches,
+  enrichWithTrophies,
+  enrichWithTransfers,
+  enrichWithSidelined,
 } from "@/lib/api-football/mapper"
 import type { ApiFixture } from "@/lib/api-football/types"
 
@@ -52,7 +62,7 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     matchMap.set(f.fixture.id, mapFixtureToMatch(f))
   }
 
-  // Live fixtures override scheduled — include all leagues globally
+  // Live fixtures override scheduled — logos + events already embedded
   for (const f of live) {
     rawFixtures.set(f.fixture.id, f)
     matchMap.set(f.fixture.id, mapFixtureToMatch(f))
@@ -72,9 +82,11 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     }
   })
 
-  // Enrich all matches with odds (paid tier — no cap)
+  // Enrich all matches with odds
   const oddsResults = await Promise.allSettled(
-    matchesWithForm.map((m) => fetchOdds(m.id)),
+    matchesWithForm.map((m) =>
+      m.status === "LIVE" ? fetchLiveOdds(m.id) : fetchOdds(m.id)
+    ),
   )
   const withOdds = matchesWithForm.map((match, i) => {
     const r = oddsResults[i]
@@ -97,9 +109,30 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     if (r.status === "fulfilled" && r.value) predMap.set(m.id, r.value)
   })
 
+  // For live matches, also fetch lineups if available (embedded in fixture detail)
+  const liveMatches = withOdds.filter((m) => m.status === "LIVE")
+  const liveLineupResults = await Promise.allSettled(
+    liveMatches.map((m) => fetchFixtureDetail(m.id)),
+  )
+
+  const lineupMap = new Map<number, ApiFixture>()
+  liveMatches.forEach((m, i) => {
+    const r = liveLineupResults[i]
+    if (r.status === "fulfilled" && r.value) lineupMap.set(m.id, r.value)
+  })
+
   const finalMatches = withOdds.map((match) => {
-    const pred = predMap.get(match.id)
-    return pred ? enrichWithPrediction(match, pred) : match
+    let m = match
+    const pred = predMap.get(m.id)
+    if (pred) m = enrichWithPrediction(m, pred)
+
+    // Enrich live matches with lineups from fixture detail
+    const liveFixture = lineupMap.get(m.id)
+    if (liveFixture?.lineups?.length) {
+      m = enrichWithLineup(m, liveFixture.lineups)
+    }
+
+    return m
   })
 
   return {
@@ -117,12 +150,33 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
   const homeTeamId = fixture.teams.home.id
   const awayTeamId = fixture.teams.away.id
 
-  // Full enrichment: odds + prediction + injuries + H2H in parallel
-  const [oddsResult, predResult, injuriesResult, h2hResult] = await Promise.allSettled([
-    fetchOdds(id),
+  // Full enrichment in parallel — odds, predictions, injuries, H2H, lineups, coaches, trophies, transfers, sidelined
+  const [
+    oddsResult,
+    predResult,
+    injuriesResult,
+    h2hResult,
+    homeCoachResult,
+    awayCoachResult,
+    homeTrophiesResult,
+    awayTrophiesResult,
+    homeTransfersResult,
+    awayTransfersResult,
+    homeSidelinedResult,
+    awaySidelinedResult,
+  ] = await Promise.allSettled([
+    match.status === "LIVE" ? fetchLiveOdds(id) : fetchOdds(id),
     fetchPrediction(id),
     fetchInjuries(id),
     fetchHeadToHead(homeTeamId, awayTeamId),
+    fetchCoach(homeTeamId),
+    fetchCoach(awayTeamId),
+    fetchTrophies(homeTeamId),
+    fetchTrophies(awayTeamId),
+    fetchTransfers(homeTeamId),
+    fetchTransfers(awayTeamId),
+    fetchSidelinedByTeam(homeTeamId),
+    fetchSidelinedByTeam(awayTeamId),
   ])
 
   if (oddsResult.status === "fulfilled" && oddsResult.value) {
@@ -134,13 +188,30 @@ export async function fetchMatchById(id: number): Promise<Match | null> {
   if (injuriesResult.status === "fulfilled" && injuriesResult.value.length > 0) {
     match = enrichWithInjuries(match, injuriesResult.value, homeTeamId)
   }
-  if (
-    h2hResult.status === "fulfilled" &&
-    h2hResult.value.length > 0 &&
-    (!match.h2h || match.h2h.length === 0)
-  ) {
+  if (h2hResult.status === "fulfilled" && h2hResult.value.length > 0 && (!match.h2h || match.h2h.length === 0)) {
     match = enrichWithH2H(match, h2hResult.value)
   }
+
+  // Lineups embedded in fixture detail response
+  if (fixture.lineups?.length) {
+    match = enrichWithLineup(match, fixture.lineups)
+  }
+
+  const homeCoach = homeCoachResult.status === "fulfilled" ? homeCoachResult.value : null
+  const awayCoach = awayCoachResult.status === "fulfilled" ? awayCoachResult.value : null
+  match = enrichWithCoaches(match, homeCoach, awayCoach)
+
+  const homeTrophies = homeTrophiesResult.status === "fulfilled" ? homeTrophiesResult.value : []
+  const awayTrophies = awayTrophiesResult.status === "fulfilled" ? awayTrophiesResult.value : []
+  match = enrichWithTrophies(match, homeTrophies, awayTrophies)
+
+  const homeTransfers = homeTransfersResult.status === "fulfilled" ? homeTransfersResult.value : []
+  const awayTransfers = awayTransfersResult.status === "fulfilled" ? awayTransfersResult.value : []
+  match = enrichWithTransfers(match, homeTransfers, awayTransfers)
+
+  const homeSidelined = homeSidelinedResult.status === "fulfilled" ? homeSidelinedResult.value : []
+  const awaySidelined = awaySidelinedResult.status === "fulfilled" ? awaySidelinedResult.value : []
+  match = enrichWithSidelined(match, homeSidelined, awaySidelined)
 
   return match
 }

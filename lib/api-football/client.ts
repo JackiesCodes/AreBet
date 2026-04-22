@@ -8,6 +8,11 @@ import type {
   ApiPlayerStat,
   ApiTransfer,
   ApiSidelined,
+  ApiTeam,
+  ApiCoach,
+  ApiTrophy,
+  ApiLeague,
+  ApiCountry,
 } from "./types"
 
 const BASE_URL = "https://v3.football.api-sports.io"
@@ -200,4 +205,62 @@ export async function fetchTransfers(teamId: number): Promise<ApiTransfer[]> {
 
 export async function fetchSidelined(playerId: number): Promise<ApiSidelined[]> {
   return apiFetch<ApiSidelined>(`/sidelined?player=${playerId}`, REVALIDATE_PLAYERS)
+}
+
+/** Fetch all sidelined players for a team */
+export async function fetchSidelinedByTeam(teamId: number): Promise<ApiSidelined[]> {
+  return apiFetch<ApiSidelined>(`/sidelined?team=${teamId}`, REVALIDATE_DETAIL)
+}
+
+// ── Teams ─────────────────────────────────────────────────────────────────────
+
+export async function fetchTeam(teamId: number): Promise<ApiTeam | null> {
+  const results = await apiFetch<ApiTeam>(`/teams?id=${teamId}`, REVALIDATE_PLAYERS)
+  return results[0] ?? null
+}
+
+export async function fetchTeamsByLeague(leagueId: number, season: number): Promise<ApiTeam[]> {
+  return apiFetch<ApiTeam>(`/teams?league=${leagueId}&season=${season}`, REVALIDATE_PLAYERS)
+}
+
+// ── Coach ─────────────────────────────────────────────────────────────────────
+
+export async function fetchCoach(teamId: number): Promise<ApiCoach | null> {
+  const results = await apiFetch<ApiCoach>(`/coachs?team=${teamId}`, REVALIDATE_DETAIL)
+  return results[0] ?? null
+}
+
+// ── Trophies ──────────────────────────────────────────────────────────────────
+
+export async function fetchTrophies(teamId: number): Promise<ApiTrophy[]> {
+  return apiFetch<ApiTrophy>(`/trophies?team=${teamId}`, REVALIDATE_PLAYERS)
+}
+
+// ── Players ───────────────────────────────────────────────────────────────────
+
+export async function fetchPlayerStatsByTeam(teamId: number, season: number): Promise<ApiPlayerStat[]> {
+  return apiFetch<ApiPlayerStat>(`/players?team=${teamId}&season=${season}`, REVALIDATE_PLAYERS)
+}
+
+export async function fetchPlayerById(playerId: number, season: number): Promise<ApiPlayerStat | null> {
+  const results = await apiFetch<ApiPlayerStat>(`/players?id=${playerId}&season=${season}`, REVALIDATE_PLAYERS)
+  return results[0] ?? null
+}
+
+// ── Leagues ───────────────────────────────────────────────────────────────────
+
+export async function fetchLeagues(country?: string): Promise<ApiLeague[]> {
+  const path = country ? `/leagues?country=${encodeURIComponent(country)}&current=true` : `/leagues?current=true`
+  return apiFetch<ApiLeague>(path, REVALIDATE_PLAYERS)
+}
+
+export async function fetchLeagueById(leagueId: number): Promise<ApiLeague | null> {
+  const results = await apiFetch<ApiLeague>(`/leagues?id=${leagueId}`, REVALIDATE_PLAYERS)
+  return results[0] ?? null
+}
+
+// ── Countries ─────────────────────────────────────────────────────────────────
+
+export async function fetchCountries(): Promise<ApiCountry[]> {
+  return apiFetch<ApiCountry>(`/countries`, REVALIDATE_PLAYERS)
 }

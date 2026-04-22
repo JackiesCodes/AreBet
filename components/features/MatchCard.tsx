@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
@@ -25,7 +26,20 @@ function teamColor(name: string): string {
   return TEAM_COLORS[hash % TEAM_COLORS.length]
 }
 
-function TeamCircle({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
+function TeamCircle({ name, logo, size = "md" }: { name: string; logo?: string; size?: "sm" | "md" }) {
+  if (logo) {
+    const px = size === "sm" ? 20 : 28
+    return (
+      <Image
+        src={logo}
+        alt={name}
+        width={px}
+        height={px}
+        className={cn("team-logo", size === "sm" && "team-logo--sm")}
+        unoptimized
+      />
+    )
+  }
   const initials = name.split(/\s+/).map((w) => w[0] ?? "").slice(0, 2).join("").toUpperCase()
   const color = teamColor(name)
   return (
@@ -134,7 +148,7 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
         {/* Home side */}
         <div className="cc-card-side cc-card-side--home">
           <div className="cc-card-side-top">
-            <TeamCircle name={match.home.name} size={compact ? "sm" : "md"} />
+            <TeamCircle name={match.home.name} logo={match.home.logo} size={compact ? "sm" : "md"} />
             <span className={cn("cc-card-team-name", homeWon && "cc-card-team-name--winner")}>
               {match.home.name}
             </span>
@@ -161,7 +175,7 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
             <span className={cn("cc-card-team-name", awayWon && "cc-card-team-name--winner")}>
               {match.away.name}
             </span>
-            <TeamCircle name={match.away.name} size={compact ? "sm" : "md"} />
+            <TeamCircle name={match.away.name} logo={match.away.logo} size={compact ? "sm" : "md"} />
           </div>
           {match.away.form && (
             <FormGuide form={match.away.form} className="cc-card-form cc-card-form--away" />

@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { notFound } from "next/navigation"
 import { fetchMatchById } from "@/lib/services/matches"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -47,7 +48,10 @@ export default async function MatchDetailPage({ params }: PageProps) {
           {/* Home team */}
           <div className="match-hero-team match-hero-team--home">
             <div className="match-hero-team-crest" aria-hidden>
-              {match.home.short.slice(0, 2).toUpperCase()}
+              {match.home.logo
+                ? <Image src={match.home.logo} alt={match.home.name} width={48} height={48} className="team-logo--lg" unoptimized />
+                : match.home.short.slice(0, 2).toUpperCase()
+              }
             </div>
             <div className="match-hero-team-name">{match.home.name}</div>
             <FormGuide form={match.home.form} />
@@ -79,7 +83,10 @@ export default async function MatchDetailPage({ params }: PageProps) {
           {/* Away team */}
           <div className="match-hero-team match-hero-team--away">
             <div className="match-hero-team-crest" aria-hidden>
-              {match.away.short.slice(0, 2).toUpperCase()}
+              {match.away.logo
+                ? <Image src={match.away.logo} alt={match.away.name} width={48} height={48} className="team-logo--lg" unoptimized />
+                : match.away.short.slice(0, 2).toUpperCase()
+              }
             </div>
             <div className="match-hero-team-name">{match.away.name}</div>
             <FormGuide form={match.away.form} />
