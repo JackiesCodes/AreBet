@@ -58,11 +58,12 @@ interface MatchCardProps {
   onSelect?: (match: Match) => void
   latestChange?: MatchChange
   compact?: boolean
+  showLeague?: boolean
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function MatchCard({ match, selected, onSelect, latestChange, compact }: MatchCardProps) {
+export function MatchCard({ match, selected, onSelect, latestChange, compact, showLeague = true }: MatchCardProps) {
   const isLive     = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
   const isUpcoming = match.status === "UPCOMING"
@@ -113,8 +114,8 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact }: 
       {/* ── Header: league • time ──────────────────── heart ── */}
       <div className="cc-card-header">
         <div className="cc-card-header-left">
-          <span className="cc-card-league">{match.league}</span>
-          <span className="cc-card-sep" aria-hidden>•</span>
+          {showLeague && <span className="cc-card-league">{match.league}</span>}
+          {showLeague && <span className="cc-card-sep" aria-hidden>•</span>}
           <span className={cn("cc-card-time", isLive && "cc-card-time--live")}>
             {timeLabel}
           </span>

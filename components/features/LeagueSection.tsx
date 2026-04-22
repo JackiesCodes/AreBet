@@ -44,6 +44,7 @@ export function LeagueSection({
               key={m.id}
               match={m}
               compact={compact}
+              showLeague={false}
               latestChange={latestChangeMap?.get(m.id)}
             />
           ))}
