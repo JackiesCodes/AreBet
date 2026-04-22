@@ -566,6 +566,99 @@ svg {
   margin-bottom: var(--space-4);
 }
 
+/* League groups container */
+.cc-league-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* League section — collapsible */
+.league-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.league-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-3);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.league-section-header:hover {
+  background: var(--surface-4);
+}
+
+.league-section-name {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.league-section-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-4);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+}
+
+.league-section-chevron {
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  transform: rotate(90deg);
+  display: inline-block;
+  line-height: 1;
+}
+
+.league-section-chevron--open {
+  transform: rotate(270deg);
+}
+
+.league-section-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.league-section-body .cc-card {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.league-section-body .cc-card:last-child {
+  border-bottom: none;
+}
+
+/* Tip grid inside league section */
+.tip-league-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.league-section-body.tip-grid {
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 10px;
+  gap: 10px;
+}
+
 .cc-bucket-head {
   display: flex;
   align-items: center;

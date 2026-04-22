@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
-import { usePagination } from "@/hooks/usePagination"
+import { leaguePrioritySort } from "@/lib/utils/league-groups"
 import {
   generateFeedTips,
   TIP_CATEGORY_LABELS,
@@ -18,7 +18,6 @@ import { formatTime } from "@/lib/utils/time"
 import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
 
-const TIPS_PAGE_SIZE = 30
 
 const CATEGORIES: Array<{ key: TipCategory | "all"; label: string; icon: string }> = [
   { key: "all", label: "All Tips", icon: "✦" },
@@ -95,6 +94,31 @@ function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
   )
 }
 
+function TipLeagueSection({ league, tips, fmt }: { league: string; tips: FeedTip[]; fmt: (n: number) => string }) {
+  const [expanded, setExpanded] = useState(true)
+  return (
+    <div className="league-section">
+      <button
+        type="button"
+        className="league-section-header"
+        onClick={() => setExpanded((e) => !e)}
+        aria-expanded={expanded}
+      >
+        <span className="league-section-name">{league}</span>
+        <span className="league-section-count">{tips.length}</span>
+        <span className={`league-section-chevron ${expanded ? "league-section-chevron--open" : ""}`}>›</span>
+      </button>
+      {expanded && (
+        <div className="league-section-body tip-grid">
+          {tips.map((t) => (
+            <TipCard key={`${t.matchId}-${t.id}`} tip={t} fmt={fmt} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function PredictionsPage() {
   const { matches, loading } = useMatchIntelligence()
   const fmt = useFormatOdds()
@@ -113,10 +137,16 @@ export default function PredictionsPage() {
     })
   }, [allTips, category, valueOnly, minConf])
 
-  const { visibleItems, hasMore, remaining, loadMore, reset } = usePagination(filtered, TIPS_PAGE_SIZE)
-
-  // Reset to first page whenever filters change
-  useEffect(() => { reset() }, [category, valueOnly, minConf, reset])
+  // Group tips by league, sorted by priority
+  const groupedByLeague = useMemo(() => {
+    const map = new Map<string, FeedTip[]>()
+    for (const tip of filtered) {
+      if (!map.has(tip.league)) map.set(tip.league, [])
+      map.get(tip.league)!.push(tip)
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => leaguePrioritySort(a, b))
+  }, [filtered])
 
   const valueTipCount = allTips.filter((t) => t.isValue).length
   const confirmedCount = allTips.filter((t) => t.dataQuality === "confirmed").length
@@ -187,21 +217,11 @@ export default function PredictionsPage() {
       )}
 
       {!loading && filtered.length > 0 && (
-        <>
-          <div className="tip-grid">
-            {visibleItems.map((t) => (
-              <TipCard key={`${t.matchId}-${t.id}`} tip={t} fmt={fmt} />
-            ))}
-          </div>
-          {hasMore && (
-            <div className="load-more-wrap">
-              <button type="button" className="load-more-btn" onClick={loadMore}>
-                Load {remaining} more tips
-              </button>
-              <span className="load-more-count">{visibleItems.length} of {filtered.length}</span>
-            </div>
-          )}
-        </>
+        <div className="tip-league-groups">
+          {groupedByLeague.map(([league, tips]) => (
+            <TipLeagueSection key={league} league={league} tips={tips} fmt={fmt} />
+          ))}
+        </div>
       )}
     </div>
   )

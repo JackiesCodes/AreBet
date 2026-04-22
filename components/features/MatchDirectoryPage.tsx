@@ -1,17 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import type { Match } from "@/types/match"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { useFilters } from "@/contexts/FilterContext"
-import { usePagination } from "@/hooks/usePagination"
 import { rankMatches } from "@/lib/utils/rank-matches"
-import { MatchCard } from "./MatchCard"
+import { LeagueSection } from "./LeagueSection"
+import { groupByLeague } from "@/lib/utils/league-groups"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { ErrorState } from "@/components/primitives/ErrorState"
-
-const PAGE_SIZE = 24
 
 interface MatchDirectoryPageProps {
   title: string
@@ -39,17 +37,14 @@ export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPag
     return rankMatches(list, "kickoff")
   }, [matches, applyToMatches, filter, search])
 
-  const { visibleItems, hasMore, remaining, loadMore, reset } = usePagination(filtered, PAGE_SIZE)
-
-  // Reset to first page when search changes
-  useEffect(() => { reset() }, [search, reset])
+  const leagueGroups = useMemo(() => groupByLeague(filtered), [filtered])
 
   return (
     <div className="md-page">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
           <h1 className="md-page-title">{title}</h1>
-          <p className="md-page-subtitle">{filtered.length} matches</p>
+          <p className="md-page-subtitle">{filtered.length} matches · {leagueGroups.length} competitions</p>
         </div>
         <div className="cc-search" style={{ width: 240 }}>
           <input
@@ -66,19 +61,16 @@ export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPag
       {!loading && !error && filtered.length === 0 && (
         <EmptyState title="No matches" text="Nothing to show right now." />
       )}
-      <div className="cc-match-list">
-        {visibleItems.map((m) => (
-          <MatchCard key={m.id} match={m} compact={compact} />
+      <div className="cc-league-groups">
+        {leagueGroups.map((g) => (
+          <LeagueSection
+            key={g.league}
+            league={g.league}
+            matches={g.matches}
+            compact={compact}
+          />
         ))}
       </div>
-      {hasMore && (
-        <div className="load-more-wrap">
-          <button type="button" className="load-more-btn" onClick={loadMore}>
-            Load {remaining} more matches
-          </button>
-          <span className="load-more-count">{visibleItems.length} of {filtered.length}</span>
-        </div>
-      )}
     </div>
   )
 }

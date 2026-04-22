@@ -10,6 +10,8 @@ import { rankMatches } from "@/lib/utils/rank-matches"
 import { BUCKET_LABELS, BUCKET_ORDER, bucketFor, type TimeBucket } from "@/lib/utils/time"
 import { MatchCard } from "./MatchCard"
 import { MatchTableRow } from "./MatchTableRow"
+import { LeagueSection } from "./LeagueSection"
+import { groupByLeague } from "@/lib/utils/league-groups"
 import { IntelligenceBar } from "./IntelligenceBar"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
@@ -20,9 +22,17 @@ import { loadUiState, saveUiState, type UiState } from "@/lib/storage/ui-state"
 const BUCKET_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 25
 
-// ── Per-bucket card list with load-more ──────────────────────────────────────
-function BucketList({ bucket, items }: { bucket: TimeBucket; items: Match[] }) {
-  const { visibleItems, hasMore, remaining, loadMore } = usePagination(items, BUCKET_PAGE_SIZE)
+// ── Per-bucket card list with league grouping ────────────────────────────────
+function BucketList({
+  bucket,
+  items,
+  latestChangeMap,
+}: {
+  bucket: TimeBucket
+  items: Match[]
+  latestChangeMap: Map<number, import("@/types/alerts").MatchChange>
+}) {
+  const leagueGroups = groupByLeague(items)
   return (
     <div className="cc-bucket">
       <div className="cc-bucket-head">
@@ -30,18 +40,17 @@ function BucketList({ bucket, items }: { bucket: TimeBucket; items: Match[] }) {
         <span className="cc-bucket-line" />
         <span className="md-mono md-text-muted">{items.length}</span>
       </div>
-      <div className="cc-match-list">
-        {visibleItems.map((m) => (
-          <MatchCard key={m.id} match={m} compact />
+      <div className="cc-league-groups">
+        {leagueGroups.map((g) => (
+          <LeagueSection
+            key={g.league}
+            league={g.league}
+            matches={g.matches}
+            compact
+            latestChangeMap={latestChangeMap}
+          />
         ))}
       </div>
-      {hasMore && (
-        <div className="load-more-wrap">
-          <button type="button" className="load-more-btn" onClick={loadMore}>
-            Show {remaining} more
-          </button>
-        </div>
-      )}
     </div>
   )
 }
@@ -224,7 +233,7 @@ export function HomeBoard() {
           BUCKET_ORDER.map((bucket) => {
             const items = grouped[bucket]
             if (items.length === 0) return null
-            return <BucketList key={bucket} bucket={bucket} items={items} />
+            return <BucketList key={bucket} bucket={bucket} items={items} latestChangeMap={latestChangeMap} />
           })
         )}
 
