@@ -107,6 +107,8 @@ export interface MatchTips {
   home: string
   away: string
   league: string
+  leagueId: number | undefined
+  country: string
   kickoffISO: string
   status: string
   tips: BettingTip[]
@@ -345,6 +347,8 @@ export function generateMatchTips(match: Match): MatchTips {
     home: home.name,
     away: away.name,
     league: match.league,
+    leagueId: match.leagueId,
+    country: match.country,
     kickoffISO: match.kickoffISO,
     status: match.status,
     tips,
@@ -358,6 +362,8 @@ export type FeedTip = BettingTip & {
   home: string
   away: string
   league: string
+  leagueId: number | undefined
+  country: string
   kickoffISO: string
   status: string
 }
@@ -378,10 +384,10 @@ export function generateFeedTips(matches: Match[]): FeedTip[] {
   const result: FeedTip[] = []
   for (const match of matches) {
     if (match.status === "FINISHED") continue
-    const { tips, matchId, home, away, league, kickoffISO, status } = generateMatchTips(match)
+    const { tips, matchId, home, away, league, leagueId, country, kickoffISO, status } = generateMatchTips(match)
     for (const t of tips) {
       if (t.probability < 0.45) continue
-      result.push({ ...t, matchId, home, away, league, kickoffISO, status })
+      result.push({ ...t, matchId, home, away, league, leagueId, country, kickoffISO, status })
     }
   }
   return result.sort((a, b) => {

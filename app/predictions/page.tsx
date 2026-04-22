@@ -137,15 +137,29 @@ export default function PredictionsPage() {
     })
   }, [allTips, category, valueOnly, minConf])
 
-  // Group tips by league, sorted by priority
-  const groupedByLeague = useMemo(() => {
-    const map = new Map<string, FeedTip[]>()
+  // Group tips by leagueId (not name) to prevent cross-country name collisions
+  const groupedByLeague = useMemo((): Array<{ label: string; tips: FeedTip[] }> => {
+    const map = new Map<string | number, FeedTip[]>()
     for (const tip of filtered) {
-      if (!map.has(tip.league)) map.set(tip.league, [])
-      map.get(tip.league)!.push(tip)
+      const key = tip.leagueId != null ? tip.leagueId : `${tip.league}::${tip.country}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(tip)
     }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => leaguePrioritySort(a, b))
+    // Count how many groups share the same league name (for disambiguation)
+    const nameCount = new Map<string, number>()
+    for (const tips of map.values()) {
+      const name = tips[0].league
+      nameCount.set(name, (nameCount.get(name) ?? 0) + 1)
+    }
+    return Array.from(map.values())
+      .map((tips) => {
+        const isDuplicate = (nameCount.get(tips[0].league) ?? 0) > 1
+        const label = isDuplicate && tips[0].country
+          ? `${tips[0].league} · ${tips[0].country}`
+          : tips[0].league
+        return { label, tips }
+      })
+      .sort((a, b) => leaguePrioritySort(a.label, b.label))
   }, [filtered])
 
   const valueTipCount = allTips.filter((t) => t.isValue).length
@@ -218,8 +232,8 @@ export default function PredictionsPage() {
 
       {!loading && filtered.length > 0 && (
         <div className="tip-league-groups">
-          {groupedByLeague.map(([league, tips]) => (
-            <TipLeagueSection key={league} league={league} tips={tips} fmt={fmt} />
+          {groupedByLeague.map(({ label, tips }) => (
+            <TipLeagueSection key={label} league={label} tips={tips} fmt={fmt} />
           ))}
         </div>
       )}
