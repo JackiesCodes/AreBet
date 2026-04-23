@@ -1,34 +1,63 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { formatTime } from "@/lib/utils/time"
+import type { Match } from "@/types/match"
+import { cn } from "@/lib/utils/cn"
 
 interface GlobalSearchProps {
   onClose: () => void
 }
 
-interface Result {
-  type: "match" | "team" | "league"
-  id: string
-  title: string
-  subtitle: string
-  href: string
-  status?: string
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(t)
+  }, [value, delay])
+  return debounced
 }
 
-const TYPE_ICON: Record<Result["type"], string> = {
-  match: "⚽",
-  team: "🏟",
-  league: "🏆",
+function matchLabel(m: Match): string {
+  if (m.status === "LIVE") return `${m.score.home}–${m.score.away} · LIVE`
+  if (m.status === "FINISHED") return `${m.score.home}–${m.score.away} · FT`
+  return formatTime(m.kickoffISO)
+}
+
+function TeamLogo({ logo, name }: { logo?: string; name: string }) {
+  if (logo) {
+    return (
+      <Image
+        src={logo}
+        alt={name}
+        width={16}
+        height={16}
+        unoptimized
+        style={{ borderRadius: 2, objectFit: "contain" }}
+      />
+    )
+  }
+  return (
+    <span className="gs-team-initial">
+      {name.slice(0, 1).toUpperCase()}
+    </span>
+  )
 }
 
 export function GlobalSearch({ onClose }: GlobalSearchProps) {
+  const router = useRouter()
   const [query, setQuery] = useState("")
-  const { matches } = useMatchIntelligence()
+  const [apiMatches, setApiMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { matches: feedMatches } = useMatchIntelligence()
+  const debouncedQuery = useDebounce(query, 350)
 
+  // Focus input and wire Escape key
   useEffect(() => {
     inputRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
@@ -38,85 +67,74 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     return () => window.removeEventListener("keydown", onKey)
   }, [onClose])
 
-  const results = useMemo<Result[]>(() => {
-    const q = query.trim().toLowerCase()
-    if (q.length < 2) return []
-
-    const matchResults: Result[] = []
-    const teamSeen = new Set<string>()
-    const leagueSeen = new Set<string>()
-    const teamResults: Result[] = []
-    const leagueResults: Result[] = []
-
-    for (const m of matches) {
-      const homeL = m.home.name.toLowerCase()
-      const awayL = m.away.name.toLowerCase()
-      const leagueL = m.league.toLowerCase()
-
-      // Matches
-      if (homeL.includes(q) || awayL.includes(q)) {
-        const timeLabel =
-          m.status === "LIVE"
-            ? `${m.score.home}–${m.score.away} · LIVE`
-            : m.status === "FINISHED"
-              ? `${m.score.home}–${m.score.away} · FT`
-              : formatTime(m.kickoffISO)
-        matchResults.push({
-          type: "match",
-          id: String(m.id),
-          title: `${m.home.name} vs ${m.away.name}`,
-          subtitle: `${m.league} · ${timeLabel}`,
-          href: `/match/${m.id}`,
-          status: m.status,
-        })
-      }
-
-      // Teams (deduplicated)
-      for (const name of [m.home.name, m.away.name]) {
-        if (name.toLowerCase().includes(q) && !teamSeen.has(name)) {
-          teamSeen.add(name)
-          teamResults.push({
-            type: "team",
-            id: `team-${name}`,
-            title: name,
-            subtitle: m.league,
-            href: `/teams`,
-          })
-        }
-      }
-
-      // Leagues (deduplicated)
-      if (leagueL.includes(q) && !leagueSeen.has(m.league)) {
-        leagueSeen.add(m.league)
-        const count = matches.filter((x) => x.league === m.league).length
-        leagueResults.push({
-          type: "league",
-          id: `league-${m.league}`,
-          title: m.league,
-          subtitle: `${count} match${count !== 1 ? "es" : ""}`,
-          href: `/`,
-        })
-      }
+  // Global API search — fires on debounced query >= 3 chars
+  useEffect(() => {
+    const q = debouncedQuery.trim()
+    if (q.length < 3) {
+      setApiMatches([])
+      setLoading(false)
+      return
     }
 
-    return [
-      ...matchResults.slice(0, 6),
-      ...teamResults.slice(0, 4),
-      ...leagueResults.slice(0, 3),
-    ]
-  }, [query, matches])
+    setLoading(true)
+    const controller = new AbortController()
 
-  const q = query.trim()
+    fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => setApiMatches(data.matches ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+
+    return () => controller.abort()
+  }, [debouncedQuery])
+
+  // Merge: local feed results (instant) + API results (from all dates)
+  const q = query.trim().toLowerCase()
+
+  const localMatches = q.length >= 2
+    ? feedMatches.filter((m) =>
+        m.home.name.toLowerCase().includes(q) ||
+        m.away.name.toLowerCase().includes(q) ||
+        m.league.toLowerCase().includes(q),
+      )
+    : []
+
+  // Deduplicate: local takes priority, API adds what's not in the feed
+  const localIds = new Set(localMatches.map((m) => m.id))
+  const apiOnly = apiMatches.filter((m) => !localIds.has(m.id))
+
+  // Sort local: live first
+  const sortedLocal = [...localMatches].sort((a, b) => {
+    const order = { LIVE: 0, UPCOMING: 1, FINISHED: 2 }
+    return (order[a.status] ?? 1) - (order[b.status] ?? 1)
+  })
+
+  const results = [...sortedLocal, ...apiOnly].slice(0, 15)
+
+  const hasQuery = q.length >= 2
+  const showEmpty = hasQuery && !loading && results.length === 0
+
+  // Navigate to first result on Enter
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && results[0]) {
+      router.push(`/match/${results[0].id}`)
+      onClose()
+    }
+  }
 
   return (
     <div className="gs-backdrop" onClick={onClose}>
       <div className="gs-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Input row */}
+        {/* Input */}
         <div className="gs-input-row">
-          <svg className="gs-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
+          {loading ? (
+            <span className="gs-spinner" aria-hidden />
+          ) : (
+            <svg className="gs-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          )}
           <input
             ref={inputRef}
             type="search"
@@ -127,40 +145,73 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
             spellCheck={false}
             enterKeyHint="search"
             className="gs-input"
-            placeholder="Teams, matches, leagues…"
+            placeholder="Search any team, league, competition…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
+          {query && (
+            <button
+              type="button"
+              className="gs-clear-btn"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
           <button className="gs-close-btn" onClick={onClose} aria-label="Close search">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            Esc
           </button>
         </div>
 
         {/* Results */}
-        {q.length >= 2 && results.length > 0 && (
+        {hasQuery && results.length > 0 && (
           <ul className="gs-results">
-            {results.map((r) => (
-              <li key={r.id}>
-                <Link href={r.href} className="gs-result-item" onClick={onClose}>
-                  <span className="gs-result-icon" aria-hidden>{TYPE_ICON[r.type]}</span>
-                  <span className="gs-result-body">
-                    <span className="gs-result-title">{r.title}</span>
-                    <span className="gs-result-sub">{r.subtitle}</span>
+            {results.map((m) => (
+              <li key={m.id}>
+                <Link href={`/match/${m.id}`} className="gs-result-item" onClick={onClose}>
+                  {/* Team logos / initials */}
+                  <span className="gs-result-teams">
+                    <TeamLogo logo={m.home.logo} name={m.home.name} />
+                    <span className="gs-vs">v</span>
+                    <TeamLogo logo={m.away.logo} name={m.away.name} />
                   </span>
-                  {r.status === "LIVE" && <span className="gs-live-badge">LIVE</span>}
+                  {/* Match info */}
+                  <span className="gs-result-body">
+                    <span className="gs-result-title">
+                      {m.home.name} vs {m.away.name}
+                    </span>
+                    <span className="gs-result-sub">
+                      {m.league} · {m.country} · {matchLabel(m)}
+                    </span>
+                  </span>
+                  {/* Status badge */}
+                  {m.status === "LIVE" && (
+                    <span className={cn("gs-status-badge", "gs-status-badge--live")}>LIVE</span>
+                  )}
+                  {m.status === "FINISHED" && (
+                    <span className={cn("gs-status-badge", "gs-status-badge--ft")}>FT</span>
+                  )}
+                  {m.status === "UPCOMING" && (
+                    <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
+                      {formatTime(m.kickoffISO)}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
           </ul>
         )}
 
-        {/* States */}
+        {/* Footer hint */}
         <p className="gs-footer-hint">
-          {q.length === 0 && `${matches.length} matches, teams and leagues available`}
-          {q.length === 1 && "Keep typing…"}
-          {q.length >= 2 && results.length === 0 && `No results for "${q}"`}
+          {!hasQuery && "Search any team or league across all upcoming fixtures"}
+          {hasQuery && loading && "Searching all fixtures…"}
+          {showEmpty && `No matches found for "${query.trim()}"`}
+          {hasQuery && !loading && results.length > 0 && `${results.length} result${results.length !== 1 ? "s" : ""} — press Enter to open first`}
         </p>
       </div>
     </div>

@@ -264,3 +264,36 @@ export async function fetchLeagueById(leagueId: number): Promise<ApiLeague | nul
 export async function fetchCountries(): Promise<ApiCountry[]> {
   return apiFetch<ApiCountry>(`/countries`, REVALIDATE_PLAYERS)
 }
+
+// ── Global search ─────────────────────────────────────────────────────────────
+
+/** Search teams by name — used for global fixture search */
+export async function searchTeamsByName(query: string): Promise<ApiTeam[]> {
+  return apiFetch<ApiTeam>(
+    `/teams?search=${encodeURIComponent(query)}`,
+    5 * 60, // 5 min cache
+  )
+}
+
+/** Upcoming + recent fixtures for a specific team */
+export async function fetchFixturesByTeam(
+  teamId: number,
+  opts: { next?: number; last?: number } = { next: 5 },
+): Promise<ApiFixture[]> {
+  const params = new URLSearchParams({ team: String(teamId) })
+  if (opts.next) params.set("next", String(opts.next))
+  if (opts.last) params.set("last", String(opts.last))
+  return apiFetch<ApiFixture>(`/fixtures?${params}`, 60) // 1 min cache
+}
+
+/** Upcoming fixtures for a specific league */
+export async function fetchFixturesByLeague(
+  leagueId: number,
+  season: number,
+  next = 10,
+): Promise<ApiFixture[]> {
+  return apiFetch<ApiFixture>(
+    `/fixtures?league=${leagueId}&season=${season}&next=${next}`,
+    60,
+  )
+}

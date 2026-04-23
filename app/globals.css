@@ -1638,23 +1638,6 @@ svg {
   color: var(--text-muted);
 }
 
-.gs-close-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  transition: all var(--t-fast);
-}
-
-.gs-close-btn:hover {
-  background: var(--surface-4);
-  color: var(--text);
-}
-
 .gs-results {
   list-style: none;
   margin: 0;
@@ -1674,13 +1657,6 @@ svg {
 
 .gs-result-item:hover {
   background: var(--surface-3);
-}
-
-.gs-result-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-  width: 22px;
-  text-align: center;
 }
 
 .gs-result-body {
@@ -1708,15 +1684,100 @@ svg {
   text-overflow: ellipsis;
 }
 
-.gs-live-badge {
+/* Spinner (replaces search icon while loading) */
+.gs-spinner {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: gs-spin 0.6s linear infinite;
+}
+@keyframes gs-spin { to { transform: rotate(360deg); } }
+
+/* Clear query button */
+.gs-clear-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface-4);
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+}
+.gs-clear-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+/* Esc close button */
+.gs-close-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+}
+.gs-close-btn:hover {
+  background: var(--surface-4);
+  color: var(--text);
+}
+
+/* Team logo / initial in result row */
+.gs-result-teams {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.gs-team-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--surface-4);
   font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.gs-vs {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* Status badges */
+.gs-status-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   padding: 2px 6px;
   border-radius: 999px;
+  white-space: nowrap;
+}
+.gs-status-badge--live {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
-  flex-shrink: 0;
+}
+.gs-status-badge--ft {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--text-muted);
+}
+.gs-status-badge--upcoming {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
 }
 
 .gs-footer-hint {
