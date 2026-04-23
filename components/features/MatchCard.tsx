@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
-import { formatTime } from "@/lib/utils/time"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 import { calculateValueEdge } from "@/lib/utils/value-bet"
 import { confTier } from "@/lib/utils/match-status"
 import { FormGuide } from "@/components/primitives/FormGuide"
@@ -101,11 +101,16 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
   // Win-probability bar data (upcoming only)
   const probs = isUpcoming && !compact ? match.prediction.modelProbs : null
 
+  const kickoff = new Date(match.kickoffISO)
+  const isToday = kickoff.toDateString() === new Date().toDateString()
+
   const timeLabel = isLive
     ? `${match.minute ?? 0}′`
     : isFinished
       ? "FT"
-      : formatTime(match.kickoffISO)
+      : isToday
+        ? formatTime(match.kickoffISO)
+        : `${formatShortDate(match.kickoffISO)} · ${formatTime(match.kickoffISO)}`
 
   return (
     <article
