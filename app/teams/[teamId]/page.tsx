@@ -9,7 +9,7 @@ import {
   currentSeason,
 } from "@/lib/api-football/client"
 import { mapFixtureToMatch } from "@/lib/api-football/mapper"
-import { formatTime } from "@/lib/utils/time"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 import { FormGuide } from "@/components/primitives/FormGuide"
 import type { Match } from "@/types/match"
 
@@ -178,7 +178,7 @@ function FixtureRow({ match: m, teamId, showResult }: { match: Match; teamId: nu
             <span className={`team-fixture-result team-fixture-result--${result?.toLowerCase()}`}>{result}</span>
           </>
         ) : (
-          <span className="team-fixture-time">{formatTime(m.kickoffISO)}</span>
+          <span className="team-fixture-time">{formatShortDate(m.kickoffISO)} · {formatTime(m.kickoffISO)}</span>
         )}
       </span>
     </Link>
