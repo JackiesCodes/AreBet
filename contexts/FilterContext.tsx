@@ -5,10 +5,16 @@ import type { Match } from "@/types/match"
 
 export type GlobalStatusFilter = "all" | "live" | "upcoming" | "finished"
 
+/** Stable key for a league — uses leagueId to prevent cross-country collisions */
+export function leagueKey(m: { leagueId?: number | null; league: string; country: string }): string {
+  return m.leagueId != null ? String(m.leagueId) : `${m.league}::${m.country}`
+}
+
 interface FilterCtx {
-  enabledLeagues: Set<string>    // empty = all leagues shown; non-empty = only these leagues
+  disabledLeagues: Set<string>  // keys of hidden leagues; empty = all visible
   statusFilter: GlobalStatusFilter
-  toggleLeague: (name: string) => void
+  toggleLeague: (key: string) => void
+  isolateLeague: (key: string, allKeys: string[]) => void
   setStatusFilter: (s: GlobalStatusFilter) => void
   resetFilters: () => void
   activeFilterCount: number
@@ -18,32 +24,45 @@ interface FilterCtx {
 const Ctx = createContext<FilterCtx | null>(null)
 
 export function FilterProvider({ children }: { children: ReactNode }) {
-  const [enabledLeagues, setEnabledLeagues] = useState<Set<string>>(new Set())
+  const [disabledLeagues, setDisabledLeagues] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<GlobalStatusFilter>("all")
 
-  const toggleLeague = (name: string) => {
-    setEnabledLeagues((prev) => {
+  const toggleLeague = (key: string) => {
+    setDisabledLeagues((prev) => {
       const next = new Set(prev)
-      if (next.has(name)) next.delete(name)
-      else next.add(name)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
       return next
     })
   }
 
+  const isolateLeague = (key: string, allKeys: string[]) => {
+    // If already isolated to this league, reset to show all
+    const wouldDisable = allKeys.filter((k) => k !== key)
+    const alreadyIsolated =
+      disabledLeagues.size === wouldDisable.length &&
+      wouldDisable.every((k) => disabledLeagues.has(k))
+    if (alreadyIsolated) {
+      setDisabledLeagues(new Set())
+    } else {
+      setDisabledLeagues(new Set(wouldDisable))
+    }
+  }
+
   const resetFilters = () => {
-    setEnabledLeagues(new Set())
+    setDisabledLeagues(new Set())
     setStatusFilter("all")
   }
 
   const activeFilterCount = useMemo(
-    () => (enabledLeagues.size > 0 ? 1 : 0) + (statusFilter !== "all" ? 1 : 0),
-    [enabledLeagues, statusFilter],
+    () => (disabledLeagues.size > 0 ? 1 : 0) + (statusFilter !== "all" ? 1 : 0),
+    [disabledLeagues, statusFilter],
   )
 
   const applyToMatches = (matches: Match[]): Match[] => {
     let list = matches
-    if (enabledLeagues.size > 0) {
-      list = list.filter((m) => enabledLeagues.has(m.league))
+    if (disabledLeagues.size > 0) {
+      list = list.filter((m) => !disabledLeagues.has(leagueKey(m)))
     }
     if (statusFilter !== "all") {
       const s = statusFilter.toUpperCase() as "LIVE" | "UPCOMING" | "FINISHED"
@@ -54,9 +73,10 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{
-      enabledLeagues,
+      disabledLeagues,
       statusFilter,
       toggleLeague,
+      isolateLeague,
       setStatusFilter,
       resetFilters,
       activeFilterCount,

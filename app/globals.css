@@ -4762,15 +4762,6 @@ svg {
   color: var(--primary);
 }
 
-.sidebar-status-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
 /* Active filters summary */
 .sidebar-active-filters {
   padding: var(--space-3);
@@ -4797,6 +4788,119 @@ svg {
   background: var(--surface-4);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+}
+
+/* Status badge variants */
+.sidebar-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.sidebar-status-badge--live {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+.sidebar-status-badge--upcoming {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+.sidebar-status-badge--finished {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--text-muted);
+}
+
+/* Country group */
+.sidebar-country-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar-country-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--t-fast);
+  width: 100%;
+  text-align: left;
+  margin-top: 4px;
+}
+.sidebar-country-heading:hover {
+  background: var(--surface-3);
+}
+
+.sidebar-country-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--t-fast);
+  display: inline-block;
+}
+.sidebar-country-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.sidebar-country-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Disabled league row */
+.sidebar-league-row--disabled {
+  opacity: 0.38;
+}
+
+/* League meta (live/upcoming badges below name) */
+.sidebar-league-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-league-upcoming {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* "Only" button — hidden until row hover, always visible when active */
+.sidebar-only-btn {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+  opacity: 0;
+  flex-shrink: 0;
+}
+.sidebar-league-row:hover .sidebar-only-btn {
+  opacity: 1;
+}
+.sidebar-only-btn:hover {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+  border-color: var(--text-muted);
+}
+.sidebar-only-btn--active {
+  opacity: 1 !important;
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--primary);
+  border-color: rgba(34, 197, 94, 0.35);
 }
 
 /* ============================================================================
