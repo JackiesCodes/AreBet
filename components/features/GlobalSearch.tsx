@@ -99,17 +99,40 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
       )
     : []
 
-  // Deduplicate: local takes priority, API adds what's not in the feed
+  // Deduplicate: local feed takes priority (richer data), API fills in what's not in the feed
   const localIds = new Set(localMatches.map((m) => m.id))
   const apiOnly = apiMatches.filter((m) => !localIds.has(m.id))
 
-  // Sort local: live first
-  const sortedLocal = [...localMatches].sort((a, b) => {
-    const order = { LIVE: 0, UPCOMING: 1, FINISHED: 2 }
-    return (order[a.status] ?? 1) - (order[b.status] ?? 1)
-  })
+  // Rank by: live first → name match quality × league popularity → date
+  const LEAGUE_POP: Record<number, number> = {
+    2: 100, 3: 95, 848: 88, 39: 90, 140: 90, 135: 90, 78: 90, 61: 90,
+    1: 88, 4: 86, 13: 82, 45: 78, 94: 72, 88: 72, 71: 72, 253: 68, 262: 64,
+  }
+  function namePop(name: string, ql: string): number {
+    const n = name.toLowerCase()
+    if (n === ql) return 3
+    if (n.startsWith(ql)) return 2
+    if (n.includes(ql)) return 1
+    return 0
+  }
+  function score(m: Match): number {
+    const ql = q.toLowerCase()
+    const ns = Math.max(namePop(m.home.name, ql), namePop(m.away.name, ql), namePop(m.league, ql))
+    const lp = (m.leagueId ? LEAGUE_POP[m.leagueId] : 0) ?? 5
+    return ns * 1000 + lp
+  }
+  function rank(arr: Match[]) {
+    return [...arr].sort((a, b) => {
+      const aLive = a.status === "LIVE" ? 1 : 0
+      const bLive = b.status === "LIVE" ? 1 : 0
+      if (aLive !== bLive) return bLive - aLive
+      const sd = score(b) - score(a)
+      if (sd !== 0) return sd
+      return new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime()
+    })
+  }
 
-  const results = [...sortedLocal, ...apiOnly].slice(0, 15)
+  const results = [...rank(localMatches), ...rank(apiOnly)].slice(0, 15)
 
   const hasQuery = q.length >= 2
   const showEmpty = hasQuery && !loading && results.length === 0
