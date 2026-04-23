@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import type { Match, SortKey } from "@/types/match"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
-import { useFilters } from "@/contexts/FilterContext"
+import { useFilters, leagueKey } from "@/contexts/FilterContext"
 import { useFavorites } from "@/hooks/useFavorites"
 import { usePagination } from "@/hooks/usePagination"
 import { rankMatches } from "@/lib/utils/rank-matches"
@@ -102,7 +102,7 @@ export function HomeBoard() {
     setWatchedMatchIds,
   } = useMatchIntelligence()
 
-  const { applyToMatches } = useFilters()
+  const { applyToMatches, disabledLeagues } = useFilters()
   const { favorites, isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
   const [sort, setSort] = useState<SortKey>("kickoff")
@@ -121,7 +121,13 @@ export function HomeBoard() {
   }, [favorites, setWatchedMatchIds])
 
   const filtered = useMemo(() => {
-    let list = applyToMatches(matches)
+    // When a search query is active, bypass the status filter so results come
+    // from all statuses (live + upcoming + finished). League hide-toggles still apply.
+    let list = ui.search
+      ? (disabledLeagues.size > 0
+          ? matches.filter((m) => !disabledLeagues.has(leagueKey(m)))
+          : matches)
+      : applyToMatches(matches)
 
     if (ui.search) {
       const q = ui.search.toLowerCase()
@@ -159,7 +165,7 @@ export function HomeBoard() {
       if (a.status !== b.status) return 0
       return aChanged - bChanged
     })
-  }, [matches, applyToMatches, ui, sort, isFavorite, changedMatchIds])
+  }, [matches, applyToMatches, disabledLeagues, ui, sort, isFavorite, changedMatchIds])
 
   const grouped = useMemo(() => {
     const groups: Record<TimeBucket, Match[]> = {
