@@ -1,6 +1,6 @@
 /* AreBet service worker — cache strategy + background push notifications */
-const CACHE = "arebet-v1"
-const PRECACHE = ["/", "/arebet-logo.svg"]
+const CACHE = "arebet-v2"
+const PRECACHE = ["/arebet-logo.svg"]
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -21,7 +21,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return
   const url = new URL(request.url)
 
-  // Network-first for API calls
+  // Network-first for API calls — always fresh, fall back to cache if offline
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(request)
@@ -35,8 +35,9 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // Cache-first for same-origin statics
-  if (url.origin === self.location.origin) {
+  // Cache-first for Next.js static assets — these have content-hashed filenames,
+  // so they are safe to serve from cache indefinitely
+  if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached
@@ -48,6 +49,23 @@ self.addEventListener("fetch", (event) => {
           return response
         })
       }),
+    )
+    return
+  }
+
+  // Network-first for all HTML navigation and other same-origin requests —
+  // ensures users always see the latest deploy without needing a hard refresh
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone()
+            caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined)
+          }
+          return response
+        })
+        .catch(() => caches.match(request).then((r) => r || new Response("offline", { status: 503 }))),
     )
   }
 })
