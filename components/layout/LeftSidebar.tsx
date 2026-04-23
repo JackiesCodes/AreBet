@@ -195,15 +195,8 @@ export function LeftSidebar() {
               return (
                 <div key={league.key} className={cn("sidebar-league-row", !isOn && "sidebar-league-row--disabled")}>
                   <div className="sidebar-league-info">
+                    {league.live > 0 && <span className="sidebar-live-dot" aria-label="has live matches" />}
                     <span className="sidebar-league-name">{league.name}</span>
-                    <div className="sidebar-league-meta">
-                      {league.live > 0 && (
-                        <span className="sidebar-league-live">{league.live}● live</span>
-                      )}
-                      {league.upcoming > 0 && league.live === 0 && (
-                        <span className="sidebar-league-upcoming">{league.upcoming} upcoming</span>
-                      )}
-                    </div>
                   </div>
                   <div className="sidebar-league-right">
                     <span className="sidebar-league-count">{league.total}</span>

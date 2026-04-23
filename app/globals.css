@@ -4639,8 +4639,10 @@ svg {
 .sidebar-league-info {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar-league-name {
@@ -4861,18 +4863,19 @@ svg {
   opacity: 0.38;
 }
 
-/* League meta (live/upcoming badges below name) */
-.sidebar-league-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* Live dot — small green pulse indicator next to league name */
+.sidebar-live-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-live, #ef4444);
+  animation: pulse-dot 1.8s ease-in-out infinite;
 }
 
-.sidebar-league-upcoming {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-muted);
-  white-space: nowrap;
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 /* "Only" button — hidden until row hover, always visible when active */
