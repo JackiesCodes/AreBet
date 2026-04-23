@@ -2,8 +2,8 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import {
   searchTeamsByName,
+  searchLeaguesByName,
   fetchFixturesByTeam,
-  fetchLeagues,
   fetchFixturesByLeague,
   currentSeason,
 } from "@/lib/api-football/client"
@@ -19,34 +19,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Search teams and leagues in parallel
+    // Search teams AND leagues by name in parallel (proper API search, not client-side filter)
     const [teams, leagues] = await Promise.all([
       searchTeamsByName(q).catch(() => []),
-      fetchLeagues().catch(() => []),
+      searchLeaguesByName(q).catch(() => []),
     ])
 
-    // Filter leagues by name match (API doesn't support text search on /leagues)
-    const qLow = q.toLowerCase()
-    const matchedLeagues = leagues
-      .filter((l) => l.league.name.toLowerCase().includes(qLow))
-      .slice(0, 2)
-
     const topTeams = teams.slice(0, 3)
+    const topLeagues = leagues.slice(0, 2)
 
-    if (topTeams.length === 0 && matchedLeagues.length === 0) {
+    if (topTeams.length === 0 && topLeagues.length === 0) {
       return NextResponse.json({ matches: [] })
     }
 
     const season = currentSeason()
 
-    // Fetch fixtures for matched teams and leagues in parallel
+    // Fetch upcoming fixtures for matched teams and leagues in parallel
+    // Note: next and last are mutually exclusive on API-Football — use only next
     const fixtureResults = await Promise.allSettled([
-      ...topTeams.map((t) =>
-        fetchFixturesByTeam(t.team.id, { next: 5, last: 3 }).catch(() => []),
-      ),
-      ...matchedLeagues.map((l) =>
-        fetchFixturesByLeague(l.league.id, season, 8).catch(() => []),
-      ),
+      ...topTeams.map((t) => fetchFixturesByTeam(t.team.id, 8).catch(() => [])),
+      ...topLeagues.map((l) => fetchFixturesByLeague(l.league.id, season, 10).catch(() => [])),
     ])
 
     // Flatten, deduplicate by fixture ID, map to Match
@@ -62,7 +54,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Sort: live first → upcoming by date → finished by date desc
+    // Sort: live first → upcoming by date → finished most recent first
     matches.sort((a, b) => {
       const order = { LIVE: 0, UPCOMING: 1, FINISHED: 2 }
       const oa = order[a.status] ?? 1
@@ -74,7 +66,10 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ matches: matches.slice(0, 20) })
-  } catch {
-    return NextResponse.json({ matches: [] })
+  } catch (err) {
+    // Surface error in dev, return empty in prod
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("[/api/search] error:", message)
+    return NextResponse.json({ matches: [], error: message }, { status: 200 })
   }
 }

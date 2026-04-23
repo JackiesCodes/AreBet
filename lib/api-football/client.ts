@@ -271,22 +271,31 @@ export async function fetchCountries(): Promise<ApiCountry[]> {
 export async function searchTeamsByName(query: string): Promise<ApiTeam[]> {
   return apiFetch<ApiTeam>(
     `/teams?search=${encodeURIComponent(query)}`,
-    5 * 60, // 5 min cache
+    5 * 60,
   )
 }
 
-/** Upcoming + recent fixtures for a specific team */
-export async function fetchFixturesByTeam(
-  teamId: number,
-  opts: { next?: number; last?: number } = { next: 5 },
-): Promise<ApiFixture[]> {
-  const params = new URLSearchParams({ team: String(teamId) })
-  if (opts.next) params.set("next", String(opts.next))
-  if (opts.last) params.set("last", String(opts.last))
-  return apiFetch<ApiFixture>(`/fixtures?${params}`, 60) // 1 min cache
+/** Search leagues by name — uses API-Football's native search */
+export async function searchLeaguesByName(query: string): Promise<ApiLeague[]> {
+  return apiFetch<ApiLeague>(
+    `/leagues?search=${encodeURIComponent(query)}`,
+    5 * 60,
+  )
 }
 
-/** Upcoming fixtures for a specific league */
+/**
+ * Upcoming fixtures for a team.
+ * NOTE: API-Football treats `next` and `last` as mutually exclusive —
+ * never pass both in the same call.
+ */
+export async function fetchFixturesByTeam(
+  teamId: number,
+  next = 8,
+): Promise<ApiFixture[]> {
+  return apiFetch<ApiFixture>(`/fixtures?team=${teamId}&next=${next}`, 60)
+}
+
+/** Upcoming fixtures for a league+season */
 export async function fetchFixturesByLeague(
   leagueId: number,
   season: number,
