@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
-import { formatTime } from "@/lib/utils/time"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 import type { Match } from "@/types/match"
 import { cn } from "@/lib/utils/cn"
 import type { SearchEntity } from "@/app/api/search/route"
@@ -31,7 +31,7 @@ function useDebounce<T>(value: T, delay: number): T {
 function matchLabel(m: Match): string {
   if (m.status === "LIVE") return `${m.score.home}–${m.score.away} · LIVE`
   if (m.status === "FINISHED") return `${m.score.home}–${m.score.away} · FT`
-  return formatTime(m.kickoffISO)
+  return `${formatShortDate(m.kickoffISO)} ${formatTime(m.kickoffISO)}`
 }
 
 function TeamLogo({ logo, name }: { logo?: string; name: string }) {
@@ -282,7 +282,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
                     )}
                     {m.status === "UPCOMING" && (
                       <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
-                        {formatTime(m.kickoffISO)}
+                        {formatShortDate(m.kickoffISO)} {formatTime(m.kickoffISO)}
                       </span>
                     )}
                   </Link>
