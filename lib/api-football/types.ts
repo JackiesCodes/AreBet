@@ -314,3 +314,16 @@ export interface ApiCountry {
   code: string | null
   flag: string | null
 }
+
+// ── Venues ────────────────────────────────────────────────────────────────────
+
+export interface ApiVenueResult {
+  id: number
+  name: string
+  address: string | null
+  city: string | null
+  country: string | null
+  capacity: number | null
+  surface: string | null
+  image: string | null
+}

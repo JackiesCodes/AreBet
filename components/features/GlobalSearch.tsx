@@ -8,9 +8,15 @@ import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { formatTime } from "@/lib/utils/time"
 import type { Match } from "@/types/match"
 import { cn } from "@/lib/utils/cn"
+import type { SearchEntity } from "@/app/api/search/route"
 
 interface GlobalSearchProps {
   onClose: () => void
+}
+
+interface SearchResponse {
+  entities: SearchEntity[]
+  matches: Match[]
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -41,17 +47,43 @@ function TeamLogo({ logo, name }: { logo?: string; name: string }) {
       />
     )
   }
+  return <span className="gs-team-initial">{name.slice(0, 1).toUpperCase()}</span>
+}
+
+function EntityImage({ image, name, type }: { image: string | null; name: string; type: SearchEntity["type"] }) {
+  if (image) {
+    return (
+      <Image
+        src={image}
+        alt={name}
+        width={48}
+        height={48}
+        unoptimized
+        className={cn("gs-entity-img", type === "player" || type === "coach" ? "gs-entity-img--round" : "")}
+      />
+    )
+  }
   return (
-    <span className="gs-team-initial">
-      {name.slice(0, 1).toUpperCase()}
+    <span className={cn("gs-entity-initial", type === "player" || type === "coach" ? "gs-entity-initial--round" : "")}>
+      {name.slice(0, 2).toUpperCase()}
     </span>
   )
+}
+
+function entityHref(entity: SearchEntity): string {
+  switch (entity.type) {
+    case "team": return `/teams/${entity.id}`
+    case "player": return `/players/${entity.id}`
+    case "league": return `/leagues/${entity.id}`
+    case "coach": return `/coaches/${entity.id}`
+    case "venue": return `/venues/${entity.id}`
+  }
 }
 
 export function GlobalSearch({ onClose }: GlobalSearchProps) {
   const router = useRouter()
   const [query, setQuery] = useState("")
-  const [apiMatches, setApiMatches] = useState<Match[]>([])
+  const [apiData, setApiData] = useState<SearchResponse>({ entities: [], matches: [] })
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { matches: feedMatches } = useMatchIntelligence()
@@ -71,7 +103,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   useEffect(() => {
     const q = debouncedQuery.trim()
     if (q.length < 3) {
-      setApiMatches([])
+      setApiData({ entities: [], matches: [] })
       setLoading(false)
       return
     }
@@ -81,7 +113,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
 
     fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => setApiMatches(data.matches ?? []))
+      .then((data: SearchResponse) => setApiData(data))
       .catch(() => {})
       .finally(() => setLoading(false))
 
@@ -99,11 +131,10 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
       )
     : []
 
-  // Deduplicate: local feed takes priority (richer data), API fills in what's not in the feed
   const localIds = new Set(localMatches.map((m) => m.id))
-  const apiOnly = apiMatches.filter((m) => !localIds.has(m.id))
+  const apiOnly = apiData.matches.filter((m) => !localIds.has(m.id))
 
-  // Rank by: live first → name match quality × league popularity → date
+  // Rank matches
   const LEAGUE_POP: Record<number, number> = {
     2: 100, 3: 95, 848: 88, 39: 90, 140: 90, 135: 90, 78: 90, 61: 90,
     1: 88, 4: 86, 13: 82, 45: 78, 94: 72, 88: 72, 71: 72, 253: 68, 262: 64,
@@ -116,8 +147,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     return 0
   }
   function score(m: Match): number {
-    const ql = q.toLowerCase()
-    const ns = Math.max(namePop(m.home.name, ql), namePop(m.away.name, ql), namePop(m.league, ql))
+    const ns = Math.max(namePop(m.home.name, q), namePop(m.away.name, q), namePop(m.league, q))
     const lp = (m.leagueId ? LEAGUE_POP[m.leagueId] : 0) ?? 5
     return ns * 1000 + lp
   }
@@ -133,15 +163,21 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   }
 
   const results = [...rank(localMatches), ...rank(apiOnly)].slice(0, 15)
+  const entities = apiData.entities
 
   const hasQuery = q.length >= 2
-  const showEmpty = hasQuery && !loading && results.length === 0
+  const showEmpty = hasQuery && !loading && results.length === 0 && entities.length === 0
 
   // Navigate to first result on Enter
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && results[0]) {
-      router.push(`/match/${results[0].id}`)
-      onClose()
+    if (e.key === "Enter") {
+      if (entities.length > 0) {
+        router.push(entityHref(entities[0]))
+        onClose()
+      } else if (results[0]) {
+        router.push(`/match/${results[0].id}`)
+        onClose()
+      }
     }
   }
 
@@ -168,7 +204,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
             spellCheck={false}
             enterKeyHint="search"
             className="gs-input"
-            placeholder="Search any team, league, competition…"
+            placeholder="Search any team, player, league…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -190,51 +226,79 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           </button>
         </div>
 
-        {/* Results */}
-        {hasQuery && results.length > 0 && (
-          <ul className="gs-results">
-            {results.map((m) => (
-              <li key={m.id}>
-                <Link href={`/match/${m.id}`} className="gs-result-item" onClick={onClose}>
-                  {/* Team logos / initials */}
-                  <span className="gs-result-teams">
-                    <TeamLogo logo={m.home.logo} name={m.home.name} />
-                    <span className="gs-vs">v</span>
-                    <TeamLogo logo={m.away.logo} name={m.away.name} />
-                  </span>
-                  {/* Match info */}
-                  <span className="gs-result-body">
-                    <span className="gs-result-title">
-                      {m.home.name} vs {m.away.name}
+        {/* Entity tiles — horizontal scroll */}
+        {hasQuery && entities.length > 0 && (
+          <div className="gs-entities-section">
+            <div className="gs-entities-scroll">
+              {entities.map((entity) => (
+                <Link
+                  key={`${entity.type}-${entity.id}`}
+                  href={entityHref(entity)}
+                  className="gs-entity-tile"
+                  onClick={onClose}
+                >
+                  <div className="gs-entity-img-wrap">
+                    <EntityImage image={entity.image} name={entity.name} type={entity.type} />
+                    <span className={cn("gs-entity-type-badge", `gs-entity-type-badge--${entity.type}`)}>
+                      {entity.type === "coach" ? "MGR" : entity.type.slice(0, 1).toUpperCase() + entity.type.slice(1)}
                     </span>
-                    <span className="gs-result-sub">
-                      {m.league} · {m.country} · {matchLabel(m)}
-                    </span>
-                  </span>
-                  {/* Status badge */}
-                  {m.status === "LIVE" && (
-                    <span className={cn("gs-status-badge", "gs-status-badge--live")}>LIVE</span>
-                  )}
-                  {m.status === "FINISHED" && (
-                    <span className={cn("gs-status-badge", "gs-status-badge--ft")}>FT</span>
-                  )}
-                  {m.status === "UPCOMING" && (
-                    <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
-                      {formatTime(m.kickoffISO)}
-                    </span>
-                  )}
+                  </div>
+                  <span className="gs-entity-name">{entity.name}</span>
+                  {entity.meta && <span className="gs-entity-meta">{entity.meta}</span>}
                 </Link>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Match results */}
+        {hasQuery && results.length > 0 && (
+          <>
+            {entities.length > 0 && (
+              <p className="gs-section-label">Matches</p>
+            )}
+            <ul className="gs-results">
+              {results.map((m) => (
+                <li key={m.id}>
+                  <Link href={`/match/${m.id}`} className="gs-result-item" onClick={onClose}>
+                    <span className="gs-result-teams">
+                      <TeamLogo logo={m.home.logo} name={m.home.name} />
+                      <span className="gs-vs">v</span>
+                      <TeamLogo logo={m.away.logo} name={m.away.name} />
+                    </span>
+                    <span className="gs-result-body">
+                      <span className="gs-result-title">
+                        {m.home.name} vs {m.away.name}
+                      </span>
+                      <span className="gs-result-sub">
+                        {m.league} · {m.country} · {matchLabel(m)}
+                      </span>
+                    </span>
+                    {m.status === "LIVE" && (
+                      <span className={cn("gs-status-badge", "gs-status-badge--live")}>LIVE</span>
+                    )}
+                    {m.status === "FINISHED" && (
+                      <span className={cn("gs-status-badge", "gs-status-badge--ft")}>FT</span>
+                    )}
+                    {m.status === "UPCOMING" && (
+                      <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
+                        {formatTime(m.kickoffISO)}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
 
         {/* Footer hint */}
         <p className="gs-footer-hint">
-          {!hasQuery && "Search any team or league across all upcoming fixtures"}
-          {hasQuery && loading && "Searching all fixtures…"}
-          {showEmpty && `No matches found for "${query.trim()}"`}
-          {hasQuery && !loading && results.length > 0 && `${results.length} result${results.length !== 1 ? "s" : ""} — press Enter to open first`}
+          {!hasQuery && "Search teams, players, leagues, coaches and venues"}
+          {hasQuery && loading && "Searching…"}
+          {showEmpty && `No results found for "${query.trim()}"`}
+          {hasQuery && !loading && (entities.length > 0 || results.length > 0) &&
+            `${entities.length + results.length} result${entities.length + results.length !== 1 ? "s" : ""} — press Enter to open first`}
         </p>
       </div>
     </div>

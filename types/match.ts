@@ -3,6 +3,7 @@ export type MatchStatus = "LIVE" | "UPCOMING" | "FINISHED"
 export type Side = "home" | "away"
 
 export interface TeamInfo {
+  id?: number    // API-Football team id (may be absent in legacy/demo data)
   name: string
   short: string
   form: string // e.g. "WWLDW"

@@ -339,12 +339,14 @@ export function mapFixtureToMatch(fixture: ApiFixture): Match {
     status,
     minute: fixture.fixture.status.elapsed ?? undefined,
     home: {
+      id: fixture.teams.home.id,
       name: fixture.teams.home.name,
       short: fixture.teams.home.name.slice(0, 3).toUpperCase(),
       form: "",
       logo: fixture.teams.home.logo || undefined,
     },
     away: {
+      id: fixture.teams.away.id,
       name: fixture.teams.away.name,
       short: fixture.teams.away.name.slice(0, 3).toUpperCase(),
       form: "",

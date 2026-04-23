@@ -1,184 +1,186 @@
-"use client"
-
-import { useMemo } from "react"
-import { useParams } from "next/navigation"
+import { notFound } from "next/navigation"
+import Image from "next/image"
 import Link from "next/link"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
-import { PageHeader } from "@/components/layout/PageHeader"
-import { Skeleton } from "@/components/primitives/Skeleton"
-import { EmptyState } from "@/components/primitives/EmptyState"
-import { FormGuide } from "@/components/primitives/FormGuide"
-import { FavoritesSwitcher } from "@/components/features/FavoritesSwitcher"
+import {
+  fetchTeam,
+  fetchFixturesByTeam,
+  fetchRecentFixturesByTeam,
+  fetchPlayerStatsByTeam,
+  currentSeason,
+} from "@/lib/api-football/client"
+import { mapFixtureToMatch } from "@/lib/api-football/mapper"
 import { formatTime } from "@/lib/utils/time"
+import { FormGuide } from "@/components/primitives/FormGuide"
 import type { Match } from "@/types/match"
-import { cn } from "@/lib/utils/cn"
 
-export default function TeamDetailPage() {
-  const params = useParams()
-  const teamName = decodeURIComponent(params.teamId as string)
-  const { matches, loading } = useMatchIntelligence()
+interface PageProps {
+  params: Promise<{ teamId: string }>
+}
 
-  const teamMatches = useMemo(
-    () => matches.filter((m) => m.home.name === teamName || m.away.name === teamName),
-    [matches, teamName],
-  )
+export default async function TeamPage({ params }: PageProps) {
+  const { teamId } = await params
+  const id = Number.parseInt(teamId, 10)
+  if (Number.isNaN(id)) notFound()
 
-  const teamInfo = useMemo(() => {
-    const m = teamMatches[0]
-    if (!m) return null
-    const isHome = m.home.name === teamName
-    return {
-      name: teamName,
-      league: m.league,
-      form: isHome ? m.home.form : m.away.form,
-    }
-  }, [teamMatches, teamName])
+  const season = currentSeason()
 
-  // Aggregate stats from all matches this team has been in
-  const stats = useMemo(() => {
-    let goalsFor = 0, goalsAgainst = 0, wins = 0, draws = 0, losses = 0, played = 0
-    for (const m of teamMatches) {
-      if (m.status !== "FINISHED") continue
-      const isHome = m.home.name === teamName
-      const gf = isHome ? m.score.home : m.score.away
-      const ga = isHome ? m.score.away : m.score.home
-      goalsFor += gf
-      goalsAgainst += ga
-      played++
-      if (gf > ga) wins++
-      else if (gf === ga) draws++
-      else losses++
-    }
-    return { goalsFor, goalsAgainst, wins, draws, losses, played, gd: goalsFor - goalsAgainst }
-  }, [teamMatches, teamName])
+  const [teamData, upcomingFixtures, recentFixtures, players] = await Promise.allSettled([
+    fetchTeam(id),
+    fetchFixturesByTeam(id, 8),
+    fetchRecentFixturesByTeam(id, 5),
+    fetchPlayerStatsByTeam(id, season),
+  ])
 
-  const upcoming = teamMatches.filter((m) => m.status === "UPCOMING").slice(0, 5)
-  const live = teamMatches.filter((m) => m.status === "LIVE")
-  const finished = teamMatches.filter((m) => m.status === "FINISHED").slice(0, 5)
+  const team = teamData.status === "fulfilled" ? teamData.value : null
+  if (!team) notFound()
 
-  if (loading) return <div className="md-page"><Skeleton count={6} /></div>
+  const upcoming: Match[] = upcomingFixtures.status === "fulfilled"
+    ? upcomingFixtures.value.map(mapFixtureToMatch).filter((m) => m.status === "UPCOMING")
+    : []
 
-  if (!teamInfo) {
-    return (
-      <div className="md-page">
-        <PageHeader title={teamName} subtitle="Team not found in current feed" />
-        <EmptyState title="No data available" text="This team has no matches in the current feed." />
-        <div style={{ marginTop: 16 }}>
-          <Link href="/teams" className="md-btn md-btn--ghost md-btn--sm">← Back to Teams</Link>
-        </div>
-      </div>
-    )
-  }
+  const recent: Match[] = recentFixtures.status === "fulfilled"
+    ? recentFixtures.value.map(mapFixtureToMatch).filter((m) => m.status === "FINISHED")
+    : []
+
+  const squad = players.status === "fulfilled"
+    ? players.value.slice(0, 20)
+    : []
+
+  const { team: t, venue } = team
 
   return (
-    <div className="md-page">
-      <div style={{ marginBottom: 8 }}>
-        <Link href="/teams" className="md-text-muted" style={{ fontSize: 12 }}>← Teams</Link>
+    <div className="team-page">
+      <div className="team-page-back">
+        <Link href="/teams">← Teams</Link>
       </div>
 
-      <div className="team-detail-header">
-        <div className="team-detail-avatar">
-          {teamName.slice(0, 2).toUpperCase()}
-        </div>
-        <div className="team-detail-meta">
-          <h1 className="team-detail-name">{teamName}</h1>
-          <div className="md-text-muted" style={{ fontSize: 13 }}>{teamInfo.league}</div>
-          {teamInfo.form && (
-            <div style={{ marginTop: 6 }}>
-              <FormGuide form={teamInfo.form} />
-            </div>
+      {/* Hero */}
+      <div className="team-hero">
+        <div className="team-hero-logo">
+          {t.logo ? (
+            <Image src={t.logo} alt={t.name} width={72} height={72} unoptimized />
+          ) : (
+            <span className="team-hero-initial">{t.name.slice(0, 2).toUpperCase()}</span>
           )}
         </div>
-        <FavoritesSwitcher type="team" id={teamName} label={teamName} meta={{ league: teamInfo.league }} />
+        <div className="team-hero-info">
+          <h1 className="team-hero-name">{t.name}</h1>
+          <div className="team-hero-meta">
+            {t.country && <span>{t.country}</span>}
+            {t.founded && <span>Est. {t.founded}</span>}
+            {venue?.name && <span>{venue.name}</span>}
+          </div>
+        </div>
       </div>
 
-      {/* Stats summary */}
-      {stats.played > 0 && (
-        <div className="team-stat-grid">
-          {[
-            { label: "Played", value: stats.played },
-            { label: "Won", value: stats.wins, color: "var(--positive)" },
-            { label: "Drawn", value: stats.draws, color: "var(--text-muted)" },
-            { label: "Lost", value: stats.losses, color: "var(--negative)" },
-            { label: "Goals For", value: stats.goalsFor },
-            { label: "Goals Against", value: stats.goalsAgainst },
-            { label: "Goal Diff", value: stats.gd > 0 ? `+${stats.gd}` : stats.gd, color: stats.gd > 0 ? "var(--positive)" : stats.gd < 0 ? "var(--negative)" : undefined },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="team-stat-cell">
-              <div className="team-stat-value" style={color ? { color } : undefined}>{value}</div>
-              <div className="team-stat-label">{label}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Live */}
-      {live.length > 0 && (
-        <section style={{ marginBottom: 24 }}>
-          <h2 className="team-section-title">Live Now</h2>
-          <MatchList matches={live} teamName={teamName} />
-        </section>
-      )}
-
-      {/* Upcoming */}
+      {/* Upcoming fixtures */}
       {upcoming.length > 0 && (
-        <section style={{ marginBottom: 24 }}>
+        <section className="team-section">
           <h2 className="team-section-title">Upcoming</h2>
-          <MatchList matches={upcoming} teamName={teamName} />
+          <div className="team-fixture-list">
+            {upcoming.map((m) => (
+              <FixtureRow key={m.id} match={m} teamId={id} />
+            ))}
+          </div>
         </section>
       )}
 
       {/* Recent results */}
-      {finished.length > 0 && (
-        <section style={{ marginBottom: 24 }}>
+      {recent.length > 0 && (
+        <section className="team-section">
           <h2 className="team-section-title">Recent Results</h2>
-          <MatchList matches={finished} teamName={teamName} />
+          <div className="team-fixture-list">
+            {recent.map((m) => (
+              <FixtureRow key={m.id} match={m} teamId={id} showResult />
+            ))}
+          </div>
         </section>
       )}
 
-      {teamMatches.length === 0 && (
-        <EmptyState title="No matches found" text="No matches for this team in the current feed." />
+      {/* Squad */}
+      {squad.length > 0 && (
+        <section className="team-section">
+          <h2 className="team-section-title">Squad</h2>
+          <div className="team-squad-grid">
+            {squad.map((p) => {
+              const stat = p.statistics?.[0]
+              const goals = stat?.goals?.total ?? 0
+              const apps = stat?.games?.appearences ?? 0
+              return (
+                <Link
+                  key={p.player.id}
+                  href={`/players/${p.player.id}`}
+                  className="team-player-card"
+                >
+                  <div className="team-player-photo">
+                    {p.player.photo ? (
+                      <Image
+                        src={p.player.photo}
+                        alt={p.player.name}
+                        width={48}
+                        height={48}
+                        unoptimized
+                        className="team-player-photo-img"
+                      />
+                    ) : (
+                      <span className="team-player-initial">
+                        {p.player.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="team-player-info">
+                    <span className="team-player-name">{p.player.name}</span>
+                    {(apps > 0 || goals > 0) && (
+                      <span className="team-player-stats">
+                        {apps > 0 && `${apps} apps`}
+                        {apps > 0 && goals > 0 && " · "}
+                        {goals > 0 && `${goals} goals`}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {upcoming.length === 0 && recent.length === 0 && squad.length === 0 && (
+        <div className="team-empty">No data available for this team this season.</div>
       )}
     </div>
   )
 }
 
-function MatchList({ matches, teamName }: { matches: Match[]; teamName: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {matches.map((m) => {
-        const isHome = m.home.name === teamName
-        const teamScore = isHome ? m.score.home : m.score.away
-        const oppScore = isHome ? m.score.away : m.score.home
-        const opp = isHome ? m.away.name : m.home.name
-        const result = m.status === "FINISHED"
-          ? teamScore > oppScore ? "W" : teamScore === oppScore ? "D" : "L"
-          : null
+function FixtureRow({ match: m, teamId, showResult }: { match: Match; teamId: number; showResult?: boolean }) {
+  const isHome = m.home.id === teamId
+  const opp = isHome ? m.away : m.home
+  const teamScore = isHome ? m.score.home : m.score.away
+  const oppScore = isHome ? m.score.away : m.score.home
+  const result = showResult
+    ? teamScore > oppScore ? "W" : teamScore === oppScore ? "D" : "L"
+    : null
 
-        return (
-          <Link key={m.id} href={`/match/${m.id}`} className="team-match-row">
-            <div className="team-match-vs">
-              <span className="md-text-muted" style={{ fontSize: 11 }}>{isHome ? "HOME" : "AWAY"}</span>
-              <strong>{opp}</strong>
-              <span className="md-text-muted" style={{ fontSize: 11 }}>{m.league}</span>
-            </div>
-            <div className="team-match-right">
-              {m.status === "FINISHED" ? (
-                <>
-                  <span className="team-match-score">{teamScore}–{oppScore}</span>
-                  <span className={cn("team-match-result", result === "W" ? "team-match-result--w" : result === "D" ? "team-match-result--d" : "team-match-result--l")}>
-                    {result}
-                  </span>
-                </>
-              ) : m.status === "LIVE" ? (
-                <span className="live-dot" style={{ fontSize: 12 }}>● {m.minute ?? 0}'</span>
-              ) : (
-                <span className="md-text-muted" style={{ fontSize: 12 }}>{formatTime(m.kickoffISO)}</span>
-              )}
-            </div>
-          </Link>
-        )
-      })}
-    </div>
+  return (
+    <Link href={`/match/${m.id}`} className="team-fixture-row">
+      <span className="team-fixture-label">{isHome ? "H" : "A"}</span>
+      <span className="team-fixture-opp">
+        {opp.logo && (
+          <Image src={opp.logo} alt={opp.name} width={16} height={16} unoptimized style={{ borderRadius: 2 }} />
+        )}
+        {opp.name}
+      </span>
+      <span className="team-fixture-league">{m.league}</span>
+      <span className="team-fixture-right">
+        {showResult ? (
+          <>
+            <span className="team-fixture-score">{teamScore}–{oppScore}</span>
+            <span className={`team-fixture-result team-fixture-result--${result?.toLowerCase()}`}>{result}</span>
+          </>
+        ) : (
+          <span className="team-fixture-time">{formatTime(m.kickoffISO)}</span>
+        )}
+      </span>
+    </Link>
   )
 }

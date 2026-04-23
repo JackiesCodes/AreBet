@@ -13,6 +13,7 @@ import type {
   ApiTrophy,
   ApiLeague,
   ApiCountry,
+  ApiVenueResult,
 } from "./types"
 
 const BASE_URL = "https://v3.football.api-sports.io"
@@ -304,5 +305,50 @@ export async function fetchFixturesByLeague(
   return apiFetch<ApiFixture>(
     `/fixtures?league=${leagueId}&season=${season}&next=${next}`,
     60,
+  )
+}
+
+/** Recent fixtures for a team (for "last matches" on team pages) */
+export async function fetchRecentFixturesByTeam(
+  teamId: number,
+  last = 5,
+): Promise<ApiFixture[]> {
+  return apiFetch<ApiFixture>(`/fixtures?team=${teamId}&last=${last}`, 60)
+}
+
+/** Upcoming fixtures at a venue */
+export async function fetchFixturesByVenue(
+  venueId: number,
+  next = 8,
+): Promise<ApiFixture[]> {
+  return apiFetch<ApiFixture>(`/fixtures?venue=${venueId}&next=${next}`, 60)
+}
+
+// ── Player / Coach / Venue search ─────────────────────────────────────────────
+
+/** Search players by name for a given season */
+export async function searchPlayersByName(
+  query: string,
+  season: number,
+): Promise<ApiPlayerStat[]> {
+  return apiFetch<ApiPlayerStat>(
+    `/players?search=${encodeURIComponent(query)}&season=${season}`,
+    5 * 60,
+  )
+}
+
+/** Search coaches by name */
+export async function searchCoachesByName(query: string): Promise<ApiCoach[]> {
+  return apiFetch<ApiCoach>(
+    `/coachs?search=${encodeURIComponent(query)}`,
+    5 * 60,
+  )
+}
+
+/** Search venues by name */
+export async function searchVenuesByName(query: string): Promise<ApiVenueResult[]> {
+  return apiFetch<ApiVenueResult>(
+    `/venues?search=${encodeURIComponent(query)}`,
+    5 * 60,
   )
 }
