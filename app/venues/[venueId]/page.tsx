@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { searchVenuesByName, fetchFixturesByVenue } from "@/lib/api-football/client"
 import { mapFixtureToMatch } from "@/lib/api-football/mapper"
-import { formatTime } from "@/lib/utils/time"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 import type { Match } from "@/types/match"
 
 interface PageProps {
@@ -70,7 +70,7 @@ export default async function VenuePage({ params }: PageProps) {
                 </span>
                 <span className="venue-fixture-meta">
                   <span className="venue-fixture-league">{m.league}</span>
-                  <span className="venue-fixture-time">{formatTime(m.kickoffISO)}</span>
+                  <span className="venue-fixture-time">{formatShortDate(m.kickoffISO)} · {formatTime(m.kickoffISO)}</span>
                 </span>
               </Link>
             ))}

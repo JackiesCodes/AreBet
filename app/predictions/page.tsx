@@ -14,7 +14,7 @@ import {
   type TipCategory,
 } from "@/lib/utils/betting-tips"
 import { useFormatOdds } from "@/hooks/useFormatOdds"
-import { formatTime } from "@/lib/utils/time"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
 
@@ -70,7 +70,7 @@ function TipCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
           {tip.home} vs {tip.away}
         </Link>
         <span className="tip-match-meta">
-          {tip.league} · {tip.status === "LIVE" ? <span className="tip-live-dot">● LIVE</span> : formatTime(tip.kickoffISO)}
+          {tip.league} · {tip.status === "LIVE" ? <span className="tip-live-dot">● LIVE</span> : `${formatShortDate(tip.kickoffISO)} · ${formatTime(tip.kickoffISO)}`}
         </span>
       </div>
 

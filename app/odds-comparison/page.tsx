@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { OddsComparison } from "@/components/analytics/OddsComparison"
 import { PageHeader } from "@/components/layout/PageHeader"
-import { formatTime } from "@/lib/utils/time"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 import Link from "next/link"
 import { cn } from "@/lib/utils/cn"
 
@@ -110,7 +110,7 @@ export default function OddsComparisonPage() {
                   {" · "}
                   {m.status === "LIVE"
                     ? <span className="live-dot">● LIVE {m.minute ? `${m.minute}'` : ""}</span>
-                    : formatTime(m.kickoffISO)
+                    : `${formatShortDate(m.kickoffISO)} · ${formatTime(m.kickoffISO)}`
                   }
                 </div>
               </div>
