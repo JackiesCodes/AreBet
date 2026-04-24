@@ -14,10 +14,10 @@ export default function TeamsPage() {
   const [search, setSearch] = useState("")
 
   const teams = useMemo(() => {
-    const map = new Map<string, { name: string; league: string; form: string }>()
+    const map = new Map<string, { id?: number; name: string; league: string; form: string }>()
     for (const m of matches) {
-      if (!map.has(m.home.name)) map.set(m.home.name, { name: m.home.name, league: m.league, form: m.home.form })
-      if (!map.has(m.away.name)) map.set(m.away.name, { name: m.away.name, league: m.league, form: m.away.form })
+      if (!map.has(m.home.name)) map.set(m.home.name, { id: m.home.id, name: m.home.name, league: m.league, form: m.home.form })
+      if (!map.has(m.away.name)) map.set(m.away.name, { id: m.away.id, name: m.away.name, league: m.league, form: m.away.form })
     }
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
   }, [matches])
@@ -50,11 +50,10 @@ export default function TeamsPage() {
       )}
       <div className="teams-grid">
         {filtered.map((t) => {
-          const slug = encodeURIComponent(t.name)
           return (
             <div key={t.name} className="md-card teams-card" style={{ padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <Link href={`/teams/${slug}`} className="teams-card-link">
+                <Link href={t.id ? `/teams/${t.id}` : "#"} className="teams-card-link">
                   <strong>{t.name}</strong>
                   <div className="md-text-muted" style={{ fontSize: 11 }}>{t.league}</div>
                   <div style={{ marginTop: 8 }}><FormGuide form={t.form} /></div>

@@ -232,6 +232,11 @@ export async function fetchCoach(teamId: number): Promise<ApiCoach | null> {
   return results[0] ?? null
 }
 
+export async function fetchCoachById(coachId: number): Promise<ApiCoach | null> {
+  const results = await apiFetch<ApiCoach>(`/coachs?id=${coachId}`, REVALIDATE_PLAYERS)
+  return results[0] ?? null
+}
+
 // ── Trophies ──────────────────────────────────────────────────────────────────
 
 export async function fetchTrophies(teamId: number): Promise<ApiTrophy[]> {

@@ -177,7 +177,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
             {match.events.map((ev, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 24px 1fr", gap: 8, padding: 8, background: "var(--surface-2)", borderRadius: 8, fontSize: 13 }}>
                 <span className="md-mono md-text-muted">{ev.minute}&apos;</span>
-                <span>{ev.type === "goal" ? "⚽" : ev.type === "card" ? "🟨" : "↔"}</span>
+                <span>{ev.type === "goal" ? "⚽" : ev.type === "card" ? "🟨" : ev.type === "sub" ? "🔄" : "↔"}</span>
                 <span><strong>{ev.player}</strong> · <span className="md-text-muted">{ev.detail}</span></span>
               </div>
             ))}

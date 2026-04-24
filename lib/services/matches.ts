@@ -82,15 +82,30 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     }
   })
 
-  // Enrich all matches with odds
+  // Enrich matches with odds — live first, then top 30 upcoming (API quota guard)
+  const liveForOdds = matchesWithForm.filter((m) => m.status === "LIVE")
+  const upcomingForOdds = matchesWithForm
+    .filter((m) => m.status === "UPCOMING")
+    .sort((a, b) => new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime())
+    .slice(0, 30)
+  const oddsTargets = [...liveForOdds, ...upcomingForOdds]
+  const oddsTargetIds = new Set(oddsTargets.map((m) => m.id))
+
   const oddsResults = await Promise.allSettled(
-    matchesWithForm.map((m) =>
+    oddsTargets.map((m) =>
       m.status === "LIVE" ? fetchLiveOdds(m.id) : fetchOdds(m.id)
     ),
   )
-  const withOdds = matchesWithForm.map((match, i) => {
+  const oddsMap = new Map<number, Parameters<typeof enrichWithOdds>[1]>()
+  oddsTargets.forEach((m, i) => {
     const r = oddsResults[i]
-    return r?.status === "fulfilled" && r.value ? enrichWithOdds(match, r.value) : match
+    if (r.status === "fulfilled" && r.value) oddsMap.set(m.id, r.value)
+  })
+
+  const withOdds = matchesWithForm.map((match) => {
+    if (!oddsTargetIds.has(match.id)) return match
+    const odds = oddsMap.get(match.id)
+    return odds ? enrichWithOdds(match, odds) : match
   })
 
   // Pre-fetch predictions for the 20 soonest upcoming matches
