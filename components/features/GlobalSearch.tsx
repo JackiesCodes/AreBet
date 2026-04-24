@@ -80,8 +80,55 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   const [apiData, setApiData] = useState<SearchResponse>({ entities: [], matches: [] })
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const tilesRef = useRef<HTMLDivElement>(null)
   const { matches: feedMatches } = useMatchIntelligence()
   const debouncedQuery = useDebounce(query, 350)
+
+  // Mouse drag-to-scroll on entity tiles
+  useEffect(() => {
+    const el = tilesRef.current
+    if (!el) return
+    let isDown = false
+    let startX = 0
+    let scrollLeft = 0
+    let hasDragged = false
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true
+      hasDragged = false
+      startX = e.pageX - el.offsetLeft
+      scrollLeft = el.scrollLeft
+      el.style.cursor = "grabbing"
+    }
+    const onMouseLeave = () => { isDown = false; el.style.cursor = "grab" }
+    const onMouseUp = () => { isDown = false; el.style.cursor = "grab" }
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return
+      e.preventDefault()
+      const x = e.pageX - el.offsetLeft
+      const walk = x - startX
+      if (Math.abs(walk) > 4) hasDragged = true
+      el.scrollLeft = scrollLeft - walk
+    }
+    // Suppress click on child links if we actually dragged
+    const onClickCapture = (e: MouseEvent) => {
+      if (hasDragged) { e.preventDefault(); e.stopPropagation(); hasDragged = false }
+    }
+
+    el.style.cursor = "grab"
+    el.addEventListener("mousedown", onMouseDown)
+    el.addEventListener("mouseleave", onMouseLeave)
+    el.addEventListener("mouseup", onMouseUp)
+    el.addEventListener("mousemove", onMouseMove)
+    el.addEventListener("click", onClickCapture, true)
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown)
+      el.removeEventListener("mouseleave", onMouseLeave)
+      el.removeEventListener("mouseup", onMouseUp)
+      el.removeEventListener("mousemove", onMouseMove)
+      el.removeEventListener("click", onClickCapture, true)
+    }
+  }, [apiData.entities])
 
   // Focus input and wire Escape key
   useEffect(() => {
@@ -223,7 +270,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
         {/* Entity tiles — horizontal scroll, always outside scroll area */}
         {hasQuery && entities.length > 0 && (
           <div className="gs-entities-section">
-            <div className="gs-entities-scroll">
+            <div className="gs-entities-scroll" ref={tilesRef}>
               {entities.map((entity) => (
                 <Link
                   key={`${entity.type}-${entity.id}`}

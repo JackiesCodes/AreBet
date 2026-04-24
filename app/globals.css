@@ -7380,6 +7380,21 @@ svg {
   border-bottom: 1px solid var(--border);
   padding: 10px 0;
   flex-shrink: 0;
+  overflow: hidden; /* constrains scroll container to modal width */
+  position: relative;
+}
+
+/* Right-side fade hint — shows there's more content to scroll */
+.gs-entities-section::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, transparent, var(--surface-2));
+  pointer-events: none;
+  z-index: 1;
 }
 
 .gs-entities-scroll {
