@@ -154,9 +154,8 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
 
     fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((data: SearchResponse) => setApiData(data))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      .then((data: SearchResponse) => { setApiData(data); setLoading(false) })
+      .catch((err) => { if (err?.name !== "AbortError") setLoading(false) })
 
     return () => controller.abort()
   }, [debouncedQuery])

@@ -7,6 +7,7 @@ import {
   searchCoachesByName,
   searchVenuesByName,
   fetchFixturesByTeam,
+  fetchRecentFixturesByTeam,
   fetchFixturesByLeague,
   fetchFixturesByVenue,
   fetchPlayerStatsByTeam,
@@ -202,10 +203,11 @@ export async function GET(request: NextRequest) {
     const fixtureTeamIds = new Set(teams.slice(0, 4).map((t) => t.team.id))
 
     // Player club IDs: when no team name matched (e.g. "Haaland" → Man City)
+    // statistics may be empty for some players — fall back to any populated entry
     if (fixtureTeamIds.size === 0) {
       for (const p of players.slice(0, 3)) {
-        const tid = p.statistics?.[0]?.team?.id
-        if (tid) fixtureTeamIds.add(tid)
+        const stat = p.statistics?.find((s) => s.team?.id)
+        if (stat?.team?.id) fixtureTeamIds.add(stat.team.id)
       }
     }
 
@@ -217,14 +219,24 @@ export async function GET(request: NextRequest) {
     const fixtureLeagueIds = leagues.slice(0, 2).map((l) => l.league.id)
     const fixtureVenueIds  = venues.slice(0, 2).map((v) => v.id)
 
+    console.log(
+      `[search] fixture sources — teams=${[...fixtureTeamIds].join(",")} ` +
+      `leagues=${fixtureLeagueIds.join(",")} venues=${fixtureVenueIds.join(",")}`
+    )
+
     if (fixtureTeamIds.size === 0 && fixtureLeagueIds.length === 0 && fixtureVenueIds.length === 0) {
       return NextResponse.json({ entities, matches: [] })
     }
 
+    // Fetch both upcoming and recent matches for each team so we always have results
+    const empty = (): Promise<never[]> => Promise.resolve([])
     const fixtureResults = await Promise.allSettled([
-      ...[...fixtureTeamIds].map((id) => fetchFixturesByTeam(id, 8).catch(() => [])),
-      ...fixtureLeagueIds.map((id) => fetchFixturesByLeague(id, season, 10).catch(() => [])),
-      ...fixtureVenueIds.map((id) => fetchFixturesByVenue(id, 8).catch(() => [])),
+      ...[...fixtureTeamIds].flatMap((id) => [
+        fetchFixturesByTeam(id, 8).catch(empty),
+        fetchRecentFixturesByTeam(id, 5).catch(empty),
+      ]),
+      ...fixtureLeagueIds.map((id) => fetchFixturesByLeague(id, season, 10).catch(empty)),
+      ...fixtureVenueIds.map((id) => fetchFixturesByVenue(id, 8).catch(empty)),
     ])
 
     const seen = new Set<number>()
@@ -250,6 +262,7 @@ export async function GET(request: NextRequest) {
       return a.status === "FINISHED" ? tb - ta : ta - tb
     })
 
+    console.log(`[search] returning entities=${entities.length} matches=${matches.length}`)
     return NextResponse.json({ entities, matches: matches.slice(0, 20) })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
