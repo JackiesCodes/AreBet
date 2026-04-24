@@ -14,6 +14,7 @@ import {
   currentSeason,
 } from "@/lib/api-football/client"
 import { mapFixtureToMatch } from "@/lib/api-football/mapper"
+import { LEAGUE_POP, leaguePop } from "@/lib/utils/league-groups"
 import type { Match } from "@/types/match"
 import type { ApiPlayerStat } from "@/lib/api-football/types"
 
@@ -31,22 +32,6 @@ export interface SearchEntity {
   meta: string
 }
 
-// ── League popularity tiers ───────────────────────────────────────────────────
-const LEAGUE_POP: Record<number, number> = {
-  2: 100, 3: 95, 848: 88,
-  39: 90, 140: 90, 135: 90, 78: 90, 61: 90,
-  1: 88, 4: 86, 5: 80, 6: 78, 10: 75,
-  45: 78, 48: 76, 143: 74, 137: 74, 81: 74, 66: 74,
-  94: 72, 88: 72, 144: 70, 207: 68,
-  119: 65, 113: 65, 103: 65, 106: 65, 218: 64,
-  13: 82, 11: 78, 71: 72, 73: 65, 128: 70, 239: 65,
-  253: 68, 262: 64,
-  169: 60, 188: 58, 17: 56,
-}
-
-function leaguePop(id: number | null | undefined): number {
-  return id ? (LEAGUE_POP[id] ?? 5) : 5
-}
 
 function nameMatch(name: string, q: string): number {
   const n = name.toLowerCase()

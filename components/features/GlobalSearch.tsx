@@ -6,8 +6,10 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
+import { useDebounce } from "@/hooks/useDebounce"
 import type { Match } from "@/types/match"
 import { cn } from "@/lib/utils/cn"
+import { LEAGUE_POP } from "@/lib/utils/league-groups"
 import type { SearchEntity } from "@/app/api/search/route"
 
 interface GlobalSearchProps {
@@ -19,14 +21,6 @@ interface SearchResponse {
   matches: Match[]
 }
 
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
 
 function TeamLogo({ logo, name }: { logo?: string; name: string }) {
   if (logo) {
@@ -185,10 +179,6 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   const apiOnly = apiData.matches.filter((m) => !localIds.has(m.id))
 
   // Rank matches
-  const LEAGUE_POP: Record<number, number> = {
-    2: 100, 3: 95, 848: 88, 39: 90, 140: 90, 135: 90, 78: 90, 61: 90,
-    1: 88, 4: 86, 13: 82, 45: 78, 94: 72, 88: 72, 71: 72, 253: 68, 262: 64,
-  }
   function namePop(name: string, ql: string): number {
     const n = name.toLowerCase()
     if (n === ql) return 3
