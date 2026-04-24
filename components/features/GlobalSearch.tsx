@@ -28,12 +28,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced
 }
 
-function matchLabel(m: Match): string {
-  if (m.status === "LIVE") return `${m.score.home}–${m.score.away} · LIVE`
-  if (m.status === "FINISHED") return `${m.score.home}–${m.score.away} · FT`
-  return `${formatShortDate(m.kickoffISO)} ${formatTime(m.kickoffISO)}`
-}
-
 function TeamLogo({ logo, name }: { logo?: string; name: string }) {
   if (logo) {
     return (
@@ -271,14 +265,18 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
                         {m.home.name} vs {m.away.name}
                       </span>
                       <span className="gs-result-sub">
-                        {m.league} · {m.country} · {matchLabel(m)}
+                        {m.league} · {m.country}
                       </span>
                     </span>
                     {m.status === "LIVE" && (
-                      <span className={cn("gs-status-badge", "gs-status-badge--live")}>LIVE</span>
+                      <span className={cn("gs-status-badge", "gs-status-badge--live")}>
+                        {m.score.home}–{m.score.away} · LIVE
+                      </span>
                     )}
                     {m.status === "FINISHED" && (
-                      <span className={cn("gs-status-badge", "gs-status-badge--ft")}>FT</span>
+                      <span className={cn("gs-status-badge", "gs-status-badge--ft")}>
+                        {m.score.home}–{m.score.away} · FT
+                      </span>
                     )}
                     {m.status === "UPCOMING" && (
                       <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
