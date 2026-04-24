@@ -164,11 +164,21 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   // Merge: local feed results (instant) + API results (from all dates)
   const q = query.trim().toLowerCase()
 
+  // Team IDs surfaced by entity search (e.g. player → their club)
+  const entityTeamIds = new Set(
+    apiData.entities
+      .filter((e) => e.type === "team")
+      .map((e) => e.id)
+  )
+
   const localMatches = q.length >= 2
     ? feedMatches.filter((m) =>
         m.home.name.toLowerCase().includes(q) ||
         m.away.name.toLowerCase().includes(q) ||
-        m.league.toLowerCase().includes(q),
+        m.league.toLowerCase().includes(q) ||
+        // also include live matches for teams found via entity search
+        (m.home.id != null && entityTeamIds.has(m.home.id)) ||
+        (m.away.id != null && entityTeamIds.has(m.away.id)),
       )
     : []
 

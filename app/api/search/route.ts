@@ -8,6 +8,7 @@ import {
   searchVenuesByName,
   fetchFixturesByTeam,
   fetchFixturesByLeague,
+  fetchFixturesByVenue,
   fetchPlayerStatsByTeam,
   currentSeason,
 } from "@/lib/api-football/client"
@@ -196,17 +197,34 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // ── Step 4: fetch fixtures for matches section ─────────────────────────
-    const topTeams = teams.slice(0, 4)
-    const topLeagues = leagues.slice(0, 2)
+    // ── Step 4: derive all fixture sources ────────────────────────────────
+    // Team IDs: from direct team matches first
+    const fixtureTeamIds = new Set(teams.slice(0, 4).map((t) => t.team.id))
 
-    if (topTeams.length === 0 && topLeagues.length === 0) {
+    // Player club IDs: when no team name matched (e.g. "Haaland" → Man City)
+    if (fixtureTeamIds.size === 0) {
+      for (const p of players.slice(0, 3)) {
+        const tid = p.statistics?.[0]?.team?.id
+        if (tid) fixtureTeamIds.add(tid)
+      }
+    }
+
+    // Coach team ID
+    if (fixtureTeamIds.size === 0 && coaches[0]?.team?.id) {
+      fixtureTeamIds.add(coaches[0].team.id)
+    }
+
+    const fixtureLeagueIds = leagues.slice(0, 2).map((l) => l.league.id)
+    const fixtureVenueIds  = venues.slice(0, 2).map((v) => v.id)
+
+    if (fixtureTeamIds.size === 0 && fixtureLeagueIds.length === 0 && fixtureVenueIds.length === 0) {
       return NextResponse.json({ entities, matches: [] })
     }
 
     const fixtureResults = await Promise.allSettled([
-      ...topTeams.map((t) => fetchFixturesByTeam(t.team.id, 8).catch(() => [])),
-      ...topLeagues.map((l) => fetchFixturesByLeague(l.league.id, season, 10).catch(() => [])),
+      ...[...fixtureTeamIds].map((id) => fetchFixturesByTeam(id, 8).catch(() => [])),
+      ...fixtureLeagueIds.map((id) => fetchFixturesByLeague(id, season, 10).catch(() => [])),
+      ...fixtureVenueIds.map((id) => fetchFixturesByVenue(id, 8).catch(() => [])),
     ])
 
     const seen = new Set<number>()
