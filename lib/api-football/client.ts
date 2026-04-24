@@ -50,13 +50,13 @@ function getApiKey(): string {
  *  - respects the revalidate window to keep data fresh
  * This replaces the old in-memory Map which was reset on every cold start.
  */
-async function apiFetch<T>(path: string, revalidate: number): Promise<T[]> {
+async function apiFetch<T>(path: string, revalidate: number, noCache = false): Promise<T[]> {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: {
       "x-apisports-key": getApiKey(),
       "Content-Type": "application/json",
     },
-    next: { revalidate },
+    ...(noCache ? { cache: "no-store" } : { next: { revalidate } }),
   })
 
   // Capture rate limit from response headers (only on a live network request)
@@ -78,7 +78,8 @@ async function apiFetch<T>(path: string, revalidate: number): Promise<T[]> {
     throw new Error(`API-Football errors: ${JSON.stringify(json.errors)}`)
   }
 
-  return json.response
+  // API can return null for response when there are no results — guard against it
+  return json.response ?? []
 }
 
 // European season: season=2025 means 2025/26. For April 2026, use currentYear - 1.
@@ -273,6 +274,7 @@ export async function searchTeamsByName(query: string): Promise<ApiTeam[]> {
   return apiFetch<ApiTeam>(
     `/teams?search=${encodeURIComponent(query)}`,
     5 * 60,
+    true, // no-cache for search
   )
 }
 
@@ -281,6 +283,7 @@ export async function searchLeaguesByName(query: string): Promise<ApiLeague[]> {
   return apiFetch<ApiLeague>(
     `/leagues?search=${encodeURIComponent(query)}`,
     5 * 60,
+    true, // no-cache for search
   )
 }
 
@@ -334,6 +337,7 @@ export async function searchPlayersByName(
   return apiFetch<ApiPlayerStat>(
     `/players?search=${encodeURIComponent(query)}&season=${season}`,
     5 * 60,
+    true, // no-cache — search must be fresh; stale empty results block new searches
   )
 }
 
@@ -342,6 +346,7 @@ export async function searchCoachesByName(query: string): Promise<ApiCoach[]> {
   return apiFetch<ApiCoach>(
     `/coachs?search=${encodeURIComponent(query)}`,
     5 * 60,
+    true,
   )
 }
 
@@ -350,5 +355,6 @@ export async function searchVenuesByName(query: string): Promise<ApiVenueResult[
   return apiFetch<ApiVenueResult>(
     `/venues?search=${encodeURIComponent(query)}`,
     5 * 60,
+    true,
   )
 }
