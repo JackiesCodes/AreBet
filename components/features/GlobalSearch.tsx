@@ -34,10 +34,10 @@ function TeamLogo({ logo, name }: { logo?: string; name: string }) {
       <Image
         src={logo}
         alt={name}
-        width={16}
-        height={16}
+        width={22}
+        height={22}
         unoptimized
-        style={{ borderRadius: 2, objectFit: "contain" }}
+        style={{ borderRadius: 3, objectFit: "contain" }}
       />
     )
   }
@@ -50,8 +50,8 @@ function EntityImage({ image, name, type }: { image: string | null; name: string
       <Image
         src={image}
         alt={name}
-        width={48}
-        height={48}
+        width={40}
+        height={40}
         unoptimized
         className={cn("gs-entity-img", type === "player" || type === "coach" ? "gs-entity-img--round" : "")}
       />
@@ -220,7 +220,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           </button>
         </div>
 
-        {/* Entity tiles — horizontal scroll */}
+        {/* Entity tiles — horizontal scroll, always outside scroll area */}
         {hasQuery && entities.length > 0 && (
           <div className="gs-entities-section">
             <div className="gs-entities-scroll">
@@ -245,58 +245,59 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           </div>
         )}
 
-        {/* Match results */}
+        {/* Match results — scrollable */}
         {hasQuery && results.length > 0 && (
-          <>
+          <ul className="gs-results">
             {entities.length > 0 && (
-              <p className="gs-section-label">Matches</p>
+              <li><p className="gs-section-label">Matches</p></li>
             )}
-            <ul className="gs-results">
-              {results.map((m) => (
-                <li key={m.id}>
-                  <Link href={`/match/${m.id}`} className="gs-result-item" onClick={onClose}>
-                    <span className="gs-result-teams">
-                      <TeamLogo logo={m.home.logo} name={m.home.name} />
-                      <span className="gs-vs">v</span>
-                      <TeamLogo logo={m.away.logo} name={m.away.name} />
+            {results.map((m) => (
+              <li key={m.id}>
+                <Link href={`/match/${m.id}`} className="gs-result-item" onClick={onClose}>
+                  {/* Two logos stacked */}
+                  <span className="gs-result-teams">
+                    <TeamLogo logo={m.home.logo} name={m.home.name} />
+                    <span className="gs-vs">vs</span>
+                    <TeamLogo logo={m.away.logo} name={m.away.name} />
+                  </span>
+                  {/* Text */}
+                  <span className="gs-result-body">
+                    <span className="gs-result-title">
+                      {m.home.name} vs {m.away.name}
                     </span>
-                    <span className="gs-result-body">
-                      <span className="gs-result-title">
-                        {m.home.name} vs {m.away.name}
-                      </span>
-                      <span className="gs-result-sub">
-                        {m.league} · {m.country}
-                      </span>
+                    <span className="gs-result-sub">
+                      {m.league} · {m.country}
                     </span>
-                    {m.status === "LIVE" && (
-                      <span className={cn("gs-status-badge", "gs-status-badge--live")}>
-                        {m.score.home}–{m.score.away} · LIVE
-                      </span>
-                    )}
-                    {m.status === "FINISHED" && (
-                      <span className={cn("gs-status-badge", "gs-status-badge--ft")}>
-                        {m.score.home}–{m.score.away} · FT
-                      </span>
-                    )}
-                    {m.status === "UPCOMING" && (
-                      <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
-                        {formatShortDate(m.kickoffISO)} {formatTime(m.kickoffISO)}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
+                  </span>
+                  {/* Status badge */}
+                  {m.status === "LIVE" && (
+                    <span className={cn("gs-status-badge", "gs-status-badge--live")}>
+                      {m.score.home}–{m.score.away} · LIVE
+                    </span>
+                  )}
+                  {m.status === "FINISHED" && (
+                    <span className={cn("gs-status-badge", "gs-status-badge--ft")}>
+                      {m.score.home}–{m.score.away} · FT
+                    </span>
+                  )}
+                  {m.status === "UPCOMING" && (
+                    <span className={cn("gs-status-badge", "gs-status-badge--upcoming")}>
+                      {formatShortDate(m.kickoffISO)} {formatTime(m.kickoffISO)}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
 
-        {/* Footer hint */}
+        {/* Footer */}
         <p className="gs-footer-hint">
           {!hasQuery && "Search teams, players, leagues, coaches and venues"}
           {hasQuery && loading && "Searching…"}
           {showEmpty && `No results found for "${query.trim()}"`}
           {hasQuery && !loading && (entities.length > 0 || results.length > 0) &&
-            `${entities.length + results.length} result${entities.length + results.length !== 1 ? "s" : ""} — press Enter to open first`}
+            `${results.length} match${results.length !== 1 ? "es" : ""} · ${entities.length} entit${entities.length !== 1 ? "ies" : "y"} — Enter to open first`}
         </p>
       </div>
     </div>

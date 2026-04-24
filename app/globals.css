@@ -1588,35 +1588,43 @@ svg {
 }
 
 /* ----- Global Search ---------------------------------------------------- */
+/* ── Backdrop ─────────────────────────────────────────────────────────────── */
 .gs-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 80px var(--space-4) var(--space-4);
+  padding: 64px 16px 16px;
   z-index: 300;
+  overflow-y: auto;
 }
 
+/* ── Modal shell ──────────────────────────────────────────────────────────── */
 .gs-modal {
   background: var(--surface-2);
   border: 1px solid var(--border-hover);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
 }
 
+/* ── Input row ────────────────────────────────────────────────────────────── */
 .gs-input-row {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 14px var(--space-4);
+  gap: 10px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .gs-search-icon {
@@ -1629,62 +1637,45 @@ svg {
   background: transparent;
   border: none;
   outline: none;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text);
   font-family: inherit;
 }
+.gs-input::placeholder { color: var(--text-muted); }
 
-.gs-input::placeholder {
-  color: var(--text-muted);
-}
-
-.gs-results {
-  list-style: none;
-  margin: 0;
-  padding: var(--space-2) 0;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.gs-result-item {
+/* Clear button */
+.gs-clear-btn {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 10px var(--space-4);
-  transition: background var(--t-fast);
-  text-decoration: none;
-}
-
-.gs-result-item:hover {
-  background: var(--surface-3);
-}
-
-.gs-result-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.gs-result-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.gs-result-sub {
-  font-size: 11px;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-4);
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  transition: all var(--t-fast);
 }
+.gs-clear-btn:hover { background: var(--border); color: var(--text); }
 
-/* Spinner (replaces search icon while loading) */
+/* Esc button */
+.gs-close-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+.gs-close-btn:hover { background: var(--surface-4); color: var(--text); }
+
+/* Spinner */
 .gs-spinner {
   flex-shrink: 0;
   width: 16px;
@@ -1696,96 +1687,119 @@ svg {
 }
 @keyframes gs-spin { to { transform: rotate(360deg); } }
 
-/* Clear query button */
-.gs-clear-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface-4);
-  color: var(--text-muted);
-  transition: all var(--t-fast);
-}
-.gs-clear-btn:hover {
-  background: var(--border);
-  color: var(--text);
+/* ── Scrollable body (entities + results) ─────────────────────────────────── */
+.gs-results {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
-/* Esc close button */
-.gs-close-btn {
-  flex-shrink: 0;
+/* ── Match result row ─────────────────────────────────────────────────────── */
+.gs-result-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 2px 7px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-muted);
-  transition: all var(--t-fast);
+  gap: 12px;
+  padding: 10px 16px;
+  transition: background var(--t-fast);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
-.gs-close-btn:hover {
-  background: var(--surface-4);
-  color: var(--text);
-}
+.gs-result-item:hover { background: var(--surface-3); }
 
-/* Team logo / initial in result row */
+/* Team logos column */
 .gs-result-teams {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
+  width: 24px;
 }
+
 .gs-team-initial {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   background: var(--surface-4);
   font-size: 9px;
   font-weight: 700;
   color: var(--text-muted);
 }
+
 .gs-vs {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-muted);
+  line-height: 1;
+  letter-spacing: 0;
 }
 
-/* Status badges */
+/* Text body */
+.gs-result-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.gs-result-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.gs-result-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status badge (right side) */
 .gs-status-badge {
   flex-shrink: 0;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 2px 6px;
-  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
   white-space: nowrap;
+  letter-spacing: 0;
 }
 .gs-status-badge--live {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }
 .gs-status-badge--ft {
-  background: rgba(100, 116, 139, 0.15);
+  background: rgba(100, 116, 139, 0.12);
   color: var(--text-muted);
 }
 .gs-status-badge--upcoming {
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
 }
 
+/* Section label (MATCHES heading) */
+.gs-section-label-old { display: none; } /* kept for safety */
+
+/* Footer */
 .gs-footer-hint {
   font-size: 11px;
   color: var(--text-muted);
-  padding: var(--space-3) var(--space-4);
+  padding: 10px 16px;
   border-top: 1px solid var(--border);
   margin: 0;
+  flex-shrink: 0;
 }
 
 /* ----- Help / FAQ ------------------------------------------------------- */
@@ -7358,17 +7372,18 @@ svg {
  * Global Search — Entity Tiles
  * ============================================================================ */
 
+/* ── Entity tiles row ─────────────────────────────────────────────────────── */
 .gs-entities-section {
   border-bottom: 1px solid var(--border);
-  padding: 12px 0 4px;
+  padding: 10px 0;
+  flex-shrink: 0;
 }
 
 .gs-entities-scroll {
   display: flex;
   gap: 8px;
-  padding: 0 16px 12px;
+  padding: 0 16px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -7378,34 +7393,32 @@ svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-width: 76px;
-  max-width: 80px;
-  padding: 10px 8px;
+  gap: 5px;
+  width: 84px;
+  padding: 10px 6px 8px;
   border-radius: 10px;
-  background: var(--surface-raised, rgba(255,255,255,0.04));
+  background: var(--surface-3);
   border: 1px solid var(--border);
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  scroll-snap-align: start;
   flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s;
 }
 .gs-entity-tile:hover {
-  background: var(--surface-hover, rgba(255,255,255,0.08));
-  border-color: var(--accent, #6366f1);
+  background: var(--surface-4);
+  border-color: #6366f1;
 }
 
 .gs-entity-img-wrap {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
 }
 
 .gs-entity-img {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   border-radius: 6px;
 }
@@ -7415,28 +7428,27 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 6px;
-  background: var(--surface-raised, rgba(255,255,255,0.08));
-  font-size: 13px;
+  background: var(--surface-4);
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 .gs-entity-initial--round { border-radius: 50%; }
 
 .gs-entity-type-badge {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
+  bottom: -3px;
+  right: -3px;
   font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.03em;
   padding: 1px 4px;
   border-radius: 4px;
   text-transform: uppercase;
   line-height: 1.4;
-  border: 1px solid var(--background, #0f1117);
+  border: 1px solid var(--surface-2);
 }
 .gs-entity-type-badge--team    { background: #6366f1; color: #fff; }
 .gs-entity-type-badge--league  { background: #f59e0b; color: #000; }
@@ -7447,10 +7459,10 @@ svg {
 .gs-entity-name {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   text-align: center;
   line-height: 1.3;
-  max-width: 68px;
+  width: 100%;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -7462,20 +7474,22 @@ svg {
   color: var(--text-muted);
   text-align: center;
   line-height: 1.2;
+  width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  max-width: 68px;
   text-overflow: ellipsis;
 }
 
+/* "MATCHES" section label */
 .gs-section-label {
-  padding: 8px 16px 4px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 8px 16px 2px;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
   margin: 0;
+  flex-shrink: 0;
 }
 
 /* ============================================================================
