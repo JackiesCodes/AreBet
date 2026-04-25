@@ -16,7 +16,9 @@ export default async function MatchDetailPage({ params }: PageProps) {
   const { matchId } = await params
   const id = Number.parseInt(matchId, 10)
   if (Number.isNaN(id)) notFound()
-  const match = await fetchMatchById(id)
+  const match = await fetchMatchById(id).catch((err: unknown) => {
+    throw new Error(err instanceof Error ? err.message : "Failed to load match data")
+  })
   if (!match) notFound()
 
   const isLive = match.status === "LIVE"

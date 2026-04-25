@@ -158,7 +158,7 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
 }
 
 export async function fetchMatchById(id: number): Promise<Match | null> {
-  const fixture = await fetchFixtureDetail(id).catch(() => null)
+  const fixture = await fetchFixtureDetail(id)
   if (!fixture) return null
 
   let match = mapFixtureToMatch(fixture)

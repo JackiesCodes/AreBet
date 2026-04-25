@@ -75,7 +75,7 @@ async function apiFetch<T>(path: string, revalidate: number, noCache = false): P
   if (Array.isArray(json.errors) && json.errors.length > 0) {
     throw new Error(`API-Football errors: ${JSON.stringify(json.errors)}`)
   }
-  if (typeof json.errors === "object" && Object.keys(json.errors).length > 0) {
+  if (json.errors && typeof json.errors === "object" && !Array.isArray(json.errors) && Object.keys(json.errors).length > 0) {
     throw new Error(`API-Football errors: ${JSON.stringify(json.errors)}`)
   }
 
