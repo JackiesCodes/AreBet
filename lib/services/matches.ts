@@ -124,27 +124,17 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
     if (r.status === "fulfilled" && r.value) predMap.set(m.id, r.value)
   })
 
-  // For live matches, also fetch lineups if available (embedded in fixture detail)
-  const liveMatches = withOdds.filter((m) => m.status === "LIVE")
-  const liveLineupResults = await Promise.allSettled(
-    liveMatches.map((m) => fetchFixtureDetail(m.id)),
-  )
-
-  const lineupMap = new Map<number, ApiFixture>()
-  liveMatches.forEach((m, i) => {
-    const r = liveLineupResults[i]
-    if (r.status === "fulfilled" && r.value) lineupMap.set(m.id, r.value)
-  })
-
+  // Lineups are already embedded in the raw ApiFixture objects from /fixtures?live=all
+  // No extra fetchFixtureDetail calls needed — rawFixtures already has full fixture data
   const finalMatches = withOdds.map((match) => {
     let m = match
     const pred = predMap.get(m.id)
     if (pred) m = enrichWithPrediction(m, pred)
 
-    // Enrich live matches with lineups from fixture detail
-    const liveFixture = lineupMap.get(m.id)
-    if (liveFixture?.lineups?.length) {
-      m = enrichWithLineup(m, liveFixture.lineups)
+    // Enrich with lineups from the raw fixture (populated from live feed or scheduled feed)
+    const rawFixture = rawFixtures.get(m.id)
+    if (rawFixture?.lineups?.length) {
+      m = enrichWithLineup(m, rawFixture.lineups)
     }
 
     return m
