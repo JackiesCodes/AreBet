@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import type { Match } from "@/types/match"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
 import { ConfidenceHeat } from "@/components/primitives/ConfidenceHeat"
@@ -8,13 +9,13 @@ import { useFormatOdds } from "@/hooks/useFormatOdds"
 
 interface MatchTableRowProps {
   match: Match
-  onSelect?: (m: Match) => void
 }
 
-export function MatchTableRow({ match, onSelect }: MatchTableRowProps) {
+export function MatchTableRow({ match }: MatchTableRowProps) {
   const fmt = useFormatOdds()
+  const router = useRouter()
   return (
-    <tr onClick={() => onSelect?.(match)} style={{ cursor: "pointer" }}>
+    <tr onClick={() => router.push(`/match/${match.id}`)} style={{ cursor: "pointer" }}>
       <td>
         <Badge tone={match.status === "LIVE" ? "live" : match.status === "FINISHED" ? "finished" : "upcoming"}>
           {match.status === "LIVE" ? `${match.minute ?? 0}'` : match.status === "FINISHED" ? "FT" : `${formatShortDate(match.kickoffISO)} · ${formatTime(match.kickoffISO)}`}

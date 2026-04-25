@@ -9,6 +9,7 @@ import type {
   ApiTransfer,
   ApiSidelined,
   ApiTeam,
+  ApiTeamSeasonStats,
   ApiCoach,
   ApiTrophy,
   ApiLeague,
@@ -80,6 +81,30 @@ async function apiFetch<T>(path: string, revalidate: number, noCache = false): P
 
   // API can return null for response when there are no results — guard against it
   return json.response ?? []
+}
+
+/**
+ * For endpoints that return a single object in `response` (not an array).
+ * e.g. /teams/statistics
+ */
+async function apiFetchObject<T>(path: string, revalidate: number): Promise<T | null> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: {
+      "x-apisports-key": getApiKey(),
+      "Content-Type": "application/json",
+    },
+    next: { revalidate },
+  })
+
+  const remaining = res.headers.get("x-ratelimit-requests-remaining")
+  const total = res.headers.get("x-ratelimit-requests-limit")
+  if (remaining !== null) _rateLimitRemaining = parseInt(remaining, 10)
+  if (total !== null) _rateLimitTotal = parseInt(total, 10)
+
+  if (!res.ok) throw new Error(`API-Football error: ${res.status} ${res.statusText}`)
+
+  const json = await res.json() as { response: T | null; errors?: unknown }
+  return (json.response as T | null) ?? null
 }
 
 // European season: season=2025 means 2025/26. For April 2026, use currentYear - 1.
@@ -362,4 +387,37 @@ export async function searchVenuesByName(query: string): Promise<ApiVenueResult[
     5 * 60,
     true,
   )
+}
+
+/** Venue by ID — capacity, surface, image */
+export async function fetchVenueById(venueId: number): Promise<ApiVenueResult | null> {
+  const results = await apiFetch<ApiVenueResult>(`/venues?id=${venueId}`, REVALIDATE_PLAYERS)
+  return results[0] ?? null
+}
+
+// ── Team season statistics ─────────────────────────────────────────────────────
+
+/**
+ * Full season statistics for a team in a specific league.
+ * Returns W/D/L breakdown (home/away/total), goals, form, streaks, clean sheets.
+ * Uses /teams/statistics which returns a single object (not an array).
+ */
+export async function fetchTeamStatistics(
+  teamId: number,
+  leagueId: number,
+  season: number,
+): Promise<ApiTeamSeasonStats | null> {
+  return apiFetchObject<ApiTeamSeasonStats>(
+    `/teams/statistics?team=${teamId}&league=${leagueId}&season=${season}`,
+    REVALIDATE_STANDINGS,
+  )
+}
+
+// ── Seasons ───────────────────────────────────────────────────────────────────
+
+/** Available seasons for a league (or all seasons if no leagueId given) */
+export async function fetchSeasons(leagueId?: number): Promise<number[]> {
+  const path = leagueId ? `/leagues/seasons` : `/leagues/seasons`
+  const results = await apiFetch<number>(path, REVALIDATE_PLAYERS)
+  return results
 }

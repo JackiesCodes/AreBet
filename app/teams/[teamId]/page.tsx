@@ -6,12 +6,13 @@ import {
   fetchFixturesByTeam,
   fetchRecentFixturesByTeam,
   fetchPlayerStatsByTeam,
+  fetchTeamStatistics,
   currentSeason,
 } from "@/lib/api-football/client"
 import { mapFixtureToMatch } from "@/lib/api-football/mapper"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
-import { FormGuide } from "@/components/primitives/FormGuide"
 import type { Match } from "@/types/match"
+import type { ApiTeamSeasonStats } from "@/lib/api-football/types"
 
 interface PageProps {
   params: Promise<{ teamId: string }>
@@ -24,7 +25,7 @@ export default async function TeamPage({ params }: PageProps) {
 
   const season = currentSeason()
 
-  const [teamData, upcomingFixtures, recentFixtures, players] = await Promise.allSettled([
+  const [teamData, upcomingRaw, recentRaw, players] = await Promise.allSettled([
     fetchTeam(id),
     fetchFixturesByTeam(id, 8),
     fetchRecentFixturesByTeam(id, 5),
@@ -34,17 +35,25 @@ export default async function TeamPage({ params }: PageProps) {
   const team = teamData.status === "fulfilled" ? teamData.value : null
   if (!team) notFound()
 
-  const upcoming: Match[] = upcomingFixtures.status === "fulfilled"
-    ? upcomingFixtures.value.map(mapFixtureToMatch).filter((m) => m.status === "UPCOMING")
+  const upcoming: Match[] = upcomingRaw.status === "fulfilled"
+    ? upcomingRaw.value.map(mapFixtureToMatch).filter((m) => m.status === "UPCOMING")
     : []
 
-  const recent: Match[] = recentFixtures.status === "fulfilled"
-    ? recentFixtures.value.map(mapFixtureToMatch).filter((m) => m.status === "FINISHED")
+  const recent: Match[] = recentRaw.status === "fulfilled"
+    ? recentRaw.value.map(mapFixtureToMatch).filter((m) => m.status === "FINISHED")
     : []
 
-  const squad = players.status === "fulfilled"
-    ? players.value.slice(0, 20)
-    : []
+  const squad = players.status === "fulfilled" ? players.value.slice(0, 20) : []
+
+  // Derive league ID from fixtures for team statistics
+  const leagueId =
+    (upcomingRaw.status === "fulfilled" && upcomingRaw.value[0]?.league?.id) ||
+    (recentRaw.status === "fulfilled" && recentRaw.value[0]?.league?.id) ||
+    null
+
+  const teamStats: ApiTeamSeasonStats | null = leagueId
+    ? await fetchTeamStatistics(id, leagueId, season).catch(() => null)
+    : null
 
   const { team: t, venue } = team
 
@@ -68,10 +77,114 @@ export default async function TeamPage({ params }: PageProps) {
           <div className="team-hero-meta">
             {t.country && <span>{t.country}</span>}
             {t.founded && <span>Est. {t.founded}</span>}
-            {venue?.name && <span>{venue.name}</span>}
+            {venue?.name && (
+              venue.id
+                ? <Link href={`/venues/${venue.id}`} className="team-hero-venue-link">{venue.name}</Link>
+                : <span>{venue.name}</span>
+            )}
           </div>
+          {venue?.capacity && (
+            <div className="team-hero-venue-detail">
+              Capacity {venue.capacity.toLocaleString()}
+              {venue.surface && ` · ${venue.surface}`}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Season statistics */}
+      {teamStats && (
+        <section className="team-section">
+          <h2 className="team-section-title">
+            {teamStats.league.name} {season}/{season + 1} Season
+          </h2>
+
+          {/* Form */}
+          {teamStats.form && (
+            <div className="team-stats-form">
+              <span className="team-stats-form-label">Form</span>
+              <div className="team-stats-form-pips">
+                {teamStats.form.slice(-10).split("").map((c, i) => (
+                  <span
+                    key={i}
+                    className={`team-form-pip team-form-pip--${c === "W" ? "w" : c === "L" ? "l" : "d"}`}
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* W/D/L table */}
+          <div className="team-stats-table">
+            <div className="team-stats-table-head">
+              <span />
+              <span>P</span>
+              <span>W</span>
+              <span>D</span>
+              <span>L</span>
+              <span>GF</span>
+              <span>GA</span>
+            </div>
+            {(["total", "home", "away"] as const).map((scope) => {
+              const f = teamStats.fixtures
+              const g = teamStats.goals
+              return (
+                <div key={scope} className="team-stats-table-row">
+                  <span className="team-stats-scope">{scope.charAt(0).toUpperCase() + scope.slice(1)}</span>
+                  <span>{f.played[scope]}</span>
+                  <span className="team-stats-w">{f.wins[scope]}</span>
+                  <span className="team-stats-d">{f.draws[scope]}</span>
+                  <span className="team-stats-l">{f.loses[scope]}</span>
+                  <span>{g.for.total[scope]}</span>
+                  <span>{g.against.total[scope]}</span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Extra stats row */}
+          <div className="team-stats-extras">
+            <div className="team-stats-extra-item">
+              <span className="team-stats-extra-val">{teamStats.goals.for.average.total}</span>
+              <span className="team-stats-extra-label">Goals / game</span>
+            </div>
+            <div className="team-stats-extra-item">
+              <span className="team-stats-extra-val">{teamStats.goals.against.average.total}</span>
+              <span className="team-stats-extra-label">Conceded / game</span>
+            </div>
+            <div className="team-stats-extra-item">
+              <span className="team-stats-extra-val">{teamStats.clean_sheet.total}</span>
+              <span className="team-stats-extra-label">Clean sheets</span>
+            </div>
+            <div className="team-stats-extra-item">
+              <span className="team-stats-extra-val">{teamStats.biggest.streak.wins}</span>
+              <span className="team-stats-extra-label">Win streak</span>
+            </div>
+            {teamStats.biggest.wins.home && (
+              <div className="team-stats-extra-item">
+                <span className="team-stats-extra-val">{teamStats.biggest.wins.home}</span>
+                <span className="team-stats-extra-label">Biggest home win</span>
+              </div>
+            )}
+            {teamStats.biggest.wins.away && (
+              <div className="team-stats-extra-item">
+                <span className="team-stats-extra-val">{teamStats.biggest.wins.away}</span>
+                <span className="team-stats-extra-label">Biggest away win</span>
+              </div>
+            )}
+            {teamStats.penalty.total > 0 && (
+              <div className="team-stats-extra-item">
+                <span className="team-stats-extra-val">
+                  {teamStats.penalty.scored.total}/{teamStats.penalty.total}
+                </span>
+                <span className="team-stats-extra-label">Penalties scored</span>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Upcoming fixtures */}
       {upcoming.length > 0 && (
@@ -145,7 +258,7 @@ export default async function TeamPage({ params }: PageProps) {
         </section>
       )}
 
-      {upcoming.length === 0 && recent.length === 0 && squad.length === 0 && (
+      {!teamStats && upcoming.length === 0 && recent.length === 0 && squad.length === 0 && (
         <div className="team-empty">No data available for this team this season.</div>
       )}
     </div>

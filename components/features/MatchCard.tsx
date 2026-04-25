@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import Image from "next/image"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
@@ -78,6 +78,7 @@ interface MatchCardProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function MatchCard({ match, selected, onSelect, latestChange, compact, showLeague = true }: MatchCardProps) {
+  const router     = useRouter()
   const isLive     = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
   const isUpcoming = match.status === "UPCOMING"
@@ -122,13 +123,11 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
         isLive       && "cc-card--live",
         isFinished   && "cc-card--finished",
       )}
-      onClick={() => onSelect?.(match)}
+      onClick={() => { onSelect?.(match); router.push(`/match/${match.id}`) }}
       role="button"
       tabIndex={0}
       aria-label={`${match.home.name} vs ${match.away.name}`}
     >
-      {/* Full-card link — always navigates to match detail */}
-      <Link href={`/match/${match.id}`} className="cc-card-link" aria-hidden tabIndex={-1} />
 
       {/* ── Header: league • time ──────────────────── heart ── */}
       <div className="cc-card-header">

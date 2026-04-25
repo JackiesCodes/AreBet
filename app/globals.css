@@ -7710,6 +7710,116 @@ svg {
   text-overflow: ellipsis;
 }
 
+/* ── Team hero venue link ──────────────────────────────────────────────────── */
+.team-hero-venue-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+}
+.team-hero-venue-link:hover { text-decoration: underline; }
+
+.team-hero-venue-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Team season statistics ───────────────────────────────────────────────── */
+.team-stats-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.team-stats-form-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 32px;
+}
+.team-stats-form-pips {
+  display: flex;
+  gap: 4px;
+}
+.team-form-pip {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.team-form-pip--w { background: rgba(34,197,94,.25); color: #4ade80; }
+.team-form-pip--d { background: rgba(148,163,184,.15); color: var(--text-secondary); }
+.team-form-pip--l { background: rgba(239,68,68,.2); color: #f87171; }
+
+.team-stats-table {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.team-stats-table-head,
+.team-stats-table-row {
+  display: grid;
+  grid-template-columns: 56px repeat(6, 1fr);
+  padding: 6px 12px;
+  gap: 4px;
+  align-items: center;
+}
+.team-stats-table-head {
+  background: var(--surface-raised, rgba(255,255,255,0.04));
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+.team-stats-table-head span:first-child { text-align: left; }
+.team-stats-table-row {
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.team-stats-scope {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: left;
+  font-weight: 500;
+}
+.team-stats-w { color: #4ade80; font-weight: 600; }
+.team-stats-d { color: var(--text-secondary); }
+.team-stats-l { color: #f87171; font-weight: 600; }
+
+.team-stats-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.team-stats-extra-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface-raised, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 80px;
+}
+.team-stats-extra-val {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.team-stats-extra-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
 .team-player-stats {
   font-size: 11px;
   color: var(--text-muted);
@@ -7784,6 +7894,17 @@ svg {
 }
 .player-hero-meta span { display: flex; align-items: center; gap: 4px; }
 
+.player-hero-pos {
+  background: var(--surface-raised, rgba(255,255,255,0.08));
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .player-hero-club {
   display: flex;
   align-items: center;
@@ -7838,6 +7959,8 @@ svg {
   line-height: 1;
 }
 .player-stat-value--highlight { color: var(--accent, #6366f1); }
+.player-stat-value--yellow { color: #facc15; }
+.player-stat-value--red { color: #f87171; }
 
 .player-stat-label {
   font-size: 10px;
@@ -7897,7 +8020,48 @@ svg {
   line-height: 1.2;
 }
 
-.venue-hero-city { font-size: 13px; color: var(--text-muted); }
+.venue-hero-city { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+
+.venue-hero-image-wrap {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.venue-hero-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.venue-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.venue-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--surface-raised, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 70px;
+}
+.venue-hero-stat-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.venue-hero-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
 .venue-section { margin-bottom: 28px; }
 

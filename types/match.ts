@@ -3,7 +3,7 @@ export type MatchStatus = "LIVE" | "UPCOMING" | "FINISHED"
 export type Side = "home" | "away"
 
 export interface TeamInfo {
-  id?: number    // API-Football team id (may be absent in legacy/demo data)
+  id?: number    // API-Football team id
   name: string
   short: string
   form: string // e.g. "WWLDW"
@@ -254,7 +254,7 @@ export interface Match {
 export interface MatchFeed {
   matches: Match[]
   fetchedAt: string
-  source: "demo" | "api"
+  source: "api"
 }
 
 export type ConfidenceTier = "low" | "mid" | "high"

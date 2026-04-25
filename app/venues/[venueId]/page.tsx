@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { searchVenuesByName, fetchFixturesByVenue } from "@/lib/api-football/client"
+import { fetchVenueById, fetchFixturesByVenue } from "@/lib/api-football/client"
 import { mapFixtureToMatch } from "@/lib/api-football/mapper"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
 import type { Match } from "@/types/match"
@@ -15,15 +15,21 @@ export default async function VenuePage({ params }: PageProps) {
   const id = Number.parseInt(venueId, 10)
   if (Number.isNaN(id)) notFound()
 
-  // API-Football doesn't have a /venues?id= endpoint exposed on all plans,
-  // so we fetch upcoming fixtures by venue and derive info from there.
-  const fixtureData = await fetchFixturesByVenue(id, 10).catch(() => [])
-  const matches: Match[] = fixtureData.map(mapFixtureToMatch)
+  const [venueData, fixtureData] = await Promise.allSettled([
+    fetchVenueById(id),
+    fetchFixturesByVenue(id, 10),
+  ])
 
-  // Try to derive venue info from fixture data
-  const raw = fixtureData[0]
-  const venueName = raw?.fixture?.venue?.name ?? `Venue #${id}`
-  const venueCity = raw?.fixture?.venue?.city ?? null
+  const venue = venueData.status === "fulfilled" ? venueData.value : null
+  const fixtures = fixtureData.status === "fulfilled" ? fixtureData.value : []
+  const matches: Match[] = fixtures.map(mapFixtureToMatch)
+
+  // Derive name/city from fixtures as fallback if venue endpoint returns nothing
+  const rawFixture = fixtures[0]
+  const venueName = venue?.name ?? rawFixture?.fixture?.venue?.name ?? `Venue #${id}`
+  const venueCity = venue?.city ?? rawFixture?.fixture?.venue?.city ?? null
+
+  if (!venue && matches.length === 0) notFound()
 
   return (
     <div className="venue-page">
@@ -33,16 +39,57 @@ export default async function VenuePage({ params }: PageProps) {
 
       {/* Hero */}
       <div className="venue-hero">
-        <div className="venue-hero-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <ellipse cx="12" cy="12" rx="10" ry="6" />
-            <line x1="2" y1="12" x2="22" y2="12" />
-            <line x1="12" y1="6" x2="12" y2="18" />
-          </svg>
-        </div>
+        {venue?.image ? (
+          <div className="venue-hero-image-wrap">
+            <Image
+              src={venue.image}
+              alt={venueName}
+              width={400}
+              height={180}
+              unoptimized
+              className="venue-hero-image"
+            />
+          </div>
+        ) : (
+          <div className="venue-hero-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <ellipse cx="12" cy="12" rx="10" ry="6" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <line x1="12" y1="6" x2="12" y2="18" />
+            </svg>
+          </div>
+        )}
         <div className="venue-hero-info">
           <h1 className="venue-hero-name">{venueName}</h1>
           {venueCity && <div className="venue-hero-city">{venueCity}</div>}
+          {venue && (
+            <div className="venue-hero-meta">
+              {venue.capacity && (
+                <span className="venue-hero-stat">
+                  <span className="venue-hero-stat-val">{venue.capacity.toLocaleString()}</span>
+                  <span className="venue-hero-stat-label">Capacity</span>
+                </span>
+              )}
+              {venue.surface && (
+                <span className="venue-hero-stat">
+                  <span className="venue-hero-stat-val">{venue.surface}</span>
+                  <span className="venue-hero-stat-label">Surface</span>
+                </span>
+              )}
+              {venue.country && (
+                <span className="venue-hero-stat">
+                  <span className="venue-hero-stat-val">{venue.country}</span>
+                  <span className="venue-hero-stat-label">Country</span>
+                </span>
+              )}
+              {venue.address && (
+                <span className="venue-hero-stat">
+                  <span className="venue-hero-stat-val" style={{ fontSize: 11 }}>{venue.address}</span>
+                  <span className="venue-hero-stat-label">Address</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

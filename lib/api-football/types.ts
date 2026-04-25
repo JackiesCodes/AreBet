@@ -251,15 +251,70 @@ export interface ApiPlayerStat {
     age?: number | null
     nationality?: string | null
     photo: string
+    height?: string | null
+    weight?: string | null
+    birth?: { date: string | null; place: string | null; country: string | null }
   }
   statistics: Array<{
     team: { id: number; name: string; logo: string }
     league: { id: number; name: string; country: string; logo: string; season: number }
-    games: { appearences: number | null; lineups: number | null; minutes: number | null; rating: string | null }
-    goals: { total: number | null; assists: number | null; conceded: number | null; saves: number | null }
+    games: {
+      appearences: number | null
+      lineups: number | null
+      minutes: number | null
+      rating: string | null
+      captain: boolean | null
+      substitute: boolean | null
+      position: string | null
+    }
+    offsides: number | null
     shots: { total: number | null; on: number | null }
+    goals: { total: number | null; assists: number | null; conceded: number | null; saves: number | null }
     passes: { total: number | null; key: number | null; accuracy: string | null }
+    tackles: { total: number | null; blocks: number | null; interceptions: number | null } | null
+    duels: { total: number | null; won: number | null } | null
+    dribbles: { attempts: number | null; success: number | null; past: number | null } | null
+    fouls: { drawn: number | null; committed: number | null } | null
+    cards: { yellow: number | null; yellowred: number | null; red: number | null } | null
+    penalty: { won: number | null; commited: number | null; scored: number | null; missed: number | null; saved: number | null } | null
   }>
+}
+
+// ── Team Season Statistics ────────────────────────────────────────────────────
+
+export interface ApiTeamSeasonStats {
+  league: { id: number; name: string; country: string; logo: string; flag: string | null; season: number }
+  team: { id: number; name: string; logo: string }
+  form: string
+  fixtures: {
+    played: { home: number; away: number; total: number }
+    wins: { home: number; away: number; total: number }
+    draws: { home: number; away: number; total: number }
+    loses: { home: number; away: number; total: number }
+  }
+  goals: {
+    for: {
+      total: { home: number; away: number; total: number }
+      average: { home: string; away: string; total: string }
+    }
+    against: {
+      total: { home: number; away: number; total: number }
+      average: { home: string; away: string; total: string }
+    }
+  }
+  biggest: {
+    streak: { wins: number; draws: number; loses: number }
+    wins: { home: string | null; away: string | null }
+    loses: { home: string | null; away: string | null }
+    goals: { for: { home: number; away: number }; against: { home: number; away: number } }
+  }
+  clean_sheet: { home: number; away: number; total: number }
+  failed_to_score: { home: number; away: number; total: number }
+  penalty: {
+    scored: { total: number; percentage: string }
+    missed: { total: number; percentage: string }
+    total: number
+  }
 }
 
 // ── Transfers ─────────────────────────────────────────────────────────────────

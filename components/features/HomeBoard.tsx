@@ -8,7 +8,6 @@ import { useFavorites } from "@/hooks/useFavorites"
 import { usePagination } from "@/hooks/usePagination"
 import { rankMatches } from "@/lib/utils/rank-matches"
 import { BUCKET_LABELS, BUCKET_ORDER, bucketFor, type TimeBucket } from "@/lib/utils/time"
-import { MatchCard } from "./MatchCard"
 import { MatchTableRow } from "./MatchTableRow"
 import { LeagueSection } from "./LeagueSection"
 import { groupByLeague } from "@/lib/utils/league-groups"
@@ -19,7 +18,6 @@ import { ErrorState } from "@/components/primitives/ErrorState"
 import { cn } from "@/lib/utils/cn"
 import { loadUiState, saveUiState, type UiState } from "@/lib/storage/ui-state"
 
-const BUCKET_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 25
 
 // ── Per-bucket card list with league grouping ────────────────────────────────
@@ -57,7 +55,6 @@ function BucketList({
 
 // ── Table view with load-more ─────────────────────────────────────────────────
 function TableView({ filtered }: { filtered: Match[] }) {
-  const [selected, setSelected] = useState<Match | null>(null)
   const { visibleItems, hasMore, remaining, loadMore } = usePagination(filtered, TABLE_PAGE_SIZE)
   return (
     <>
@@ -69,14 +66,14 @@ function TableView({ filtered }: { filtered: Match[] }) {
             <th>Match</th>
             <th>Score</th>
             <th>Conf.</th>
-            <th>1</th>
-            <th>X</th>
-            <th>2</th>
+            <th title="Home Win">1</th>
+            <th title="Draw">X</th>
+            <th title="Away Win">2</th>
           </tr>
         </thead>
         <tbody>
           {visibleItems.map((m) => (
-            <MatchTableRow key={m.id} match={m} onSelect={setSelected} />
+            <MatchTableRow key={m.id} match={m} />
           ))}
         </tbody>
       </table>
