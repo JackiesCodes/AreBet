@@ -100,7 +100,10 @@ export function groupByLeague(matches: Match[]): LeagueGroup[] {
     .map(([, ms]) => {
       const first = ms[0]
       const isDuplicate = (nameCount.get(first.league) ?? 0) > 1
-      const label = isDuplicate && first.country
+      // Also qualify leagues not in the known-major-league list to prevent
+      // e.g. "Jamaica Premier League" appearing as just "Premier League"
+      const isKnownMajor = first.leagueId != null && LEAGUE_POP[first.leagueId] != null
+      const label = (isDuplicate || !isKnownMajor) && first.country
         ? `${first.league} · ${first.country}`
         : first.league
       return {

@@ -114,7 +114,7 @@ export function detectChanges(
       if (nextGoals.length > prevGoals.length) {
         // Most recent goal event
         const newest = nextGoals[nextGoals.length - 1]
-        const scorer = newest?.player ?? "Unknown"
+        const scorer = newest?.player || "Unknown"
         const teamSide = newest?.team === "home" ? match.home.short : match.away.short
         changes.push(
           mkChange(match.id, label, match.league, "goal", "critical",

@@ -56,7 +56,7 @@ function mapEvents(events: ApiEvent[], homeTeamId: number): MatchEvent[] {
     minute: e.time.elapsed,
     team: e.team.id === homeTeamId ? "home" : "away",
     type: mapEventType(e.type, e.detail),
-    player: e.player.name,
+    player: e.player?.name ?? "",
     detail: e.detail,
   }))
 }

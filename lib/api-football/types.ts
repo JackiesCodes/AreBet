@@ -21,7 +21,7 @@ export interface ApiFixtureStatus {
 export interface ApiEvent {
   time: { elapsed: number; extra: number | null }
   team: { id: number; name: string; logo: string }
-  player: { id: number; name: string }
+  player: { id: number | null; name: string | null } | null
   assist: { id: number | null; name: string | null }
   type: string // "Goal" | "Card" | "subst" | "Var"
   detail: string
