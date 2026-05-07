@@ -160,7 +160,37 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
                 </div>
               )}
             </div>
-          ) : <p className="md-text-muted">No statistics available yet.</p>
+          ) : (
+            /* Upcoming match — show model forecast instead of live stats */
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <p className="md-text-muted" style={{ fontSize: 13 }}>
+                Live statistics are available once the match kicks off. Pre-match model forecast below.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <MatchStatBar
+                  label="xG forecast"
+                  home={match.prediction.expectedGoals.home}
+                  away={match.prediction.expectedGoals.away}
+                />
+                {match.prediction.modelProbs && (
+                  <>
+                    <MatchStatBar
+                      label="Win probability"
+                      home={Math.round(match.prediction.modelProbs.home * 100)}
+                      away={Math.round(match.prediction.modelProbs.away * 100)}
+                      unit="%"
+                    />
+                    <MatchStatBar
+                      label="Draw probability"
+                      home={Math.round(match.prediction.modelProbs.draw * 100)}
+                      away={Math.round(match.prediction.modelProbs.draw * 100)}
+                      unit="%"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          )
         )}
 
         {/* ── Players ── */}
@@ -178,7 +208,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
               <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 24px 1fr", gap: 8, padding: 8, background: "var(--surface-2)", borderRadius: 8, fontSize: 13 }}>
                 <span className="md-mono md-text-muted">{ev.minute}&apos;</span>
                 <span>{ev.type === "goal" ? "⚽" : ev.type === "card" ? "🟨" : ev.type === "sub" ? "🔄" : "↔"}</span>
-                <span><strong>{ev.player}</strong> · <span className="md-text-muted">{ev.detail}</span></span>
+                <span><strong>{ev.player || "Unknown"}</strong> · <span className="md-text-muted">{ev.detail}</span></span>
               </div>
             ))}
           </div>
@@ -194,7 +224,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
                 <tbody>
                   {match.h2h.map((h, i) => (
                     <tr key={i}>
-                      <td className="md-mono">{h.date}</td>
+                      <td className="md-mono">{new Date(h.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
                       <td>{h.home} vs {h.away}</td>
                       <td className="md-mono">{h.score.home}–{h.score.away}</td>
                     </tr>

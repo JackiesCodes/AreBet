@@ -154,8 +154,8 @@ function DataSourceBanner({
         <div>
           <strong>Collecting signals</strong> — {totalRecorded.toLocaleString()} signal
           {totalRecorded === 1 ? "" : "s"} recorded so far, but no match outcomes have been
-          resolved yet. The track record will appear once watched matches have finished and
-          outcomes are confirmed. Stats below are sample data for illustration.
+          resolved yet. The track record will appear automatically once watched matches finish
+          and outcomes are confirmed.
         </div>
       </div>
     )
@@ -166,9 +166,9 @@ function DataSourceBanner({
     <div className="trust-source-banner trust-source-banner--demo">
       <span className="trust-source-icon">🔬</span>
       <div>
-        <strong>Sample data</strong> — No signal history is stored yet. This page shows simulated
-        figures to illustrate what the Track Record will look like once AreBet has collected and
-        resolved enough match signals. All figures below are for demonstration only.
+        <strong>No data yet</strong> — Signal history will appear here once AreBet has recorded
+        and resolved match predictions. Browse upcoming matches and the model will start
+        collecting signals automatically.
       </div>
     </div>
   )
@@ -266,6 +266,21 @@ export default function TrustPage() {
           </button>
         ))}
       </div>
+
+      {/* ── Stats only shown when real resolved data exists ─────────────── */}
+      {signalState !== "live" && (
+        <div className="trust-empty-state">
+          <p className="md-text-muted" style={{ marginBottom: 8 }}>
+            Performance statistics will appear here once signals have been resolved.
+          </p>
+          <p className="md-text-muted" style={{ fontSize: 13 }}>
+            See the methodology section below for how signals are generated and tracked.
+          </p>
+        </div>
+      )}
+
+      {/* ── All stat sections — only rendered when real resolved data exists ─ */}
+      {signalState === "live" && (<>
 
       {/* ── Overall summary ──────────────────────────────────────────────── */}
       <Card className="mb-6">
@@ -441,6 +456,8 @@ export default function TrustPage() {
           </div>
         </Card>
       )}
+
+      </>)}
 
       {/* ── Methodology ──────────────────────────────────────────────────── */}
       <Card>
