@@ -7,6 +7,7 @@ import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import type { SignalStatus } from "@/app/api/signals/status/route"
 import type { RateLimitStatus } from "@/app/api/rate-limit/route"
+import type { EditorialBoostRow } from "@/lib/services/highlights"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -167,6 +168,185 @@ function BackfillPanel({
         <div className="admin-backfill-result admin-backfill-result--error">
           <strong>Backfill failed</strong>: {bfState.error}
         </div>
+      )}
+    </div>
+  )
+}
+
+// ── Editorial Boost Panel ─────────────────────────────────────────────────────
+
+const BOOST_LABELS = ["Top Pick", "Derby", "Final", "Editor's Choice", "Promoted", "Big Match"]
+
+function BoostPanel() {
+  const [boosts, setBoosts] = useState<EditorialBoostRow[]>([])
+  const [loading, setLoading] = useState(false)
+  const [secret, setSecret] = useState("")
+  const [fixtureId, setFixtureId] = useState("")
+  const [homeTeam, setHomeTeam] = useState("")
+  const [awayTeam, setAwayTeam] = useState("")
+  const [score, setScore] = useState("1.0")
+  const [label, setLabel] = useState(BOOST_LABELS[0])
+  const [expiresAt, setExpiresAt] = useState("")
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  function flash(ok: boolean, text: string) {
+    setMsg({ ok, text })
+    setTimeout(() => setMsg(null), 3000)
+  }
+
+  async function loadBoosts() {
+    if (!secret) return
+    setLoading(true)
+    try {
+      const res = await fetch("/api/admin/boost", {
+        headers: { "x-admin-secret": secret },
+      })
+      if (res.ok) {
+        const data: { boosts: EditorialBoostRow[] } = await res.json()
+        setBoosts(data.boosts)
+      } else {
+        flash(false, "Failed to load boosts — check ADMIN_SECRET")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault()
+    const fid = parseInt(fixtureId, 10)
+    const sc  = parseFloat(score)
+    if (!Number.isFinite(fid) || fid <= 0) { flash(false, "Invalid fixture ID"); return }
+    if (!Number.isFinite(sc) || sc < 0 || sc > 1) { flash(false, "Score must be 0–1"); return }
+
+    const res = await fetch("/api/admin/boost", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": secret },
+      body:    JSON.stringify({
+        fixture_id: fid,
+        score:      sc,
+        label:      label || null,
+        expires_at: expiresAt || null,
+        home_team:  homeTeam || null,
+        away_team:  awayTeam || null,
+      }),
+    })
+    if (res.ok) {
+      flash(true, "Boost saved")
+      setFixtureId(""); setHomeTeam(""); setAwayTeam(""); setExpiresAt("")
+      loadBoosts()
+    } else {
+      flash(false, "Failed to save boost")
+    }
+  }
+
+  async function handleRemove(fixture_id: number) {
+    const res = await fetch(`/api/admin/boost?fixture_id=${fixture_id}`, {
+      method:  "DELETE",
+      headers: { "x-admin-secret": secret },
+    })
+    if (res.ok) {
+      flash(true, "Boost removed")
+      setBoosts((prev) => prev.filter((b) => b.fixture_id !== fixture_id))
+    } else {
+      flash(false, "Failed to remove boost")
+    }
+  }
+
+  return (
+    <div className="admin-boost-form">
+      {/* Secret input */}
+      <div className="admin-boost-row">
+        <div className="admin-boost-field" style={{ maxWidth: 280 }}>
+          <label htmlFor="admin-secret">Admin Secret</label>
+          <input
+            id="admin-secret"
+            type="password"
+            className="admin-boost-input"
+            placeholder="Value of ADMIN_SECRET env var"
+            value={secret}
+            onChange={(e) => setSecret(e.target.value)}
+            onBlur={loadBoosts}
+          />
+        </div>
+      </div>
+
+      {/* Add form */}
+      <form onSubmit={handleAdd}>
+        <div className="admin-boost-row">
+          <div className="admin-boost-field" style={{ maxWidth: 120 }}>
+            <label htmlFor="boost-fixture">Fixture ID</label>
+            <input id="boost-fixture" type="number" className="admin-boost-input" placeholder="123456"
+              value={fixtureId} onChange={(e) => setFixtureId(e.target.value)} />
+          </div>
+          <div className="admin-boost-field">
+            <label htmlFor="boost-home">Home team</label>
+            <input id="boost-home" type="text" className="admin-boost-input" placeholder="Arsenal"
+              value={homeTeam} onChange={(e) => setHomeTeam(e.target.value)} />
+          </div>
+          <div className="admin-boost-field">
+            <label htmlFor="boost-away">Away team</label>
+            <input id="boost-away" type="text" className="admin-boost-input" placeholder="Chelsea"
+              value={awayTeam} onChange={(e) => setAwayTeam(e.target.value)} />
+          </div>
+        </div>
+        <div className="admin-boost-row" style={{ marginTop: 8 }}>
+          <div className="admin-boost-field" style={{ maxWidth: 100 }}>
+            <label htmlFor="boost-score">Score (0–1)</label>
+            <input id="boost-score" type="number" step="0.1" min="0" max="1" className="admin-boost-input"
+              value={score} onChange={(e) => setScore(e.target.value)} />
+          </div>
+          <div className="admin-boost-field">
+            <label htmlFor="boost-label">Label</label>
+            <select id="boost-label" className="admin-boost-input"
+              value={label} onChange={(e) => setLabel(e.target.value)}>
+              {BOOST_LABELS.map((l) => <option key={l} value={l}>{l}</option>)}
+              <option value="">No label</option>
+            </select>
+          </div>
+          <div className="admin-boost-field">
+            <label htmlFor="boost-expires">Expires at (optional)</label>
+            <input id="boost-expires" type="datetime-local" className="admin-boost-input"
+              value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+          </div>
+          <div className="admin-boost-field" style={{ maxWidth: 100, justifyContent: "flex-end" }}>
+            <label>&nbsp;</label>
+            <button type="submit" className="admin-btn">Add Boost</button>
+          </div>
+        </div>
+      </form>
+
+      {msg && (
+        <div style={{ fontSize: 13, color: msg.ok ? "var(--positive)" : "var(--negative)" }}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* Active boosts list */}
+      {loading && <div className="md-text-muted" style={{ fontSize: 13 }}>Loading…</div>}
+      {!loading && boosts.length > 0 && (
+        <div className="admin-boost-list">
+          {boosts.map((b) => (
+            <div key={b.fixture_id} className="admin-boost-item">
+              <span className="admin-boost-teams">
+                {b.home_team && b.away_team ? `${b.home_team} vs ${b.away_team}` : `Fixture #${b.fixture_id}`}
+              </span>
+              {b.label && <span className="admin-boost-meta">{b.label}</span>}
+              <span className="admin-boost-score">{b.score.toFixed(2)}</span>
+              {b.expires_at && (
+                <span className="admin-boost-meta">
+                  expires {new Date(b.expires_at).toLocaleDateString()}
+                </span>
+              )}
+              <button type="button" className="admin-boost-remove" onClick={() => handleRemove(b.fixture_id)}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && boosts.length === 0 && secret && (
+        <div className="md-text-muted" style={{ fontSize: 13 }}>No active boosts.</div>
       )}
     </div>
   )
@@ -511,6 +691,16 @@ export default function AdminPage() {
             with NEXT_PUBLIC_).
           </div>
         )}
+      </Card>
+
+      {/* ── Editorial Boost Panel ──────────────────────────────────────────── */}
+      <Card>
+        <CardTitle>Editorial Boosts</CardTitle>
+        <CardSubtitle>
+          Pin or boost specific matches in the Highlighted Matches section.
+          Requires ADMIN_SECRET to be set in .env.local.
+        </CardSubtitle>
+        <BoostPanel />
       </Card>
     </div>
   )

@@ -249,6 +249,8 @@ export interface Match {
   trophies?: { home?: MatchTrophy[]; away?: MatchTrophy[] }
   transfers?: { home?: MatchTransfer[]; away?: MatchTransfer[] }
   sidelined?: { home?: MatchSidelined[]; away?: MatchSidelined[] }
+  /** Computed by highlight engine — not in API response */
+  highlightScore?: number
 }
 
 export interface MatchFeed {
@@ -259,6 +261,6 @@ export interface MatchFeed {
 
 export type ConfidenceTier = "low" | "mid" | "high"
 
-export type SortKey = "confidence" | "kickoff" | "odds" | "league"
+export type SortKey = "confidence" | "kickoff" | "odds" | "league" | "highlight"
 
 export type StatusFilter = "all" | "live" | "soon" | "favorites" | "high"

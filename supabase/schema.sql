@@ -274,3 +274,48 @@ create index if not exists idx_signals_kickoff    on public.signal_snapshots(kic
 create index if not exists idx_signals_created    on public.signal_snapshots(created_at desc);
 create index if not exists idx_signals_resolved   on public.signal_snapshots(resolved_at) where resolved_at is not null;
 create index if not exists idx_signals_is_correct on public.signal_snapshots(is_correct)  where is_correct is not null;
+
+-- =====================
+-- EDITORIAL BOOSTS
+-- Admin-controlled match highlights and priority overrides.
+-- Admins can pin a match, apply a temporary score boost, and attach a display
+-- label. The highlight engine reads this table on every highlights request.
+-- =====================
+create table if not exists public.editorial_boosts (
+  id          serial       primary key,
+  fixture_id  integer      not null unique,   -- API-Football fixture ID
+
+  -- Boost strength: 0.0 (no boost) → 1.0 (maximum editorial priority)
+  score       numeric(4,3) not null default 1.0
+              check (score >= 0 and score <= 1),
+
+  -- Display label shown on the highlight card (optional)
+  -- e.g. "Top Pick" | "Derby" | "Final" | "Editor's Choice" | "Promoted"
+  label       text,
+
+  -- Optional expiry — NULL means the boost is permanent until manually removed
+  expires_at  timestamptz,
+
+  -- Match metadata (denormalised for admin panel display — avoids join to API)
+  home_team   text,
+  away_team   text,
+  kickoff_at  timestamptz,
+
+  created_at  timestamptz  not null default now(),
+  updated_at  timestamptz  not null default now()
+);
+
+alter table public.editorial_boosts enable row level security;
+
+-- Public can read active boosts (needed by the highlights API + client hook)
+drop policy if exists "Anyone can read editorial boosts" on public.editorial_boosts;
+create policy "Anyone can read editorial boosts"
+  on public.editorial_boosts for select
+  using (true);
+
+-- All writes (INSERT / UPDATE / DELETE) go through service-role route handlers.
+-- No client-side writes — protects against manipulation of highlighted matches.
+
+create index if not exists idx_editorial_fixture    on public.editorial_boosts(fixture_id);
+create index if not exists idx_editorial_expires    on public.editorial_boosts(expires_at) where expires_at is not null;
+create index if not exists idx_editorial_created    on public.editorial_boosts(created_at desc);

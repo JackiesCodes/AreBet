@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import type { ReactNode } from "react"
 import "./globals.css"
+import "./highlight-matches.css"
 import { AuthProvider } from "@/lib/auth/context"
 import { ToastProvider } from "@/components/primitives/Toast"
 import { MainNav } from "@/components/layout/MainNav"

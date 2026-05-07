@@ -1,4 +1,5 @@
 import type { Match, SortKey } from "@/types/match"
+import { scoreAndRankMatches } from "@/lib/utils/highlight-engine"
 
 const safe = (n: unknown, fallback = 0): number =>
   typeof n === "number" && Number.isFinite(n) ? n : fallback
@@ -41,6 +42,12 @@ export function rankMatches(matches: Match[], key: SortKey = "kickoff"): Match[]
         if (cmp !== 0) return cmp
         return statusDelta || safe(new Date(a.kickoffISO).getTime()) - safe(new Date(b.kickoffISO).getTime())
       }
+      case "highlight": {
+        const av = safe(a.highlightScore)
+        const bv = safe(b.highlightScore)
+        if (bv !== av) return bv - av
+        return statusDelta
+      }
       case "kickoff":
       default: {
         if (statusDelta !== 0) return statusDelta
@@ -50,4 +57,20 @@ export function rankMatches(matches: Match[], key: SortKey = "kickoff"): Match[]
   })
 
   return list
+}
+
+/**
+ * Sort matches by highlight score (highest first).
+ * When scores are not pre-computed (no highlightScore field), falls back to
+ * running the engine with empty popularity and boost maps.
+ */
+export function rankByHighlight(matches: Match[]): Match[] {
+  // If scores are already attached (from HighlightedMatches hook), use them
+  if (matches.length > 0 && matches[0].highlightScore != null) {
+    return [...matches].sort((a, b) =>
+      (b.highlightScore ?? 0) - (a.highlightScore ?? 0)
+    )
+  }
+  // Otherwise compute on-the-fly with no popularity/editorial data
+  return scoreAndRankMatches(matches, new Map(), new Map())
 }
