@@ -1,41 +1,81 @@
+/**
+ * Next.js Edge Proxy (Next.js 16+)
+ *
+ * Responsibilities:
+ *   1. Refresh Supabase auth session on every request (keeps cookies valid).
+ *   2. Guard protected routes — redirect unauthenticated visitors to /auth/login.
+ *   3. Redirect already-authenticated visitors away from auth pages.
+ *
+ * Admin authorisation happens at the API layer (x-admin-secret header);
+ * proxy only enforces that a *session* exists before the page loads.
+ */
+
 import { NextResponse, type NextRequest } from "next/server"
 import { updateSession } from "@/lib/supabase/middleware"
 
-const PROTECTED_PATHS = [
-  "/live-matches",
-  "/upcoming-matches",
-  "/predictions",
-  "/odds-comparison",
-  "/standings",
-  "/teams",
-  "/favorites",
-  "/insights",
-  "/match",
+// Pages that require an authenticated session
+const PROTECTED_PREFIXES = [
+  "/admin",
   "/user",
   "/settings",
   "/subscription",
-  "/admin",
-]
+  "/favorites",
+  "/insights",
+] as const
+
+// Pages that authenticated users should be redirected away from
+const AUTH_PAGES = ["/auth/login", "/auth/signup"] as const
+
+// Static / API paths that should always pass through untouched
+const BYPASS_PREFIXES = [
+  "/_next",
+  "/api",
+  "/favicon",
+  "/manifest",
+  "/arebet-logo",
+  "/sw.js",
+] as const
+
+function isBypassed(pathname: string): boolean {
+  return BYPASS_PREFIXES.some((p) => pathname.startsWith(p))
+}
+
+function isProtected(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))
+}
+
+function isAuthPage(pathname: string): boolean {
+  return AUTH_PAGES.some((p) => pathname.startsWith(p))
+}
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const { response, user } = await updateSession(request)
+  const { pathname, search } = request.nextUrl
 
-  const requiresAuth = PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
-
-  if (requiresAuth && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    url.searchParams.set("redirect", pathname)
-    return NextResponse.redirect(url)
+  // Pass through static assets and API routes without session overhead
+  if (isBypassed(pathname)) {
+    return NextResponse.next()
   }
 
-  // If signed-in user lands on auth pages, bounce them home.
-  if ((pathname === "/auth/login" || pathname === "/auth/signup" || pathname === "/signup") && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/"
-    url.searchParams.delete("redirect")
-    return NextResponse.redirect(url)
+  // Refresh session + get current user (updates auth cookies)
+  const { response, user } = await updateSession(request)
+
+  // Redirect unauthenticated visitors away from protected pages
+  if (!user && isProtected(pathname)) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = "/auth/login"
+    // Preserve the destination so we can redirect back after login
+    loginUrl.searchParams.set("redirect", pathname + search)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Redirect already-authenticated visitors away from login/signup
+  if (user && isAuthPage(pathname)) {
+    const dest = request.nextUrl.searchParams.get("redirect") ?? "/"
+    // Validate redirect destination is same-origin only
+    const destUrl = request.nextUrl.clone()
+    destUrl.pathname = dest.startsWith("/") ? dest : "/"
+    destUrl.search = ""
+    return NextResponse.redirect(destUrl)
   }
 
   return response
@@ -43,6 +83,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt).*)",
   ],
 }
