@@ -126,6 +126,7 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
   const inFlightRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const aliveRef = useRef(true)
+  const abortControllerRef = useRef<AbortController | null>(null)
   // Tracks change IDs that have already fired a browser notification this session
   const notifiedIdsRef = useRef<Set<string>>(new Set())
 
@@ -165,8 +166,9 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
   const tick = useCallback(async () => {
     if (inFlightRef.current) return
     inFlightRef.current = true
+    abortControllerRef.current = new AbortController()
     try {
-      const res = await fetch("/api/matches", { cache: "no-store" })
+      const res = await fetch("/api/matches", { cache: "no-store", signal: abortControllerRef.current.signal })
       if (!res.ok) throw new Error(`Feed fetch failed: ${res.status}`)
       const feed = (await res.json()) as MatchFeed
 
@@ -212,6 +214,8 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
       setError(null)
     } catch (err) {
       if (!aliveRef.current) return
+      // Ignore intentional aborts (unmount)
+      if (err instanceof DOMException && err.name === "AbortError") return
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       inFlightRef.current = false
@@ -244,6 +248,7 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
     return () => {
       aliveRef.current = false
       if (timerRef.current) clearTimeout(timerRef.current)
+      abortControllerRef.current?.abort()
       document.removeEventListener("visibilitychange", onVis)
     }
   }, [tick, schedule])

@@ -32,6 +32,7 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
   const [bankroll, setBankroll] = useState(1000)
   const [editing, setEditing] = useState(false)
   const [input, setInput] = useState("")
+  const [inputError, setInputError] = useState<string | null>(null)
 
   useEffect(() => {
     const stored = loadBankroll()
@@ -41,10 +42,19 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
 
   function handleSave() {
     const val = parseFloat(input)
-    if (!isNaN(val) && val > 0) {
-      setBankroll(val)
-      saveBankroll(val)
+    if (isNaN(val) || val <= 0) {
+      setInputError("Enter a positive number")
+      return                          // keep edit mode open — don't silently discard
     }
+    setInputError(null)
+    setBankroll(val)
+    saveBankroll(val)
+    setEditing(false)
+  }
+
+  function handleCancel() {
+    setInput(String(bankroll))        // reset to last saved value
+    setInputError(null)
     setEditing(false)
   }
 
@@ -59,17 +69,26 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
         <div>
           <CardSubtitle>Starting Bankroll</CardSubtitle>
           {editing ? (
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="number"
-                className="md-input"
-                style={{ width: 100, fontSize: 13 }}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSave()}
-                autoFocus
-              />
-              <button type="button" className="md-btn md-btn--ghost md-btn--sm" onClick={handleSave}>✓</button>
+            <div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  type="number"
+                  className="md-input"
+                  style={{ width: 100, fontSize: 13 }}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSave()
+                    if (e.key === "Escape") handleCancel()
+                  }}
+                  autoFocus
+                />
+                <button type="button" className="md-btn md-btn--ghost md-btn--sm" onClick={handleSave}>✓</button>
+                <button type="button" className="md-btn md-btn--ghost md-btn--sm" onClick={handleCancel}>✕</button>
+              </div>
+              {inputError && (
+                <p style={{ color: "var(--negative)", fontSize: 11, marginTop: 4 }}>{inputError}</p>
+              )}
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

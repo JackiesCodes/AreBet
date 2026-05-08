@@ -144,7 +144,7 @@ function SubscriptionContent() {
             <Button
               variant={tier.featured ? "primary" : "secondary"}
               block
-              disabled={tier.disabled || loading !== null}
+              disabled={tier.disabled || loading === tier.key}
               loading={loading === tier.key}
               onClick={() => !tier.disabled && handleUpgrade(tier.key)}
             >

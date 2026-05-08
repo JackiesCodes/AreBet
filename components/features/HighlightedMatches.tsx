@@ -99,7 +99,6 @@ function TeamLogo({ src, name }: { src?: string; name: string }) {
       width={36}
       height={36}
       className="hm-team-logo"
-      unoptimized
     />
   )
 }

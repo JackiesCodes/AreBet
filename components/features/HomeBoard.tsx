@@ -156,10 +156,12 @@ export function HomeBoard() {
     }
 
     const sorted = rankMatches(list, sort)
+    // Float recently-changed matches to the top of their own status group.
+    // Cross-status pairs keep the order established by rankMatches above.
     return sorted.sort((a, b) => {
+      if (a.status !== b.status) return 0          // preserve status ordering
       const aChanged = changedMatchIds.has(a.id) ? 0 : 1
       const bChanged = changedMatchIds.has(b.id) ? 0 : 1
-      if (a.status !== b.status) return 0
       return aChanged - bChanged
     })
   }, [matches, applyToMatches, disabledLeagues, ui, sort, isFavorite, changedMatchIds])
