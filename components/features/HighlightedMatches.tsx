@@ -156,8 +156,10 @@ function HighlightCard({ match, rank }: { match: ScoredMatch; rank: number }) {
       <div className="hm-teams">
         <div className="hm-team">
           <TeamLogo src={match.home.logo} name={match.home.name} />
-          <span className="hm-team-name">{match.home.name}</span>
-          <span className="hm-team-form">{match.home.form}</span>
+          <div className="hm-team-info">
+            <span className="hm-team-name">{match.home.name}</span>
+            {match.home.form && <span className="hm-team-form">{match.home.form}</span>}
+          </div>
         </div>
 
         <div className="hm-score-block">
@@ -181,8 +183,10 @@ function HighlightCard({ match, rank }: { match: ScoredMatch; rank: number }) {
         </div>
 
         <div className="hm-team hm-team--away">
-          <span className="hm-team-form">{match.away.form}</span>
-          <span className="hm-team-name">{match.away.name}</span>
+          <div className="hm-team-info">
+            <span className="hm-team-name">{match.away.name}</span>
+            {match.away.form && <span className="hm-team-form">{match.away.form}</span>}
+          </div>
           <TeamLogo src={match.away.logo} name={match.away.name} />
         </div>
       </div>

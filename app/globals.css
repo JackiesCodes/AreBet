@@ -89,17 +89,71 @@
 
 /* Light theme override (optional toggle) */
 [data-theme="light"] {
-  --bg: #fafafa;
+  --bg: #f4f4f5;
   --surface-1: #ffffff;
-  --surface-2: #f5f5f5;
-  --surface-3: #ebebeb;
-  --surface-4: #e0e0e0;
+  --surface-2: #f0f0f1;
+  --surface-3: #e4e4e6;
+  --surface-4: #d8d8db;
   --text: #0a0a0a;
   --text-secondary: rgba(0, 0, 0, 0.7);
-  --text-muted: rgba(0, 0, 0, 0.45);
+  --text-muted: rgba(0, 0, 0, 0.5);
   --border: rgba(0, 0, 0, 0.1);
-  --border-hover: rgba(0, 0, 0, 0.2);
-  --border-strong: rgba(0, 0, 0, 0.25);
+  --border-hover: rgba(0, 0, 0, 0.22);
+  --border-strong: rgba(0, 0, 0, 0.28);
+}
+
+/* Light mode: nav + bottom-nav use a white-frosted glass instead of dark */
+[data-theme="light"] .nav-root {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .mobile-bottom-nav {
+  background: rgba(255, 255, 255, 0.95);
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Light mode: nav links and active states */
+[data-theme="light"] .nav-link {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .nav-link:hover,
+[data-theme="light"] .nav-link--active {
+  color: var(--primary-dark);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+/* Light mode: modal + search backdrops — softer overlay */
+[data-theme="light"] .md-modal-backdrop,
+[data-theme="light"] .gs-backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .nav-drawer-backdrop,
+[data-theme="light"] .alert-backdrop {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Light mode: active toolbar/pill buttons — more visible */
+[data-theme="light"] .cc-toolbar-btn--active {
+  background: rgba(34, 197, 94, 0.18);
+  color: #15803d;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+[data-theme="light"] .cc-pill--active {
+  background: rgba(34, 197, 94, 0.18);
+  color: #15803d;
+}
+
+/* Light mode: mobile bottom nav items */
+[data-theme="light"] .mobile-bottom-nav-item {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .mobile-bottom-nav-item--active {
+  color: var(--primary-dark);
 }
 
 /* ----- Reset ------------------------------------------------------------- */
@@ -333,8 +387,10 @@ svg {
   height: var(--bottom-nav-height);
   background: rgba(5, 5, 5, 0.95);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
-  z-index: 99;
+  /* Above regular content (100) but below drawers/modals (199+) */
+  z-index: 110;
 }
 
 @media (max-width: 767px) {
@@ -4676,11 +4732,16 @@ svg {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .app-shell {
     grid-template-columns: 1fr;
+    /* Prevent any child from blowing out the viewport width */
+    overflow-x: hidden;
   }
   .app-sidebar {
+    display: none;
+  }
+  .app-right {
     display: none;
   }
 }
@@ -4690,6 +4751,8 @@ svg {
   min-width: 0;
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
+  /* Clip horizontally scrollable children (e.g. hm-rail) to viewport */
+  overflow-x: clip;
 }
 
 /* ============================================================================
@@ -5682,6 +5745,21 @@ svg {
   /* cc-feed fills the full mobile viewport */
   .cc-feed {
     padding: var(--space-3);
+  }
+
+  /* Toolbar: search takes full row, buttons wrap beneath */
+  .cc-toolbar {
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .cc-search {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .cc-toolbar-group {
+    flex: 0 0 auto;
   }
 
   /* Stats grids stack on mobile */
