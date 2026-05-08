@@ -49,7 +49,7 @@ export default async function LeaguePage({ params }: PageProps) {
       <div className="team-hero">
         <div className="team-hero-logo">
           {l.logo ? (
-            <Image src={l.logo} alt={l.name} width={72} height={72} unoptimized />
+            <Image src={l.logo} alt={l.name} width={72} height={72} />
           ) : (
             <span className="team-hero-initial">{l.name.slice(0, 2).toUpperCase()}</span>
           )}
@@ -58,7 +58,7 @@ export default async function LeaguePage({ params }: PageProps) {
           <h1 className="team-hero-name">{l.name}</h1>
           <div className="team-hero-meta">
             {country.flag && (
-              <Image src={country.flag} alt={country.name} width={18} height={12} unoptimized style={{ borderRadius: 2 }} />
+              <Image src={country.flag} alt={country.name} width={18} height={12} style={{ borderRadius: 2 }} />
             )}
             <span>{country.name}</span>
             <span>{season}/{season + 1}</span>
@@ -75,14 +75,14 @@ export default async function LeaguePage({ params }: PageProps) {
               <Link key={m.id} href={`/match/${m.id}`} className="team-fixture-row">
                 <span className="team-fixture-opp">
                   {m.home.logo && (
-                    <Image src={m.home.logo} alt={m.home.name} width={16} height={16} unoptimized style={{ borderRadius: 2 }} />
+                    <Image src={m.home.logo} alt={m.home.name} width={16} height={16} style={{ borderRadius: 2 }} />
                   )}
                   {m.home.name}
                 </span>
                 <span className="team-fixture-league" style={{ color: "var(--text-muted)", fontSize: 11 }}>vs</span>
                 <span className="team-fixture-opp">
                   {m.away.logo && (
-                    <Image src={m.away.logo} alt={m.away.name} width={16} height={16} unoptimized style={{ borderRadius: 2 }} />
+                    <Image src={m.away.logo} alt={m.away.name} width={16} height={16} style={{ borderRadius: 2 }} />
                   )}
                   {m.away.name}
                 </span>

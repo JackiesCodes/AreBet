@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useAuth } from "@/lib/auth/context"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import type { SignalStatus } from "@/app/api/signals/status/route"
 import type { RateLimitStatus } from "@/app/api/rate-limit/route"
@@ -352,9 +353,41 @@ function BoostPanel() {
   )
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Auth guard wrapper ────────────────────────────────────────────────────────
+// Separating auth check from AdminContent avoids conditional hook calls.
 
 export default function AdminPage() {
+  const { user, loading: authLoading, role } = useAuth()
+
+  if (authLoading) {
+    return (
+      <div className="md-page">
+        <PageHeader title="Admin" subtitle="Loading…" />
+        <Skeleton variant="list" count={4} />
+      </div>
+    )
+  }
+
+  if (!user || role !== "admin") {
+    return (
+      <div className="md-page">
+        <PageHeader title="Admin" subtitle="Restricted area" />
+        <div className="admin-warn-box" style={{ marginTop: 24 }}>
+          <strong>Access denied.</strong>{" "}
+          {!user
+            ? "You must be signed in to view this page."
+            : "Your account does not have admin privileges. Contact the site owner to request access."}
+        </div>
+      </div>
+    )
+  }
+
+  return <AdminContent />
+}
+
+// ── Admin content (only rendered for role=admin) ───────────────────────────
+
+function AdminContent() {
   const { matches, loading: feedLoading, error: feedError, fetchedAt } = useMatchIntelligence()
 
   const [signalStatus, setSignalStatus] = useState<SignalStatus | null>(null)

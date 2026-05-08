@@ -319,3 +319,82 @@ create policy "Anyone can read editorial boosts"
 create index if not exists idx_editorial_fixture    on public.editorial_boosts(fixture_id);
 create index if not exists idx_editorial_expires    on public.editorial_boosts(expires_at) where expires_at is not null;
 create index if not exists idx_editorial_created    on public.editorial_boosts(created_at desc);
+
+-- =====================
+-- WEBHOOK IDEMPOTENCY
+-- Prevents Stripe webhook events from being processed more than once.
+-- The webhook handler inserts a row on first delivery; a duplicate delivery
+-- hits the unique constraint (23505) and is safely skipped.
+-- =====================
+create table if not exists public.processed_webhook_events (
+  event_id     text        primary key,   -- Stripe event ID (evt_xxx)
+  processed_at timestamptz not null default now()
+);
+
+-- Auto-clean old records after 30 days (Stripe retries within 3 days)
+create index if not exists idx_webhook_events_age
+  on public.processed_webhook_events(processed_at);
+
+-- Service-role only — no public access
+alter table public.processed_webhook_events enable row level security;
+
+-- =====================
+-- PROFILES: TIER CHECK CONSTRAINT + ROLE COLUMN
+-- Prevents arbitrary strings being stored as tier or role.
+-- Run with: ALTER TABLE ... ADD CONSTRAINT (idempotent via DO block).
+-- =====================
+do $$ begin
+  -- Tier check constraint (free / pro / elite only)
+  if not exists (
+    select 1 from information_schema.table_constraints
+    where constraint_schema = 'public'
+      and table_name = 'profiles'
+      and constraint_name = 'profiles_tier_check'
+  ) then
+    alter table public.profiles
+      add constraint profiles_tier_check
+      check (tier in ('free', 'pro', 'elite'));
+  end if;
+
+  -- Role column (user / admin)
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'profiles'
+      and column_name = 'role'
+  ) then
+    alter table public.profiles
+      add column role text not null default 'user'
+      check (role in ('user', 'admin'));
+  end if;
+end $$;
+
+-- =====================
+-- UPDATED_AT TRIGGER
+-- Automatically keeps updated_at in sync on every UPDATE.
+-- =====================
+create or replace function public.set_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- profiles
+drop trigger if exists trg_profiles_updated_at on public.profiles;
+create trigger trg_profiles_updated_at
+  before update on public.profiles
+  for each row execute function public.set_updated_at();
+
+-- preferences
+drop trigger if exists trg_preferences_updated_at on public.preferences;
+create trigger trg_preferences_updated_at
+  before update on public.preferences
+  for each row execute function public.set_updated_at();
+
+-- editorial_boosts
+drop trigger if exists trg_editorial_boosts_updated_at on public.editorial_boosts;
+create trigger trg_editorial_boosts_updated_at
+  before update on public.editorial_boosts
+  for each row execute function public.set_updated_at();

@@ -51,7 +51,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
           <div className="match-hero-team match-hero-team--home">
             <div className="match-hero-team-crest" aria-hidden>
               {match.home.logo
-                ? <Image src={match.home.logo} alt={match.home.name} width={48} height={48} className="team-logo--lg" unoptimized />
+                ? <Image src={match.home.logo} alt={match.home.name} width={48} height={48} className="team-logo--lg" />
                 : match.home.short.slice(0, 2).toUpperCase()
               }
             </div>
@@ -86,7 +86,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
           <div className="match-hero-team match-hero-team--away">
             <div className="match-hero-team-crest" aria-hidden>
               {match.away.logo
-                ? <Image src={match.away.logo} alt={match.away.name} width={48} height={48} className="team-logo--lg" unoptimized />
+                ? <Image src={match.away.logo} alt={match.away.name} width={48} height={48} className="team-logo--lg" />
                 : match.away.short.slice(0, 2).toUpperCase()
               }
             </div>

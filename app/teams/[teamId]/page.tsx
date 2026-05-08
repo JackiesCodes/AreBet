@@ -67,7 +67,7 @@ export default async function TeamPage({ params }: PageProps) {
       <div className="team-hero">
         <div className="team-hero-logo">
           {t.logo ? (
-            <Image src={t.logo} alt={t.name} width={72} height={72} unoptimized />
+            <Image src={t.logo} alt={t.name} width={72} height={72} />
           ) : (
             <span className="team-hero-initial">{t.name.slice(0, 2).toUpperCase()}</span>
           )}
@@ -232,7 +232,6 @@ export default async function TeamPage({ params }: PageProps) {
                         alt={p.player.name}
                         width={48}
                         height={48}
-                        unoptimized
                         className="team-player-photo-img"
                       />
                     ) : (
@@ -279,7 +278,7 @@ function FixtureRow({ match: m, teamId, showResult }: { match: Match; teamId: nu
       <span className="team-fixture-label">{isHome ? "H" : "A"}</span>
       <span className="team-fixture-opp">
         {opp.logo && (
-          <Image src={opp.logo} alt={opp.name} width={16} height={16} unoptimized style={{ borderRadius: 2 }} />
+          <Image src={opp.logo} alt={opp.name} width={16} height={16} style={{ borderRadius: 2 }} />
         )}
         {opp.name}
       </span>

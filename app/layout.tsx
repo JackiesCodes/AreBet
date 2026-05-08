@@ -51,6 +51,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
       </head>
       <body>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <AuthProvider>
           <ToastProvider>
             <MatchIntelligenceProvider>
@@ -62,7 +63,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     <MainNav />
                     <div className="site-main">
                       <AppShell>
-                        <ErrorBoundary>{children}</ErrorBoundary>
+                        <main id="main-content" tabIndex={-1}>
+                          <ErrorBoundary>{children}</ErrorBoundary>
+                        </main>
                       </AppShell>
                     </div>
                     <MobileBottomNav />

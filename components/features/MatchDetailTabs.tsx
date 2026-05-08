@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useRef, useState } from "react"
 import Image from "next/image"
 import type { Match } from "@/types/match"
 import { cn } from "@/lib/utils/cn"
@@ -32,24 +32,68 @@ interface MatchDetailTabsProps {
 
 export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
   const [tab, setTab] = useState<Tab>("tips")
-  const fmt = useFormatOdds()
+  const fmt     = useFormatOdds()
+  const uid     = useId()
+  const tabsRef = useRef<HTMLDivElement>(null)
+
+  // Arrow key navigation between tabs (ARIA tabs pattern)
+  function handleTabKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, index: number) {
+    const tabs = tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+    if (!tabs) return
+    const count = tabs.length
+
+    if (e.key === "ArrowRight") {
+      e.preventDefault()
+      const next = (index + 1) % count
+      tabs[next].focus()
+      setTab(TABS[next].key)
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault()
+      const prev = (index - 1 + count) % count
+      tabs[prev].focus()
+      setTab(TABS[prev].key)
+    } else if (e.key === "Home") {
+      e.preventDefault()
+      tabs[0].focus()
+      setTab(TABS[0].key)
+    } else if (e.key === "End") {
+      e.preventDefault()
+      tabs[count - 1].focus()
+      setTab(TABS[count - 1].key)
+    }
+  }
+
+  const tabId  = (key: Tab) => `${uid}-tab-${key}`
+  const panelId = (key: Tab) => `${uid}-panel-${key}`
 
   return (
     <div>
-      <div className="md-tabs" role="tablist">
-        {TABS.map((t) => (
+      <div className="md-tabs" role="tablist" aria-label="Match details" ref={tabsRef}>
+        {TABS.map((t, i) => (
           <button
             key={t.key}
+            id={tabId(t.key)}
             type="button"
+            role="tab"
             className={cn("md-tab", tab === t.key && "md-tab--active")}
+            aria-selected={tab === t.key}
+            aria-controls={panelId(t.key)}
+            tabIndex={tab === t.key ? 0 : -1}
             onClick={() => setTab(t.key)}
+            onKeyDown={(e) => handleTabKeyDown(e, i)}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      <div style={{ padding: "var(--space-5) 0" }}>
+      <div
+        id={panelId(tab)}
+        role="tabpanel"
+        aria-labelledby={tabId(tab)}
+        tabIndex={0}
+        style={{ padding: "var(--space-5) 0" }}
+      >
 
         {/* ── Tips ── */}
         {tab === "tips" && <MatchTips match={match} />}
@@ -87,7 +131,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
                     <div key={side} className="coach-card">
                       <div className="coach-card-header">
                         {coach?.photo
-                          ? <Image src={coach.photo} alt={coach.name ?? "Coach"} width={44} height={44} className="coach-photo" unoptimized />
+                          ? <Image src={coach.photo} alt={coach.name ?? "Coach"} width={44} height={44} className="coach-photo" />
                           : <div className="coach-photo-placeholder">👤</div>
                         }
                         <div>
@@ -318,7 +362,7 @@ export function MatchDetailTabs({ match }: MatchDetailTabsProps) {
                       {list.map((s, i) => (
                         <div key={i} className="sidelined-item">
                           {s.playerPhoto
-                            ? <Image src={s.playerPhoto} alt={s.playerName} width={32} height={32} className="sidelined-photo" unoptimized />
+                            ? <Image src={s.playerPhoto} alt={s.playerName} width={32} height={32} className="sidelined-photo" />
                             : <div className="sidelined-photo" style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>👤</div>
                           }
                           <div className="sidelined-info">

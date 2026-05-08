@@ -110,6 +110,7 @@ export function MainNav() {
             className="nav-hamburger"
             aria-label={drawerOpen ? "Close menu" : "Open menu"}
             aria-expanded={drawerOpen}
+            aria-controls="mobile-nav-drawer"
             onClick={() => setDrawerOpen((v) => !v)}
           >
             {drawerOpen ? (
@@ -138,20 +139,20 @@ export function MainNav() {
 
           {/* Desktop nav links */}
           <nav className="nav-links" aria-label="Main navigation">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "nav-link",
-                  (pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href))) &&
-                    "nav-link--active",
-                )}
-              >
-                <span className="nav-link-icon" aria-hidden>{link.icon}</span>
-                <span className="nav-link-label">{link.label}</span>
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href))
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn("nav-link", isActive && "nav-link--active")}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span className="nav-link-icon" aria-hidden>{link.icon}</span>
+                  <span className="nav-link-label">{link.label}</span>
+                </Link>
+              )
+            })}
           </nav>
 
           <div className="nav-actions">
@@ -199,6 +200,7 @@ export function MainNav() {
 
       {/* Mobile drawer */}
       <nav
+        id="mobile-nav-drawer"
         className={cn("nav-drawer", drawerOpen && "nav-drawer--open")}
         aria-label="Mobile navigation"
         aria-hidden={!drawerOpen}
@@ -235,6 +237,7 @@ export function MainNav() {
                 key={link.href}
                 href={link.href}
                 className={cn("nav-drawer-link", active && "nav-drawer-link--active")}
+                aria-current={active ? "page" : undefined}
                 onClick={() => setDrawerOpen(false)}
               >
                 <span className="nav-drawer-link-icon" aria-hidden>{link.icon}</span>

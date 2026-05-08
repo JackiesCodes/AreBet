@@ -46,7 +46,6 @@ export default async function VenuePage({ params }: PageProps) {
               alt={venueName}
               width={400}
               height={180}
-              unoptimized
               className="venue-hero-image"
             />
           </div>
@@ -103,14 +102,14 @@ export default async function VenuePage({ params }: PageProps) {
                 <span className="venue-fixture-teams">
                   <span className="venue-fixture-team">
                     {m.home.logo && (
-                      <Image src={m.home.logo} alt={m.home.name} width={16} height={16} unoptimized />
+                      <Image src={m.home.logo} alt={m.home.name} width={16} height={16} />
                     )}
                     {m.home.name}
                   </span>
                   <span className="venue-fixture-vs">vs</span>
                   <span className="venue-fixture-team">
                     {m.away.logo && (
-                      <Image src={m.away.logo} alt={m.away.name} width={16} height={16} unoptimized />
+                      <Image src={m.away.logo} alt={m.away.name} width={16} height={16} />
                     )}
                     {m.away.name}
                   </span>

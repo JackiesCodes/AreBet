@@ -30,7 +30,6 @@ function TeamLogo({ logo, name }: { logo?: string; name: string }) {
         alt={name}
         width={22}
         height={22}
-        unoptimized
         style={{ borderRadius: 3, objectFit: "contain" }}
       />
     )
@@ -46,7 +45,6 @@ function EntityImage({ image, name, type }: { image: string | null; name: string
         alt={name}
         width={40}
         height={40}
-        unoptimized
         className={cn("gs-entity-img", type === "player" || type === "coach" ? "gs-entity-img--round" : "")}
       />
     )
@@ -221,21 +219,52 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     }
   }
 
+  // Human-readable status for aria-live region
+  const statusMsg = !hasQuery
+    ? ""
+    : loading
+      ? "Searching…"
+      : showEmpty
+        ? `No results found for ${query.trim()}`
+        : entities.length > 0 || results.length > 0
+          ? `${results.length} match${results.length !== 1 ? "es" : ""} and ${entities.length} entit${entities.length !== 1 ? "ies" : "y"} found`
+          : ""
+
   return (
-    <div className="gs-backdrop" onClick={onClose}>
-      <div className="gs-modal" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="gs-backdrop"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="gs-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Input */}
         <div className="gs-input-row">
           {loading ? (
             <span className="gs-spinner" aria-hidden />
           ) : (
-            <svg className="gs-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              className="gs-search-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
           )}
           <input
             ref={inputRef}
+            id="gs-search-input"
             type="search"
             inputMode="search"
             autoComplete="off"
@@ -245,6 +274,9 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
             enterKeyHint="search"
             className="gs-input"
             placeholder="Search any team, player, league…"
+            aria-label="Search teams, players, leagues, coaches and venues"
+            aria-busy={loading}
+            aria-controls="gs-results-list"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -256,19 +288,33 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
               onClick={() => setQuery("")}
               aria-label="Clear search"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           )}
-          <button className="gs-close-btn" onClick={onClose} aria-label="Close search">
+          <button
+            type="button"
+            className="gs-close-btn"
+            onClick={onClose}
+            aria-label="Close search"
+          >
             Esc
           </button>
         </div>
 
+        {/* Live status announcement for screen readers */}
+        <p
+          className="sr-only"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {statusMsg}
+        </p>
+
         {/* Entity tiles — horizontal scroll, always outside scroll area */}
         {hasQuery && entities.length > 0 && (
-          <div className="gs-entities-section">
+          <div className="gs-entities-section" aria-label="People and teams">
             <div className="gs-entities-scroll" ref={tilesRef}>
               {entities.map((entity) => (
                 <Link
@@ -279,7 +325,10 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
                 >
                   <div className="gs-entity-img-wrap">
                     <EntityImage image={entity.image} name={entity.name} type={entity.type} />
-                    <span className={cn("gs-entity-type-badge", `gs-entity-type-badge--${entity.type}`)}>
+                    <span
+                      className={cn("gs-entity-type-badge", `gs-entity-type-badge--${entity.type}`)}
+                      aria-hidden="true"
+                    >
                       {entity.type === "coach" ? "MGR" : entity.type.slice(0, 1).toUpperCase() + entity.type.slice(1)}
                     </span>
                   </div>
@@ -293,15 +342,15 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
 
         {/* Match results — scrollable */}
         {hasQuery && results.length > 0 && (
-          <ul className="gs-results">
+          <ul id="gs-results-list" className="gs-results" aria-label="Match results">
             {entities.length > 0 && (
-              <li><p className="gs-section-label">Matches</p></li>
+              <li aria-hidden="true"><p className="gs-section-label">Matches</p></li>
             )}
             {results.map((m) => (
               <li key={m.id}>
                 <Link href={`/match/${m.id}`} className="gs-result-item" onClick={onClose}>
                   {/* Two logos stacked */}
-                  <span className="gs-result-teams">
+                  <span className="gs-result-teams" aria-hidden="true">
                     <TeamLogo logo={m.home.logo} name={m.home.name} />
                     <span className="gs-vs">vs</span>
                     <TeamLogo logo={m.away.logo} name={m.away.name} />
@@ -337,8 +386,8 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           </ul>
         )}
 
-        {/* Footer */}
-        <p className="gs-footer-hint">
+        {/* Footer hint — visual only; announcements go via the sr-only live region above */}
+        <p className="gs-footer-hint" aria-hidden="true">
           {!hasQuery && "Search teams, players, leagues, coaches and venues"}
           {hasQuery && loading && "Searching…"}
           {showEmpty && `No results found for "${query.trim()}"`}

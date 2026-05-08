@@ -74,7 +74,6 @@ export default async function PlayerPage({ params }: PageProps) {
               alt={player.name}
               width={80}
               height={80}
-              unoptimized
               className="player-hero-photo-img"
             />
           ) : (
@@ -91,7 +90,7 @@ export default async function PlayerPage({ params }: PageProps) {
             {team && (
               <Link href={`/teams/${team.id}`} className="player-hero-club">
                 {team.logo && (
-                  <Image src={team.logo} alt={team.name} width={16} height={16} unoptimized />
+                  <Image src={team.logo} alt={team.name} width={16} height={16} />
                 )}
                 {team.name}
               </Link>
@@ -100,7 +99,7 @@ export default async function PlayerPage({ params }: PageProps) {
           {league && (
             <div className="player-hero-league">
               {league.logo && (
-                <Image src={league.logo} alt={league.name} width={14} height={14} unoptimized />
+                <Image src={league.logo} alt={league.name} width={14} height={14} />
               )}
               <span>{league.name} · {league.country} · {season}/{season + 1}</span>
             </div>

@@ -390,3 +390,20 @@
 }
 
 .admin-boost-remove:hover { background: rgba(239,68,68,0.1); }
+
+/* ----- Reduced motion ---------------------------------------------------- */
+/* Disable decorative animations (pulse, blink) for users who prefer it.
+   The global @media block in globals.css covers everything else;
+   these overrides target highlight-specific keyframe animations. */
+@media (prefers-reduced-motion: reduce) {
+  .hm-live-pip-dot,
+  .hm-card--live .hm-card {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .hm-card--skeleton .hm-skel {
+    animation: none !important;
+    background: var(--surface-3) !important;
+  }
+}

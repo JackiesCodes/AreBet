@@ -14,6 +14,11 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/lib/supabase/service"
+import { createRateLimiter, getClientIp } from "@/lib/utils/rate-limit"
+
+// 20 resolve calls per minute per IP — generous for automated resolution,
+// tight enough to block bulk-fabrication attempts.
+const limiter = createRateLimiter({ windowMs: 60_000, max: 20 })
 
 interface ResolveBody {
   signal_id: string
@@ -41,6 +46,22 @@ function validateBody(body: unknown): body is ResolveBody {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit before any DB work
+  const ip    = getClientIp(req)
+  const limit = limiter.check(ip)
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)),
+          "X-RateLimit-Remaining": "0",
+        },
+      },
+    )
+  }
+
   let body: unknown
   try {
     body = await req.json()

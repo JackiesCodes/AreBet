@@ -30,7 +30,6 @@ export default async function CoachPage({ params }: PageProps) {
               alt={coach.name}
               width={80}
               height={80}
-              unoptimized
               className="player-hero-photo-img"
             />
           ) : (
@@ -47,7 +46,7 @@ export default async function CoachPage({ params }: PageProps) {
           {coach.team && (
             <div className="player-hero-league" style={{ marginTop: 6 }}>
               {coach.team.logo && (
-                <Image src={coach.team.logo} alt={coach.team.name} width={16} height={16} unoptimized />
+                <Image src={coach.team.logo} alt={coach.team.name} width={16} height={16} />
               )}
               <Link href={`/teams/${coach.team.id}`} style={{ color: "var(--primary)", fontWeight: 500 }}>
                 {coach.team.name}
@@ -76,7 +75,7 @@ export default async function CoachPage({ params }: PageProps) {
                 }}
               >
                 {c.team.logo && (
-                  <Image src={c.team.logo} alt={c.team.name} width={22} height={22} unoptimized style={{ borderRadius: 3 }} />
+                  <Image src={c.team.logo} alt={c.team.name} width={22} height={22} style={{ borderRadius: 3 }} />
                 )}
                 <Link href={`/teams/${c.team.id}`} style={{ fontWeight: 500, flex: 1 }}>
                   {c.team.name}

@@ -36,7 +36,6 @@ function TeamCircle({ name, logo, size = "md" }: { name: string; logo?: string; 
         width={px}
         height={px}
         className={cn("team-logo", size === "sm" && "team-logo--sm")}
-        unoptimized
       />
     )
   }
@@ -113,6 +112,16 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
         ? formatTime(match.kickoffISO)
         : `${formatShortDate(match.kickoffISO)} · ${formatTime(match.kickoffISO)}`
 
+  // Accessible label includes the current score / time so screen-reader users
+  // have all essential info without opening the detail page.
+  const scoreLabel = isLive
+    ? `${match.score.home}–${match.score.away}, ${match.minute ?? 0} minutes`
+    : isFinished
+      ? `Final score ${match.score.home}–${match.score.away}`
+      : `Kickoff ${timeLabel}`
+
+  const cardLabel = `${match.home.name} vs ${match.away.name}, ${match.league}. ${scoreLabel}.`
+
   return (
     <article
       className={cn(
@@ -124,9 +133,16 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
         isFinished   && "cc-card--finished",
       )}
       onClick={() => { onSelect?.(match); router.push(`/match/${match.id}`) }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onSelect?.(match)
+          router.push(`/match/${match.id}`)
+        }
+      }}
       role="button"
       tabIndex={0}
-      aria-label={`${match.home.name} vs ${match.away.name}`}
+      aria-label={cardLabel}
     >
 
       {/* ── Header: league • time ──────────────────── heart ── */}
@@ -162,8 +178,13 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
           )}
         </div>
 
-        {/* Centre score */}
-        <div className="cc-card-centre">
+        {/* Centre score — aria-live so screen readers announce score changes */}
+        <div
+          className="cc-card-centre"
+          aria-live={isLive ? "polite" : undefined}
+          aria-atomic={isLive ? "true" : undefined}
+          aria-label={isLive ? `Score: ${homeScore}–${awayScore}` : undefined}
+        >
           {homeScore != null && awayScore != null ? (
             <span className={cn("cc-card-score-centre", isLive && "cc-card-score-centre--live")}>
               {homeScore} – {awayScore}
