@@ -35,12 +35,14 @@ export function MobileFilterSheet({ open, onClose }: MobileFilterSheetProps) {
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className={cn("nav-drawer-backdrop", open && "nav-drawer-backdrop--open")}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      {/* Backdrop — only mount when open to avoid constant blur overlay */}
+      {open && (
+        <div
+          className="nav-drawer-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Sheet */}
       <div
