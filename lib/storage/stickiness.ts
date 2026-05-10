@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   ratings: "arebet:ratings:v1",
   predictions: "arebet:predictions:v1",
   onboarding: "arebet:onboarding:v1",
+  filters: "arebet:filters:v2",
 } as const
 
 export interface LocalFavorite {

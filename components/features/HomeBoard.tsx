@@ -17,6 +17,8 @@ import { EmptyState } from "@/components/primitives/EmptyState"
 import { ErrorState } from "@/components/primitives/ErrorState"
 import { cn } from "@/lib/utils/cn"
 import { loadUiState, saveUiState, type UiState } from "@/lib/storage/ui-state"
+import { ActiveFilterChips } from "@/components/features/ActiveFilterChips"
+import { MobileFilterSheet } from "@/components/layout/MobileFilterSheet"
 
 const TABLE_PAGE_SIZE = 25
 
@@ -99,10 +101,11 @@ export function HomeBoard() {
     setWatchedMatchIds,
   } = useMatchIntelligence()
 
-  const { applyToMatches, disabledLeagues } = useFilters()
+  const { applyToMatches, disabledLeagues, activeFilterCount } = useFilters()
   const { favorites, isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
   const [sort, setSort] = useState<SortKey>("kickoff")
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   useEffect(() => {
     saveUiState(ui)
@@ -180,6 +183,21 @@ export function HomeBoard() {
     <section className="cc-feed">
       <IntelligenceBar matches={matches} fetchedAt={fetchedAt ?? undefined} />
       <div className="cc-toolbar">
+        {/* Mobile filter trigger — hidden on desktop */}
+        <button
+          type="button"
+          className="cc-filter-trigger"
+          onClick={() => setFilterSheetOpen(true)}
+          aria-label={`Open filters${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ""}`}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="cc-filter-badge">{activeFilterCount}</span>
+          )}
+        </button>
         <div className="cc-search">
           <input
             type="search"
@@ -226,6 +244,9 @@ export function HomeBoard() {
           </button>
         </div>
       </div>
+
+      <ActiveFilterChips />
+      <MobileFilterSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} />
 
       <div className="cc-section-body">
         {loading && <Skeleton variant="cc" count={5} />}
