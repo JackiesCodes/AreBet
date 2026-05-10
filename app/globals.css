@@ -1347,7 +1347,7 @@ svg {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  z-index: 200;
+  z-index: 250;
   max-width: 320px;
 }
 
@@ -1659,6 +1659,13 @@ svg {
   overflow-y: auto;
 }
 
+@media (max-width: 767px) {
+  .gs-backdrop {
+    padding: 12px 8px 8px;
+    align-items: flex-start;
+  }
+}
+
 /* ── Modal shell ──────────────────────────────────────────────────────────── */
 .gs-modal {
   background: var(--surface-2);
@@ -1667,10 +1674,18 @@ svg {
   width: 100%;
   max-width: 620px;
   max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
   display: flex;
   flex-direction: column;
   /* No overflow here — overflow:hidden blocks child scroll; let children manage their own overflow */
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 767px) {
+  .gs-modal {
+    border-radius: 12px;
+    max-height: calc(100dvh - 24px);
+  }
 }
 
 
@@ -6056,19 +6071,31 @@ svg {
     padding: var(--space-3);
   }
 
-  /* Toolbar: search takes full row, buttons wrap beneath */
+  /* Toolbar: search takes full row on its own; filter trigger + sort/view groups share a row */
   .cc-toolbar {
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
   }
 
+  /* Search always on its own row */
   .cc-search {
+    order: -1;
     flex: 1 1 100%;
     min-width: 0;
   }
 
+  /* Filter trigger + toolbar groups share the second row */
+  .cc-filter-trigger {
+    order: 0;
+    flex-shrink: 0;
+  }
+
   .cc-toolbar-group {
     flex: 0 0 auto;
+    margin-left: auto;
+  }
+  .cc-toolbar-group + .cc-toolbar-group {
+    margin-left: 0;
   }
 
   /* Stats grids stack on mobile */
@@ -6096,6 +6123,58 @@ svg {
   .page-header {
     padding-left: 0;
     padding-right: 0;
+  }
+
+  /* Toast: float above bottom nav, use full width on mobile */
+  .md-toast-stack {
+    bottom: calc(var(--bottom-nav-height) + var(--space-3));
+    left: var(--space-3);
+    right: var(--space-3);
+    max-width: 100%;
+  }
+
+  /* Filter sheet close button: ensure 44px touch target */
+  .filter-sheet-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Filter trigger: share row with toolbar-groups, search goes below */
+  .cc-filter-trigger {
+    height: 36px;
+    padding: 0 var(--space-3);
+  }
+
+  /* Sidebar touch targets inside filter sheet: always show hover-only buttons */
+  .filter-sheet-body .sidebar-only-btn {
+    opacity: 1;
+  }
+  .filter-sheet-body .sidebar-pin-btn {
+    opacity: 1;
+  }
+
+  /* Sidebar buttons: enlarge touch targets in filter sheet */
+  .filter-sheet-body .sidebar-country-heading {
+    padding: 8px 6px;
+    min-height: 36px;
+  }
+  .filter-sheet-body .sidebar-kickoff-btn,
+  .filter-sheet-body .sidebar-conf-btn {
+    padding: 7px 8px;
+    min-height: 36px;
+  }
+  .filter-sheet-body .sidebar-status-btn {
+    min-height: 36px;
+  }
+  .filter-sheet-body .sidebar-preset-pill {
+    padding: 7px 12px;
+    min-height: 36px;
+  }
+
+  /* League row in filter sheet: space out crowded controls */
+  .filter-sheet-body .sidebar-league-row {
+    padding: 8px 6px;
+    min-height: 40px;
   }
 }
 
