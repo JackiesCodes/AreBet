@@ -11,7 +11,8 @@ const BANKROLL_KEY = "arebet:bankroll:v1"
 function loadBankroll(): number {
   if (typeof window === "undefined") return 1000
   try {
-    return parseFloat(localStorage.getItem(BANKROLL_KEY) ?? "1000") || 1000
+    const val = parseFloat(localStorage.getItem(BANKROLL_KEY) ?? "")
+    return val > 0 ? val : 1000
   } catch {
     return 1000
   }

@@ -65,6 +65,8 @@ export async function GET(req: NextRequest) {
       highlightScore:   m.highlightScore,
       highlightBreakdown: m.highlightBreakdown,
       highlightLabel:   m.highlightLabel,
+      // Popularity counts so the client can seed its local popularityMap
+      popularity:       popularityMap.get(m.id) ?? { betCount: 0, favoriteCount: 0 },
     }))
 
     return NextResponse.json(

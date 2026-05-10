@@ -4708,12 +4708,6 @@ svg {
   padding-bottom: 0;
 }
 
-@media (max-width: 767px) {
-  .site-main {
-    padding-bottom: var(--bottom-nav-height);
-  }
-}
-
 /* 3-col grid: sidebar | main | right panel */
 .app-shell {
   display: grid;

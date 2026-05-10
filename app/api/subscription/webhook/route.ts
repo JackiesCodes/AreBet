@@ -18,6 +18,16 @@ import { createServiceClient } from "@/lib/supabase/service"
 
 export const dynamic = "force-dynamic"
 
+const VALID_TIERS = ["pro", "elite"] as const
+type Tier = (typeof VALID_TIERS)[number]
+
+function safeTier(value: unknown): Tier {
+  if (typeof value === "string" && (VALID_TIERS as readonly string[]).includes(value)) {
+    return value as Tier
+  }
+  return "pro"
+}
+
 // ---------------------------------------------------------------------------
 // Stripe factory
 // ---------------------------------------------------------------------------
@@ -82,6 +92,21 @@ async function updateUserTier(
     .eq("id", userId)
 }
 
+/**
+ * Resolve userId from a Stripe customerId via the profiles table.
+ * This is the secure lookup path for subscription events where we cannot
+ * rely on metadata (which is writable by the Stripe dashboard).
+ */
+async function userIdByCustomer(customerId: string): Promise<string | null> {
+  const supabase = createServiceClient()
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .single()
+  return data?.id ?? null
+}
+
 // ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
@@ -130,25 +155,32 @@ export async function POST(req: NextRequest) {
           break
         }
 
-        const tier = (session.metadata?.tier as string) ?? "pro"
+        const tier = safeTier(session.metadata?.tier)
         await updateUserTier(userId, tier, session.customer as string | undefined)
         break
       }
 
       case "customer.subscription.updated": {
-        const sub    = event.data.object as Stripe.Subscription
-        const userId = sub.metadata?.userId
+        const sub = event.data.object as Stripe.Subscription
+        // Prefer DB lookup by customerId — avoids trusting metadata
+        const customerId = typeof sub.customer === "string" ? sub.customer : null
+        const userId = customerId
+          ? await userIdByCustomer(customerId)
+          : (isValidUserId(sub.metadata?.userId) ? sub.metadata.userId : null)
         if (!isValidUserId(userId)) break
 
-        const tier   = (sub.metadata?.tier as string) ?? "pro"
+        const tier   = safeTier(sub.metadata?.tier)
         const active = sub.status === "active" || sub.status === "trialing"
         await updateUserTier(userId, active ? tier : "free")
         break
       }
 
       case "customer.subscription.deleted": {
-        const sub    = event.data.object as Stripe.Subscription
-        const userId = sub.metadata?.userId
+        const sub = event.data.object as Stripe.Subscription
+        const customerId = typeof sub.customer === "string" ? sub.customer : null
+        const userId = customerId
+          ? await userIdByCustomer(customerId)
+          : (isValidUserId(sub.metadata?.userId) ? sub.metadata.userId : null)
         if (!isValidUserId(userId)) break
 
         await updateUserTier(userId, "free")

@@ -252,35 +252,23 @@ export function HighlightedMatches() {
     if (ids === prevIdsRef.current) return
     prevIdsRef.current = ids
 
-    const load = async () => {
+    const loadPopularity = async () => {
       try {
         const res = await fetch(`/api/highlights?limit=20`)
         if (!res.ok) return
-        const data: { highlights: Array<{ id: number }> } = await res.json()
-        // Response used only to warm the server cache; client-side scoring
-        // uses the popularity map built from feed data below.
-        void data
+        const data: { highlights: Array<{ id: number; popularity: MatchPopularity }> } = await res.json()
+        const map = new Map<number, MatchPopularity>()
+        for (const h of data.highlights) {
+          if (h.popularity) map.set(h.id, h.popularity)
+        }
+        if (map.size > 0) setPopularityMap(map)
       } catch { /* graceful */ }
     }
-    load()
+    loadPopularity()
 
-    // Also refresh popularity on a timer
+    // Refresh popularity on a timer so client scoring improves over time
     if (popularTimerRef.current) clearInterval(popularTimerRef.current)
-    popularTimerRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/highlights?limit=20`)
-        if (res.ok) {
-          const data: { highlights: Array<{ id: number; highlightScore: number }> } = await res.json()
-          // Build a synthetic popularity map from highlight scores
-          // (real popularity is embedded in the server-side score)
-          const map = new Map<number, MatchPopularity>()
-          for (const h of data.highlights) {
-            map.set(h.id, { betCount: 0, favoriteCount: 0 })
-          }
-          setPopularityMap(map)
-        }
-      } catch { /* graceful */ }
-    }, POPULAR_REFRESH_MS)
+    popularTimerRef.current = setInterval(loadPopularity, POPULAR_REFRESH_MS)
 
     return () => { if (popularTimerRef.current) clearInterval(popularTimerRef.current) }
   }, [matches])

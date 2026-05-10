@@ -8,6 +8,9 @@ export const VALUE_THRESHOLD = 0.05
  * e.g. 1.80 / 3.40 / 4.50 → overround ~1.11 → fair probs sum to 1.0
  */
 export function removemargin(homeOdds: number, drawOdds: number, awayOdds: number): ModelProbabilities {
+  if (homeOdds <= 0 || drawOdds <= 0 || awayOdds <= 0) {
+    return { home: 1 / 3, draw: 1 / 3, away: 1 / 3 }
+  }
   const total = 1 / homeOdds + 1 / drawOdds + 1 / awayOdds
   return {
     home: 1 / homeOdds / total,
@@ -24,7 +27,7 @@ export function inferModelProbs(confidence: number, advice: string): ModelProbab
   const c = confidence / 100
   const adv = advice.toLowerCase()
 
-  if (adv.includes("home") || adv.includes("win") && !adv.includes("away")) {
+  if ((adv.includes("home") || adv.includes("win")) && !adv.includes("away")) {
     return { home: c, draw: (1 - c) * 0.45, away: (1 - c) * 0.55 }
   }
   if (adv.includes("away")) {

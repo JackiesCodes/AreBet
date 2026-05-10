@@ -135,16 +135,30 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
 
   // Watchlist (fed from useFavorites in HomeBoard)
   const [watchedMatchIds, setWatchedMatchIds] = useState<Set<string>>(new Set())
+  // Ref mirror so tick() can read the latest value without being re-created
+  const watchedMatchIdsRef = useRef<Set<string>>(new Set())
 
   // Alert prefs — load from localStorage, persist on change
   const [alertPrefs, setAlertPrefsState] = useState<AlertPreferences>(() => ({
     ...DEFAULT_ALERT_PREFS,
     ...readJSON<Partial<AlertPreferences>>(PREFS_KEY, {}),
   }))
+  // Ref mirror so tick() can read the latest value without being re-created
+  const alertPrefsRef = useRef<AlertPreferences>({
+    ...DEFAULT_ALERT_PREFS,
+    ...readJSON<Partial<AlertPreferences>>(PREFS_KEY, {}),
+  })
 
   const setAlertPrefs = useCallback((prefs: AlertPreferences) => {
+    alertPrefsRef.current = prefs
     setAlertPrefsState(prefs)
     writeJSON(PREFS_KEY, prefs)
+  }, [])
+
+  // Keep watchedMatchIds ref in sync with state
+  const stableSetWatchedMatchIds = useCallback((ids: Set<string>) => {
+    watchedMatchIdsRef.current = ids
+    setWatchedMatchIds(ids)
   }, [])
 
   // ---------------------------------------------------------------------------
@@ -163,6 +177,8 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
   // ---------------------------------------------------------------------------
   // Feed polling
   // ---------------------------------------------------------------------------
+  // tick has no state dependencies — reads latest values from refs so it never
+  // needs to be re-created, preventing spurious extra polls on every state change.
   const tick = useCallback(async () => {
     if (inFlightRef.current) return
     inFlightRef.current = true
@@ -181,8 +197,8 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
         const newChanges = detectChanges(
           prevMatchesRef.current,
           nextMatches,
-          watchedMatchIds,
-          alertPrefs,
+          watchedMatchIdsRef.current,
+          alertPrefsRef.current,
         )
         if (newChanges.length > 0) {
           setChanges((prev) => [...newChanges, ...prev].slice(0, MAX_CHANGES))
@@ -221,7 +237,8 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
       inFlightRef.current = false
       if (aliveRef.current) setLoading(false)
     }
-  }, [watchedMatchIds, alertPrefs])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Schedule next tick — adaptive: 15s when live matches exist, 30s otherwise
   const schedule = useCallback((currentMatches: Match[]) => {
@@ -298,7 +315,7 @@ export function MatchIntelligenceProvider({ children }: { children: ReactNode })
     alertPrefs,
     setAlertPrefs,
     watchedMatchIds,
-    setWatchedMatchIds,
+    setWatchedMatchIds: stableSetWatchedMatchIds,
   }
 
   return (
