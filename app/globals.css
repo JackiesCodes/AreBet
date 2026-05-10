@@ -572,6 +572,66 @@ svg {
   flex-wrap: wrap;
 }
 
+/* Desktop toolbar: always shown on desktop, hidden on mobile */
+.cc-toolbar--desktop {
+  display: flex;
+}
+.cc-toolbar--mobile {
+  display: none;
+}
+
+/* Mobile status tab strip (Betway-style) */
+.mob-status-tabs {
+  display: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+  padding: 0 var(--space-3);
+  gap: 0;
+}
+.mob-status-tabs::-webkit-scrollbar { display: none; }
+
+.mob-status-tab {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color var(--t-fast), border-color var(--t-fast);
+  white-space: nowrap;
+}
+.mob-status-tab:hover {
+  color: var(--text-secondary);
+}
+.mob-status-tab--active {
+  color: var(--text-primary);
+  border-bottom-color: var(--primary);
+}
+
+.mob-status-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--surface-3);
+  color: var(--text-muted);
+  line-height: 1;
+}
+.mob-status-tab-badge--live {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
 .cc-search {
   flex: 1;
   min-width: 180px;
@@ -4744,7 +4804,6 @@ svg {
 @media (max-width: 767px) {
   .app-shell {
     grid-template-columns: 1fr;
-    /* Prevent any child from blowing out the viewport width */
     overflow-x: hidden;
   }
   .app-sidebar {
@@ -4752,6 +4811,11 @@ svg {
   }
   .app-right {
     display: none;
+  }
+  /* Remove lateral borders on mobile — content fills edge-to-edge */
+  .app-main {
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -6067,35 +6131,82 @@ svg {
   }
 
   /* cc-feed fills the full mobile viewport */
+  /* cc-feed: no extra padding on mobile — toolbar/tabs handle spacing */
   .cc-feed {
-    padding: var(--space-3);
+    padding: 0;
+    min-height: unset;
+    background: var(--bg);
+    border: none;
+    border-radius: 0;
+  }
+  .cc-section-body {
+    padding: 0 var(--space-2) var(--space-2);
   }
 
-  /* Toolbar: search takes full row on its own; filter trigger + sort/view groups share a row */
-  .cc-toolbar {
+  /* Switch toolbar variants and show status tab strip */
+  .cc-toolbar--desktop {
+    display: none;
+  }
+  .cc-toolbar--mobile {
+    display: flex;
+    align-items: center;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
+    border-bottom: none;
   }
-
-  /* Search always on its own row */
-  .cc-search {
-    order: -1;
-    flex: 1 1 100%;
+  .cc-toolbar--mobile .cc-search {
+    flex: 1;
     min-width: 0;
+    height: 38px;
   }
-
-  /* Filter trigger + toolbar groups share the second row */
+  .mob-status-tabs {
+    display: flex;
+  }
   .cc-filter-trigger {
-    order: 0;
-    flex-shrink: 0;
+    height: 38px;
+    padding: 0 12px;
   }
 
-  .cc-toolbar-group {
-    flex: 0 0 auto;
-    margin-left: auto;
+  /* League sections: no border-radius, flush edges like Betway */
+  .cc-league-groups {
+    gap: 0;
   }
-  .cc-toolbar-group + .cc-toolbar-group {
-    margin-left: 0;
+  .league-section {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .league-section-header {
+    padding: 10px 14px;
+    background: var(--surface-2);
+  }
+  .league-section-name {
+    font-size: 12px;
+  }
+
+  /* Match cards on mobile: less padding, flush border style */
+  .cc-card {
+    padding: 10px 14px 9px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+  .cc-card:hover {
+    transform: none;
+  }
+
+  /* Bucket headers: compact on mobile */
+  .cc-bucket-head {
+    padding: 8px 14px;
+    font-size: 11px;
+    background: var(--bg);
+    position: sticky;
+    top: calc(var(--nav-height) + 44px); /* below nav + tab strip */
+    z-index: 10;
   }
 
   /* Stats grids stack on mobile */

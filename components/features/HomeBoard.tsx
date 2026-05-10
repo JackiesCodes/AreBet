@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import type { Match, SortKey } from "@/types/match"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
-import { useFilters, leagueKey } from "@/contexts/FilterContext"
+import { useFilters, leagueKey, type GlobalStatusFilter } from "@/contexts/FilterContext"
 import { useFavorites } from "@/hooks/useFavorites"
 import { usePagination } from "@/hooks/usePagination"
 import { rankMatches } from "@/lib/utils/rank-matches"
@@ -19,6 +19,47 @@ import { cn } from "@/lib/utils/cn"
 import { loadUiState, saveUiState, type UiState } from "@/lib/storage/ui-state"
 import { ActiveFilterChips } from "@/components/features/ActiveFilterChips"
 import { MobileFilterSheet } from "@/components/layout/MobileFilterSheet"
+
+// ── Mobile status tab strip (Betway-style) ────────────────────────────────────
+const STATUS_TABS: { key: GlobalStatusFilter; label: string }[] = [
+  { key: "all",      label: "All" },
+  { key: "live",     label: "Live" },
+  { key: "upcoming", label: "Upcoming" },
+  { key: "finished", label: "Finished" },
+]
+
+function MobileStatusTabs({
+  counts,
+  active,
+  onChange,
+}: {
+  counts: Record<GlobalStatusFilter, number>
+  active: GlobalStatusFilter
+  onChange: (s: GlobalStatusFilter) => void
+}) {
+  return (
+    <div className="mob-status-tabs" role="tablist" aria-label="Match status filter">
+      {STATUS_TABS.map(({ key, label }) => (
+        <button
+          key={key}
+          type="button"
+          role="tab"
+          aria-selected={active === key}
+          className={cn("mob-status-tab", active === key && "mob-status-tab--active")}
+          onClick={() => onChange(key)}
+        >
+          {label}
+          {key === "live" && counts.live > 0 && (
+            <span className="mob-status-tab-badge mob-status-tab-badge--live">{counts.live}</span>
+          )}
+          {key === "upcoming" && counts.upcoming > 0 && (
+            <span className="mob-status-tab-badge">{counts.upcoming}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 const TABLE_PAGE_SIZE = 25
 
@@ -101,11 +142,18 @@ export function HomeBoard() {
     setWatchedMatchIds,
   } = useMatchIntelligence()
 
-  const { applyToMatches, disabledLeagues, activeFilterCount } = useFilters()
+  const { applyToMatches, disabledLeagues, activeFilterCount, statusFilter, setStatusFilter } = useFilters()
   const { favorites, isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
   const [sort, setSort] = useState<SortKey>("kickoff")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+
+  const statusCounts = useMemo(() => ({
+    all:      matches.length,
+    live:     matches.filter((m) => m.status === "LIVE").length,
+    upcoming: matches.filter((m) => m.status === "UPCOMING").length,
+    finished: matches.filter((m) => m.status === "FINISHED").length,
+  }), [matches])
 
   useEffect(() => {
     saveUiState(ui)
@@ -182,22 +230,9 @@ export function HomeBoard() {
   return (
     <section className="cc-feed">
       <IntelligenceBar matches={matches} fetchedAt={fetchedAt ?? undefined} />
-      <div className="cc-toolbar">
-        {/* Mobile filter trigger — hidden on desktop */}
-        <button
-          type="button"
-          className="cc-filter-trigger"
-          onClick={() => setFilterSheetOpen(true)}
-          aria-label={`Open filters${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ""}`}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="cc-filter-badge">{activeFilterCount}</span>
-          )}
-        </button>
+
+      {/* Desktop toolbar */}
+      <div className="cc-toolbar cc-toolbar--desktop">
         <div className="cc-search">
           <input
             type="search"
@@ -244,6 +279,39 @@ export function HomeBoard() {
           </button>
         </div>
       </div>
+
+      {/* Mobile toolbar: search + filter trigger on one row */}
+      <div className="cc-toolbar cc-toolbar--mobile">
+        <div className="cc-search">
+          <input
+            type="search"
+            placeholder="Search matches…"
+            aria-label="Search matches"
+            value={ui.search}
+            onChange={(e) => setUi((u) => ({ ...u, search: e.target.value }))}
+          />
+        </div>
+        <button
+          type="button"
+          className="cc-filter-trigger"
+          onClick={() => setFilterSheetOpen(true)}
+          aria-label={`Open filters${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ""}`}
+        >
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          {activeFilterCount > 0 && (
+            <span className="cc-filter-badge">{activeFilterCount}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile status tabs — Betway-style persistent strip */}
+      <MobileStatusTabs
+        counts={statusCounts}
+        active={statusFilter}
+        onChange={setStatusFilter}
+      />
 
       <ActiveFilterChips />
       <MobileFilterSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} />
