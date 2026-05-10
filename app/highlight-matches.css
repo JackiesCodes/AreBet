@@ -43,8 +43,8 @@
 
 /* Card */
 .hm-card {
-  flex: 0 0 280px;
-  min-width: 280px;
+  flex: 0 0 260px;
+  min-width: 260px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -65,8 +65,8 @@
 }
 
 .hm-card--featured {
-  flex: 0 0 320px;
-  min-width: 320px;
+  flex: 0 0 290px;
+  min-width: 290px;
   border-color: var(--primary-dark);
   background: linear-gradient(135deg, var(--surface-2) 60%, rgba(34,197,94,0.06));
 }
@@ -402,6 +402,46 @@
 }
 
 .admin-boost-remove:hover { background: rgba(239,68,68,0.1); }
+
+/* ----- Mobile responsiveness --------------------------------------------- */
+@media (max-width: 767px) {
+  .hm-section {
+    margin-bottom: var(--space-4);
+  }
+  .hm-section-header {
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  /* Cards slightly narrower on phones — show ~1.4 at a time on 375px */
+  .hm-card {
+    flex: 0 0 230px;
+    min-width: 230px;
+    padding: 12px;
+  }
+  .hm-card--featured {
+    flex: 0 0 260px;
+    min-width: 260px;
+  }
+  .hm-rail {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 380px) {
+  .hm-card {
+    flex: 0 0 200px;
+    min-width: 200px;
+  }
+  .hm-card--featured {
+    flex: 0 0 230px;
+    min-width: 230px;
+  }
+  .hm-team-name {
+    font-size: 12px;
+  }
+}
 
 /* ----- Reduced motion ---------------------------------------------------- */
 /* Disable decorative animations (pulse, blink) for users who prefer it.

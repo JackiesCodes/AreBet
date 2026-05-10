@@ -415,10 +415,23 @@ svg {
   font-size: 12px;
   min-height: 44px;
   color: var(--text-muted);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mobile-bottom-nav-item--active {
   color: var(--primary);
+}
+
+/* Squeeze labels on very small screens */
+@media (max-width: 360px) {
+  .mobile-bottom-nav-item {
+    font-size: 10px;
+    gap: 1px;
+  }
+  .mobile-bottom-nav-item span[aria-hidden] {
+    font-size: 14px !important;
+  }
 }
 
 /* ----- Command Center 3-col layout --------------------------------------- */
@@ -1521,6 +1534,13 @@ svg {
   padding: var(--space-8);
 }
 
+@media (max-width: 480px) {
+  .auth-card {
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+  }
+}
+
 .auth-title {
   font-size: 22px;
   font-weight: 700;
@@ -1629,7 +1649,7 @@ svg {
   right: 0;
   top: var(--nav-height);
   bottom: 0;
-  width: 320px;
+  width: min(320px, 100vw);
   background: var(--surface-1);
   border-left: 1px solid var(--border);
   display: flex;
@@ -1637,6 +1657,16 @@ svg {
   z-index: 50;
   transform: translateX(100%);
   transition: transform var(--t-base);
+}
+
+@media (max-width: 767px) {
+  .bet-slip {
+    width: 100vw;
+    top: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    z-index: 210;
+  }
 }
 
 .bet-slip--open {
@@ -4168,7 +4198,7 @@ svg {
   gap: var(--space-4);
   margin-top: var(--space-4);
 }
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .trust-stat-grid,
   .trust-value-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -4798,6 +4828,13 @@ svg {
   }
   .app-right {
     display: none;
+  }
+}
+
+/* Tablet: sidebar narrows further to give content more room */
+@media (max-width: 960px) {
+  .app-shell {
+    grid-template-columns: 200px 1fr;
   }
 }
 
@@ -6287,6 +6324,17 @@ svg {
     padding: 8px 6px;
     min-height: 40px;
   }
+
+  /* md-page content: add bottom padding so it clears the fixed bottom nav */
+  .md-page {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
+  }
+
+  /* Ensure all main page-level wrappers clear the bottom nav */
+  .cc-feed {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--space-2));
+  }
+
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -7812,6 +7860,13 @@ svg {
   gap: 0;
   min-height: 360px;
   position: relative;
+}
+
+@media (max-width: 767px) {
+  .lu-pitch-grass {
+    min-height: 280px;
+    padding: 8px 6px;
+  }
 }
 .lu-pitch-center-line {
   position: absolute;
