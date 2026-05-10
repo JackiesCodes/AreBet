@@ -4861,7 +4861,11 @@ svg {
   min-width: 0;
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
-  /* Clip horizontally scrollable children (e.g. hm-rail) to viewport */
+  /*
+   * overflow-x:clip clips x-axis overflow without creating a scroll container.
+   * This prevents wide children (e.g. hm-rail) from causing horizontal page scroll.
+   * Unlike overflow-x:hidden, it does NOT break position:sticky for children.
+   */
   overflow-x: clip;
 }
 
@@ -6163,24 +6167,51 @@ svg {
  * ============================================================================ */
 
 @media (max-width: 767px) {
+  /* ── Page-level spacing ──────────────────────────────────────────────── */
   .md-page {
-    padding: var(--space-3) var(--space-3);
+    padding: var(--space-3);
+    /* site-main already provides bottom-nav clearance via padding-bottom */
   }
 
-  /* cc-feed fills the full mobile viewport */
-  /* cc-feed: no extra padding on mobile — toolbar/tabs handle spacing */
+  /* ── cc-feed: flush, full-width, natural page scroll ────────────────── */
+  /*
+   * CRITICAL: override the shared rule that sets overflow:hidden on cc-feed.
+   * overflow:hidden on a flex column parent breaks position:sticky for ALL
+   * descendants and clips content. On mobile we want the page itself to scroll.
+   */
   .cc-feed {
+    overflow: visible;        /* ← fixes sticky descendants + content clipping */
     padding: 0;
     min-height: unset;
     background: var(--bg);
     border: none;
     border-radius: 0;
-  }
-  .cc-section-body {
-    padding: 0 var(--space-2) var(--space-2);
+    /* No extra padding-bottom here — site-main already handles bottom nav clearance */
   }
 
-  /* Switch toolbar variants and show status tab strip */
+  /*
+   * cc-section-body: let content flow to page height, not scroll inside a cage.
+   * overflow-y:auto creates an inner scroll container; on mobile the whole page
+   * should scroll instead.
+   */
+  .cc-section-body {
+    overflow: visible;
+    padding: 0;
+    flex: none;              /* don't grow/shrink inside the flex parent */
+  }
+
+  /* intel-bar: strip card styling on mobile — it looks detached at zero padding */
+  .intel-bar {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-bottom: 0;
+    border-top: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  /* ── Toolbar switch ──────────────────────────────────────────────────── */
   .cc-toolbar--desktop {
     display: none;
   }
@@ -6190,6 +6221,7 @@ svg {
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
     border-bottom: none;
+    background: var(--surface-1);
   }
   .cc-toolbar--mobile .cc-search {
     flex: 1;
@@ -6204,7 +6236,7 @@ svg {
     padding: 0 12px;
   }
 
-  /* League sections: no border-radius, flush edges like Betway */
+  /* ── League sections: flush Betway-style rows ────────────────────────── */
   .cc-league-groups {
     gap: 0;
   }
@@ -6224,7 +6256,7 @@ svg {
     font-size: 12px;
   }
 
-  /* Match cards on mobile: less padding, flush border style */
+  /* ── Match cards: flush, no radius ──────────────────────────────────── */
   .cc-card {
     padding: 10px 14px 9px;
     border-radius: 0;
@@ -6236,44 +6268,37 @@ svg {
     transform: none;
   }
 
-  /* Bucket headers: compact on mobile */
+  /* ── Bucket headers: compact, no sticky (sticky needs overflow:visible
+        all the way up the tree; too fragile to guarantee) ──────────────── */
   .cc-bucket-head {
     padding: 8px 14px;
     font-size: 11px;
-    background: var(--bg);
-    position: sticky;
-    top: calc(var(--nav-height) + 44px); /* below nav + tab strip */
-    z-index: 10;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: static;   /* ← remove sticky — it broke inside overflow:hidden parent */
   }
 
-  /* Stats grids stack on mobile */
+  /* ── Misc page grids ─────────────────────────────────────────────────── */
   .admin-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  /* Price grid full width on very small screens */
   .price-grid {
     grid-template-columns: 1fr;
   }
-
-  /* Trust stats row wraps */
   .trust-stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  /* Match detail tabs scroll */
   .match-detail-tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-
-  /* Remove side padding on page headers on mobile */
   .page-header {
     padding-left: 0;
     padding-right: 0;
   }
 
-  /* Toast: float above bottom nav, use full width on mobile */
+  /* ── Toast: above bottom nav, full-width ─────────────────────────────── */
   .md-toast-stack {
     bottom: calc(var(--bottom-nav-height) + var(--space-3));
     left: var(--space-3);
@@ -6281,27 +6306,15 @@ svg {
     max-width: 100%;
   }
 
-  /* Filter sheet close button: ensure 44px touch target */
+  /* ── Filter sheet ────────────────────────────────────────────────────── */
   .filter-sheet-close {
     width: 44px;
     height: 44px;
   }
-
-  /* Filter trigger: share row with toolbar-groups, search goes below */
-  .cc-filter-trigger {
-    height: 36px;
-    padding: 0 var(--space-3);
-  }
-
-  /* Sidebar touch targets inside filter sheet: always show hover-only buttons */
-  .filter-sheet-body .sidebar-only-btn {
-    opacity: 1;
-  }
+  .filter-sheet-body .sidebar-only-btn,
   .filter-sheet-body .sidebar-pin-btn {
     opacity: 1;
   }
-
-  /* Sidebar buttons: enlarge touch targets in filter sheet */
   .filter-sheet-body .sidebar-country-heading {
     padding: 8px 6px;
     min-height: 36px;
@@ -6318,23 +6331,10 @@ svg {
     padding: 7px 12px;
     min-height: 36px;
   }
-
-  /* League row in filter sheet: space out crowded controls */
   .filter-sheet-body .sidebar-league-row {
     padding: 8px 6px;
     min-height: 40px;
   }
-
-  /* md-page content: add bottom padding so it clears the fixed bottom nav */
-  .md-page {
-    padding-bottom: calc(var(--bottom-nav-height) + var(--space-4));
-  }
-
-  /* Ensure all main page-level wrappers clear the bottom nav */
-  .cc-feed {
-    padding-bottom: calc(var(--bottom-nav-height) + var(--space-2));
-  }
-
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
