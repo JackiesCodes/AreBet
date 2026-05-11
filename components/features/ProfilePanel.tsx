@@ -6,67 +6,91 @@ import { useAuth } from "@/lib/auth/context"
 import { signOutAction } from "@/lib/auth/actions"
 import { Avatar } from "@/components/primitives/Avatar"
 import { TierBadge } from "@/components/primitives/TierBadge"
+import { cn } from "@/lib/utils/cn"
+
+const MENU_LINKS = [
+  { href: "/user/profile",    label: "Profile",      icon: "◉" },
+  { href: "/user/dashboard",  label: "Dashboard",    icon: "📊" },
+  { href: "/favorites",       label: "Watchlist",    icon: "♥" },
+  { href: "/subscription",    label: "Subscription", icon: "⚡" },
+  { href: "/settings",        label: "Settings",     icon: "⚙" },
+]
 
 export function ProfilePanel() {
-  const { user } = useAuth()
+  const { user, tier } = useAuth()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (!ref.current) return
-      if (ref.current.contains(e.target as Node)) return
-      setOpen(false)
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false)
     }
     document.addEventListener("mousedown", onDoc)
-    return () => document.removeEventListener("mousedown", onDoc)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDoc)
+      document.removeEventListener("keydown", onKey)
+    }
   }, [])
 
   if (!user) return null
 
+  const displayName = user.email?.split("@")[0] ?? "User"
+
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} className="profile-panel-root">
       <button
         type="button"
+        className="profile-panel-trigger"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Open profile menu"
-        style={{ display: "flex", alignItems: "center", gap: 8 }}
+        aria-label="Open account menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
       >
         <Avatar label={user.email ?? "U"} />
       </button>
+
       {open && (
-        <div
-          role="menu"
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 44,
-            background: "var(--surface-2)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-md)",
-            boxShadow: "var(--shadow-3)",
-            minWidth: 220,
-            zIndex: 200,
-            padding: 8,
-          }}
-        >
-          <div style={{ padding: 12, borderBottom: "1px solid var(--border)" }}>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Signed in as</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>{user.email}</div>
-            <div style={{ marginTop: 6 }}>
-              <TierBadge tier="free" />
+        <div className="profile-panel-menu" role="menu">
+          {/* User identity */}
+          <div className="profile-panel-identity">
+            <Avatar label={user.email ?? "U"} size="lg" />
+            <div className="profile-panel-identity-text">
+              <div className="profile-panel-name">{displayName}</div>
+              <div className="profile-panel-email">{user.email}</div>
+              <div style={{ marginTop: 6 }}>
+                <TierBadge tier={tier ?? "free"} />
+              </div>
             </div>
           </div>
-          <Link href="/user/dashboard" className="nav-link" style={{ display: "block" }}>Dashboard</Link>
-          <Link href="/settings" className="nav-link" style={{ display: "block" }}>Settings</Link>
-          <Link href="/subscription" className="nav-link" style={{ display: "block" }}>Subscription</Link>
-          <Link href="/favorites" className="nav-link" style={{ display: "block" }}>Watchlist</Link>
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="md-btn md-btn--ghost md-btn--sm md-btn--block"
-              style={{ marginTop: 4, justifyContent: "flex-start" }}
-            >
+
+          <div className="profile-panel-divider" />
+
+          {/* Nav links */}
+          <div className="profile-panel-links">
+            {MENU_LINKS.map(({ href, label, icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="profile-panel-link"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+              >
+                <span className="profile-panel-link-icon" aria-hidden>{icon}</span>
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="profile-panel-divider" />
+
+          {/* Sign out */}
+          <form action={signOutAction} className="profile-panel-signout">
+            <button type="submit" className="profile-panel-signout-btn" role="menuitem">
+              <span aria-hidden>↩</span>
               Sign out
             </button>
           </form>

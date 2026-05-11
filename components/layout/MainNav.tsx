@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils/cn"
 import { useAuth } from "@/lib/auth/context"
-import { ThemeToggle } from "@/components/features/ThemeToggle"
 import { ProfilePanel } from "@/components/features/ProfilePanel"
 import { GlobalSearch } from "@/components/features/GlobalSearch"
 import { AlertBell } from "@/components/features/AlertBell"
@@ -181,7 +180,6 @@ export function MainNav() {
               </svg>
             </button>
             <AlertBell />
-            <ThemeToggle />
             {user ? (
               <ProfilePanel />
             ) : (

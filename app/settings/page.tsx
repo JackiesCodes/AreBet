@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from "react"
 import { usePreferences } from "@/hooks/usePreferences"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useTheme, type Theme } from "@/hooks/useTheme"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
 import { SelectField } from "@/components/primitives/SelectField"
 import { Toggle } from "@/components/primitives/Toggle"
 import { Button } from "@/components/primitives/Button"
+import { cn } from "@/lib/utils/cn"
 import type { AlertPreferences } from "@/types/alerts"
 
 type NotifPermission = "default" | "granted" | "denied" | "unsupported"
@@ -78,9 +80,15 @@ const SECONDARY_ALERTS: AlertToggleDef[] = [
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
+const THEME_OPTIONS: { value: Theme; label: string; icon: string; desc: string }[] = [
+  { value: "dark",  label: "Dark",  icon: "🌙", desc: "Dark backgrounds, easy on the eyes at night" },
+  { value: "light", label: "Light", icon: "☀️", desc: "Bright backgrounds, great in daylight" },
+]
+
 export default function SettingsPage() {
   const { prefs, setPrefs, loading } = usePreferences()
   const { alertPrefs, setAlertPrefs } = useMatchIntelligence()
+  const { theme, setTheme } = useTheme()
   const [notifPerm, setNotifPerm] = useState<NotifPermission>("default")
 
   // Read current browser notification permission
@@ -117,6 +125,38 @@ export default function SettingsPage() {
   return (
     <div className="md-page">
       <PageHeader title="Settings" subtitle="Customize how AreBet looks and works for you" />
+
+      {/* ── Appearance ────────────────────────────────────────────────────── */}
+      <Card className="mb-6">
+        <CardTitle>Appearance</CardTitle>
+        <CardSubtitle>Choose your preferred colour theme</CardSubtitle>
+        <div className="settings-theme-options">
+          {THEME_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={cn("settings-theme-card", theme === opt.value && "settings-theme-card--active")}
+              onClick={() => setTheme(opt.value)}
+              aria-pressed={theme === opt.value}
+            >
+              <div className={`settings-theme-preview settings-theme-preview--${opt.value}`}>
+                <div className="settings-theme-preview-nav" />
+                <div className="settings-theme-preview-body">
+                  <div className="settings-theme-preview-card" />
+                  <div className="settings-theme-preview-card settings-theme-preview-card--short" />
+                </div>
+              </div>
+              <div className="settings-theme-label">
+                <span className="settings-theme-icon">{opt.icon}</span>
+                <span className="settings-theme-name">{opt.label}</span>
+              </div>
+              {theme === opt.value && (
+                <span className="settings-theme-check" aria-hidden>✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </Card>
 
       {/* ── Display ───────────────────────────────────────────────────────── */}
       <Card className="mb-6">
