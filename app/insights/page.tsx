@@ -1,11 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardTitle, CardSubtitle } from "@/components/primitives/Card"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { generateFeedTips, type FeedTip } from "@/lib/utils/betting-tips"
+import { useFormatOdds } from "@/hooks/useFormatOdds"
+import { formatTime } from "@/lib/utils/time"
 import type { ApiPlayerStat } from "@/lib/api-football/types"
 
 // ── League map ────────────────────────────────────────────────────────────────
@@ -19,6 +23,100 @@ const LEAGUE_NAMES: Record<number, string> = {
 }
 const LEAGUE_IDS = [39, 140, 135, 78, 61]
 
+// ── Value Board ───────────────────────────────────────────────────────────────
+
+function ValueBoardCard({ tip, fmt }: { tip: FeedTip; fmt: (n: number) => string }) {
+  const pct = Math.round(tip.probability * 100)
+  return (
+    <Link href={`/match/${tip.matchId}`} className="vb-card">
+      <div className="vb-card-top">
+        {tip.isValue && (
+          <span className="vb-edge">▲ +{(tip.edge * 100).toFixed(1)}%</span>
+        )}
+        <span className={`vb-conf-badge vb-conf-badge--${tip.confidence}`}>{pct}%</span>
+      </div>
+      <div className="vb-match">{tip.home} <span className="vb-vs">vs</span> {tip.away}</div>
+      <div className="vb-selection">{tip.selection}</div>
+      <div className="vb-card-footer">
+        <span className="vb-league">{tip.league}</span>
+        <div className="vb-right">
+          {tip.status === "LIVE"
+            ? <span className="vb-live-dot">● LIVE</span>
+            : <span className="vb-time">{formatTime(tip.kickoffISO)}</span>
+          }
+          {tip.odds > 0 && <span className="vb-odds">{fmt(tip.odds)}</span>}
+        </div>
+      </div>
+      <div className="vb-bar-wrap">
+        <div className="vb-bar" style={{ width: `${pct}%` }} />
+      </div>
+    </Link>
+  )
+}
+
+function ValueBoardSection() {
+  const { matches, loading } = useMatchIntelligence()
+  const fmt = useFormatOdds()
+  const [showAll, setShowAll] = useState(false)
+
+  const valueTips = useMemo(() => {
+    const tips = generateFeedTips(matches)
+    const value    = tips.filter((t) => t.isValue).sort((a, b) => b.edge - a.edge)
+    const highConf = tips.filter((t) => !t.isValue && t.confidence === "high").sort((a, b) => b.probability - a.probability)
+    return [...value, ...highConf]
+  }, [matches])
+
+  const displayed = showAll ? valueTips : valueTips.slice(0, 6)
+
+  return (
+    <div className="vb-section">
+      <div className="vb-header">
+        <div>
+          <h2 className="vb-title">⚡ Value Board</h2>
+          <p className="vb-subtitle">
+            Best edges &amp; high-confidence tips across today&rsquo;s fixtures
+          </p>
+        </div>
+        {valueTips.length > 0 && (
+          <div className="vb-meta">
+            <span className="vb-count">{valueTips.filter((t) => t.isValue).length} value</span>
+            <span className="vb-count-sep">·</span>
+            <span className="vb-count">{valueTips.filter((t) => t.confidence === "high").length} high-conf</span>
+          </div>
+        )}
+      </div>
+
+      {loading && <Skeleton variant="list" count={3} />}
+
+      {!loading && valueTips.length === 0 && (
+        <EmptyState
+          title="No value tips yet today"
+          text="Value tips appear when the model finds a 5%+ edge against the market. Check back after odds are posted."
+        />
+      )}
+
+      {!loading && valueTips.length > 0 && (
+        <>
+          <div className="vb-grid">
+            {displayed.map((t) => (
+              <ValueBoardCard key={`${t.matchId}-${t.id}`} tip={t} fmt={fmt} />
+            ))}
+          </div>
+          {valueTips.length > 6 && (
+            <button
+              type="button"
+              className="md-btn md-btn--ghost md-btn--sm vb-show-more"
+              onClick={() => setShowAll((s) => !s)}
+            >
+              {showAll ? "Show less" : `Show ${valueTips.length - 6} more`}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── Top scorers section ───────────────────────────────────────────────────────
 
 interface LeagueScorers {
@@ -27,9 +125,9 @@ interface LeagueScorers {
 }
 
 function TopScorersSection() {
-  const [data, setData] = useState<LeagueScorers[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData]           = useState<LeagueScorers[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState<string | null>(null)
   const [activeLeague, setActiveLeague] = useState(39)
 
   useEffect(() => {
@@ -38,11 +136,8 @@ function TopScorersSection() {
         const res = await fetch("/api/players/topscorers")
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json() as { topScorers: LeagueScorers[] | ApiPlayerStat[] }
-        if (Array.isArray(json.topScorers)) {
-          // Grouped by league
-          if (json.topScorers.length > 0 && "leagueId" in json.topScorers[0]) {
-            setData(json.topScorers as LeagueScorers[])
-          }
+        if (Array.isArray(json.topScorers) && json.topScorers.length > 0 && "leagueId" in json.topScorers[0]) {
+          setData(json.topScorers as LeagueScorers[])
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load")
@@ -60,7 +155,6 @@ function TopScorersSection() {
       <CardTitle>Top Scorers</CardTitle>
       <CardSubtitle>Golden Boot race across the top 5 leagues</CardSubtitle>
 
-      {/* League tabs */}
       <div style={{ display: "flex", gap: 6, margin: "12px 0", flexWrap: "wrap" }}>
         {LEAGUE_IDS.map((id) => (
           <button
@@ -148,8 +242,8 @@ function FormLeadersSection() {
             name: team.name,
             league: m.league,
             form: team.form,
-            wins: chars.filter((c) => c === "W").length,
-            draws: chars.filter((c) => c === "D").length,
+            wins:   chars.filter((c) => c === "W").length,
+            draws:  chars.filter((c) => c === "D").length,
             losses: chars.filter((c) => c === "L").length,
           })
         }
@@ -178,9 +272,6 @@ function FormLeadersSection() {
               <th>League</th>
               <th title="Last 5 form">Form</th>
               <th title="Points from last 5">Pts</th>
-              <th title="Wins">W</th>
-              <th title="Draws">D</th>
-              <th title="Losses">L</th>
             </tr>
           </thead>
           <tbody>
@@ -195,12 +286,9 @@ function FormLeadersSection() {
                       <span
                         key={j}
                         style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: 3,
+                          width: 14, height: 14, borderRadius: 3,
                           background: c === "W" ? "var(--positive)" : c === "D" ? "var(--warning)" : "var(--negative)",
-                          opacity: 0.85,
-                          display: "inline-block",
+                          opacity: 0.85, display: "inline-block",
                         }}
                         title={c === "W" ? "Win" : c === "D" ? "Draw" : "Loss"}
                       />
@@ -208,9 +296,6 @@ function FormLeadersSection() {
                   </span>
                 </td>
                 <td><strong>{formScore(t.form)}</strong></td>
-                <td>{t.wins}</td>
-                <td>{t.draws}</td>
-                <td>{t.losses}</td>
               </tr>
             ))}
           </tbody>
@@ -232,9 +317,9 @@ interface InjuryEntry {
 
 function InjuryWatchSection() {
   const { matches } = useMatchIntelligence()
-  const [injuries, setInjuries] = useState<InjuryEntry[]>([])
-  const [loading, setLoading] = useState(false)
-  const [fetched, setFetched] = useState(false)
+  const [injuries, setInjuries]   = useState<InjuryEntry[]>([])
+  const [loading, setLoading]     = useState(false)
+  const [fetched, setFetched]     = useState(false)
 
   const loadInjuries = useCallback(async () => {
     const upcoming = matches.filter((m) => m.status === "UPCOMING").slice(0, 6)
@@ -245,8 +330,8 @@ function InjuryWatchSection() {
         upcoming.map((m) =>
           fetch(`/api/injuries?fixture=${m.id}`)
             .then((r) => r.json())
-            .then((d) => ({ match: m, injuries: d.injuries ?? [] })),
-        ),
+            .then((d) => ({ match: m, injuries: d.injuries ?? [] }))
+        )
       )
       const entries: InjuryEntry[] = []
       for (const r of results) {
@@ -270,11 +355,7 @@ function InjuryWatchSection() {
     }
   }, [matches])
 
-  useEffect(() => {
-    if (matches.length > 0 && !fetched) {
-      void loadInjuries()
-    }
-  }, [matches, fetched, loadInjuries])
+  useEffect(() => { if (matches.length > 0 && !fetched) void loadInjuries() }, [matches, fetched, loadInjuries])
 
   return (
     <Card>
@@ -302,20 +383,11 @@ function InjuryWatchSection() {
                 <td style={{ fontWeight: 500 }}>{inj.playerName}</td>
                 <td style={{ color: "var(--text-muted)", fontSize: 11 }}>{inj.team}</td>
                 <td>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      padding: "2px 6px",
-                      borderRadius: 4,
-                      background: inj.type === "Missing Fixture"
-                        ? "rgba(255,68,68,0.12)"
-                        : "rgba(245,158,11,0.12)",
-                      color: inj.type === "Missing Fixture"
-                        ? "var(--negative)"
-                        : "var(--warning)",
-                    }}
-                  >
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
+                    background: inj.type === "Missing Fixture" ? "rgba(255,68,68,0.12)" : "rgba(245,158,11,0.12)",
+                    color: inj.type === "Missing Fixture" ? "var(--negative)" : "var(--warning)",
+                  }}>
                     {inj.type}
                   </span>
                 </td>
@@ -337,9 +409,10 @@ export default function InsightsPage() {
     <div className="md-page">
       <PageHeader
         title="Intelligence"
-        subtitle="Top scorers, form leaders, and injury watch across the top 5 leagues"
+        subtitle="Value board, top scorers, form leaders, and injury watch"
       />
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <ValueBoardSection />
         <TopScorersSection />
         <div className="insights-sections-grid">
           <FormLeadersSection />

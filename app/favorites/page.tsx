@@ -9,6 +9,32 @@ import { Badge } from "@/components/primitives/Badge"
 import { FavoritesSwitcher } from "@/components/features/FavoritesSwitcher"
 import { CHANGE_ICONS, relativeTime } from "@/lib/utils/match-changes"
 import { cn } from "@/lib/utils/cn"
+import type { Match } from "@/types/match"
+
+// ── Live Now strip ─────────────────────────────────────────────────────────────
+
+function LiveNowStrip({ liveMatches }: { liveMatches: Match[] }) {
+  if (liveMatches.length === 0) return null
+  return (
+    <div className="wl-live-strip">
+      <span className="wl-live-strip-label">
+        <span className="wl-live-pulse" aria-hidden /> Live Now
+      </span>
+      <div className="wl-live-scroll">
+        {liveMatches.map((m) => (
+          <Link key={m.id} href={`/match/${m.id}`} className="wl-live-card">
+            <span className="wl-live-card-teams">
+              {m.home.short} <span className="wl-live-score">{m.score.home}–{m.score.away}</span> {m.away.short}
+            </span>
+            <span className="wl-live-min">{m.minute ?? 0}&prime;</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function WatchlistPage() {
   const { favorites, loading } = useFavorites()
@@ -18,17 +44,16 @@ export default function WatchlistPage() {
     favorites.filter((f) => f.entity_type === "match").map((f) => f.entity_id),
   )
 
-  // Find live match data for watched matches
   const watchedMatchData = matches.filter((m) => watchedMatchIds.has(String(m.id)))
+  const liveWatchedMatches = watchedMatchData.filter((m) => m.status === "LIVE")
 
-  // Recent changes only for watched matches
   const watchedChanges = changes
     .filter((c) => watchedMatchIds.has(String(c.matchId)))
     .slice(0, 20)
 
-  const matchFavs   = favorites.filter((f) => f.entity_type === "match")
-  const teamFavs    = favorites.filter((f) => f.entity_type === "team")
-  const leagueFavs  = favorites.filter((f) => f.entity_type === "league")
+  const matchFavs  = favorites.filter((f) => f.entity_type === "match")
+  const teamFavs   = favorites.filter((f) => f.entity_type === "team")
+  const leagueFavs = favorites.filter((f) => f.entity_type === "league")
 
   return (
     <div className="md-page">
@@ -36,6 +61,11 @@ export default function WatchlistPage() {
         title="Watchlist"
         subtitle="Followed matches, teams, and leagues — plus recent signals"
       />
+
+      {/* Live now strip — only when watched matches are live */}
+      {!loading && liveWatchedMatches.length > 0 && (
+        <LiveNowStrip liveMatches={liveWatchedMatches} />
+      )}
 
       {loading ? (
         <div className="md-text-muted" style={{ padding: 24 }}>Loading…</div>
@@ -47,16 +77,15 @@ export default function WatchlistPage() {
       ) : (
         <div className="watchlist-layout">
 
-          {/* ── Left: followed items ────────────────────────────────────── */}
+          {/* ── Left: followed items ─────────────────────── */}
           <div className="watchlist-main">
 
-            {/* Watched matches with live context */}
             {matchFavs.length > 0 && (
               <section className="watchlist-section">
                 <h2 className="watchlist-section-title">Followed Matches</h2>
                 <div className="watchlist-match-list">
                   {matchFavs.map((fav) => {
-                    const live = watchedMatchData.find((m) => String(m.id) === fav.entity_id)
+                    const live   = watchedMatchData.find((m) => String(m.id) === fav.entity_id)
                     const change = live ? latestChangeMap.get(live.id) : undefined
                     return (
                       <Link
@@ -67,17 +96,15 @@ export default function WatchlistPage() {
                         <div className="watchlist-match-info">
                           <span className="watchlist-match-label">{fav.label}</span>
                           {typeof fav.meta?.league === "string" && (
-                            <span className="watchlist-match-league">
-                              {fav.meta.league}
-                            </span>
+                            <span className="watchlist-match-league">{fav.meta.league}</span>
                           )}
                           {live && (
                             <Badge tone={live.status === "LIVE" ? "live" : live.status === "FINISHED" ? "finished" : "upcoming"}>
                               {live.status === "LIVE"
                                 ? `${live.minute ?? 0}' · ${live.score.home}–${live.score.away}`
                                 : live.status === "FINISHED"
-                                ? `FT ${live.score.home}–${live.score.away}`
-                                : "Upcoming"}
+                                  ? `FT ${live.score.home}–${live.score.away}`
+                                  : "Upcoming"}
                             </Badge>
                           )}
                         </div>
@@ -100,7 +127,6 @@ export default function WatchlistPage() {
               </section>
             )}
 
-            {/* Followed teams */}
             {teamFavs.length > 0 && (
               <section className="watchlist-section">
                 <h2 className="watchlist-section-title">Followed Teams</h2>
@@ -115,7 +141,6 @@ export default function WatchlistPage() {
               </section>
             )}
 
-            {/* Followed leagues */}
             {leagueFavs.length > 0 && (
               <section className="watchlist-section">
                 <h2 className="watchlist-section-title">Followed Leagues</h2>
@@ -131,7 +156,7 @@ export default function WatchlistPage() {
             )}
           </div>
 
-          {/* ── Right: recent signals for watched matches ─────────────── */}
+          {/* ── Right: recent signals ────────────────────── */}
           <aside className="watchlist-signals">
             <h2 className="watchlist-section-title">Recent Signals</h2>
             {watchedChanges.length === 0 ? (

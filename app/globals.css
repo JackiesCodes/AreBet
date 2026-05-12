@@ -2403,7 +2403,8 @@ svg {
   color: inherit;
   cursor: pointer;
 }
-.gs-result-item:hover { background: var(--surface-3); }
+.gs-result-item:hover,
+.gs-result-item--active { background: var(--surface-3); }
 
 /* Team logos column */
 .gs-result-teams {
@@ -2487,6 +2488,79 @@ svg {
 
 /* Section label (MATCHES heading) */
 .gs-section-label-old { display: none; } /* kept for safety */
+
+/* ── Recent searches ──────────────────────────────────────────────────────── */
+.gs-recent-wrap {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0 4px;
+}
+
+.gs-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 6px;
+}
+
+.gs-recent-clear-all {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.gs-recent-clear-all:hover { color: var(--text); }
+
+.gs-recent-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.gs-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 16px;
+}
+.gs-recent-item:hover { background: var(--surface-3); }
+
+.gs-recent-query {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+.gs-recent-query:hover { color: var(--text); }
+
+.gs-recent-remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.gs-recent-remove:hover { color: var(--text); background: var(--surface-4); }
 
 /* Footer */
 .gs-footer-hint {
@@ -4165,6 +4239,82 @@ svg {
 /* ============================================================================
  * Watchlist page
  * ============================================================================ */
+
+/* Live Now strip */
+.wl-live-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 68, 68, 0.06);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.wl-live-strip-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--live);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.wl-live-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+.wl-live-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.wl-live-scroll::-webkit-scrollbar { display: none; }
+
+.wl-live-card {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 68, 68, 0.08);
+  border: 1px solid rgba(255, 68, 68, 0.18);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.wl-live-card:hover { background: rgba(255, 68, 68, 0.14); }
+
+.wl-live-card-teams {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.wl-live-score {
+  font-weight: 700;
+  color: var(--live);
+  margin: 0 2px;
+}
+
+.wl-live-min {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--live);
+  opacity: 0.8;
+}
 
 .watchlist-layout {
   display: grid;
@@ -6611,6 +6761,159 @@ svg {
   border-radius: var(--radius-sm);
 }
 
+/* ── Value Board ─────────────────────────────────────────────────────────── */
+
+.vb-section {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.vb-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.vb-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+
+.vb-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.vb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vb-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+.vb-count-sep { font-size: 11px; color: var(--text-muted); }
+
+.vb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.vb-card {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.vb-card:hover { border-color: var(--border-hover); background: var(--surface-4); }
+
+.vb-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vb-edge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--positive);
+  letter-spacing: 0.02em;
+}
+
+.vb-conf-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.vb-conf-badge--high { background: rgba(34,197,94,0.15);  color: var(--positive); }
+.vb-conf-badge--mid  { background: rgba(245,158,11,0.15); color: var(--warning); }
+.vb-conf-badge--low  { background: rgba(99,102,241,0.12); color: #818cf8; }
+
+.vb-match {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+.vb-vs { color: var(--text-muted); font-weight: 400; }
+
+.vb-selection {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.vb-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.vb-league {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.vb-right { display: flex; align-items: center; gap: 6px; }
+
+.vb-live-dot { font-size: 10px; font-weight: 700; color: var(--live); }
+.vb-time     { font-size: 10px; color: var(--text-muted); }
+
+.vb-odds {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-4);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.vb-bar-wrap {
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.vb-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 1px;
+}
+
+.vb-show-more { display: block; width: 100%; margin-top: 4px; }
+
 /* ============================================================================
  * Responsive Grid Fixes
  * ============================================================================ */
@@ -7558,6 +7861,175 @@ svg {
 /* Dim estimated-quality tip cards slightly */
 .tip-card--estimated {
   opacity: 0.75;
+}
+
+/* ── Best Picks Strip ──────────────────────────────────────────────────────── */
+
+.best-picks-wrap {
+  margin-bottom: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px 12px;
+}
+
+.best-picks-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.best-picks-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.best-picks-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.best-picks-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.best-picks-scroll::-webkit-scrollbar { display: none; }
+
+.best-pick-card {
+  flex: 0 0 auto;
+  width: 180px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.best-pick-card:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-4);
+}
+.best-pick-card--value {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.04);
+}
+.best-pick-card--value:hover {
+  border-color: rgba(34, 197, 94, 0.55);
+}
+
+.best-pick-edge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--positive);
+  letter-spacing: 0.02em;
+}
+
+.best-pick-match {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.best-pick-vs {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.best-pick-selection {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.best-pick-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.best-pick-conf {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.best-pick-odds {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-4);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* ── Date filter tabs ──────────────────────────────────────────────────────── */
+
+.tip-date-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.tip-date-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.tip-date-tab:hover {
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+.tip-date-tab--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #000;
+}
+
+.tip-date-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+.tip-date-tab--active .tip-date-tab-count {
+  background: rgba(0,0,0,0.2);
 }
 
 /* Odds comparison — no data message */

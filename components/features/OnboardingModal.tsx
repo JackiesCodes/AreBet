@@ -7,16 +7,24 @@ import { useFocusTrap, useEscapeKey } from "@/lib/utils/a11y"
 
 const STEPS = [
   {
-    title: "Welcome to AreBet",
-    text: "Smart Betting. Simple Insights. Get a single command center for live matches, predictions, and odds.",
+    icon: "⚡",
+    title: "Find value before the market does",
+    text: "AreBet's model compares its own win probabilities against bookmaker odds. When there's a 5%+ gap, it flags it as a value edge — the same logic professional bettors use.",
   },
   {
-    title: "Confidence Heatmaps",
-    text: "Each match shows our model confidence (low/mid/high). Use it to filter the noise quickly.",
+    icon: "📊",
+    title: "Every tip is fully transparent",
+    text: "Each prediction shows confidence %, the rationale behind it, and a data quality badge — so you always know whether it's API-confirmed or model-estimated. No black boxes.",
   },
   {
-    title: "Track Your Picks",
-    text: "Click any match to see signals and insights, then add picks to your slip to track your decisions.",
+    icon: "🎯",
+    title: "Track record, not promises",
+    text: "The Track Record page shows exactly how AreBet's signals have performed on real completed matches: hit rate, ROI, calibration by confidence tier. If it doesn't work, you'll see it.",
+  },
+  {
+    icon: "❤️",
+    title: "Follow what matters to you",
+    text: "Add matches, teams, and leagues to your Watchlist. Get live alerts when goals are scored, odds shift, or a value edge appears for teams you follow.",
   },
 ]
 
@@ -60,13 +68,17 @@ export function OnboardingModal() {
         aria-describedby={descId}
       >
         {/* Step counter for screen readers */}
-        <p className="sr-only">
-          Step {step + 1} of {STEPS.length}
-        </p>
+        <p className="sr-only">Step {step + 1} of {STEPS.length}</p>
+
+        {/* Icon */}
+        <div style={{ fontSize: 32, marginBottom: 12, lineHeight: 1 }} aria-hidden="true">
+          {current.icon}
+        </div>
+
         <h3 id={titleId} className="md-modal-title">{current.title}</h3>
         <p  id={descId}  className="md-modal-text">{current.text}</p>
 
-        {/* Step dots — visual only */}
+        {/* Step dots */}
         <div
           className="md-modal-steps"
           aria-hidden="true"
@@ -76,8 +88,11 @@ export function OnboardingModal() {
             <span
               key={i}
               style={{
-                width: 6, height: 6, borderRadius: "50%",
+                width: i === step ? 16 : 6,
+                height: 6,
+                borderRadius: 3,
                 background: i === step ? "var(--primary)" : "var(--border-strong)",
+                transition: "width 0.2s, background 0.2s",
               }}
             />
           ))}
@@ -93,7 +108,7 @@ export function OnboardingModal() {
               if (isLast) { close() } else { setStep((s) => s + 1) }
             }}
           >
-            {isLast ? "Get Started" : "Next"}
+            {isLast ? "Get Started" : "Next →"}
           </Button>
         </div>
       </div>
