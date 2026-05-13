@@ -56,23 +56,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <ToastProvider>
             <MatchIntelligenceProvider>
               <Suspense>
-              <FilterProvider>
-                <DensityShell>
-                  <StickinessSync />
-                  <PwaRegister />
-                  <div className="site-shell">
-                    <MainNav />
-                    <div className="site-main">
-                      <AppShell>
-                        <main id="main-content" tabIndex={-1}>
-                          <ErrorBoundary>{children}</ErrorBoundary>
-                        </main>
-                      </AppShell>
+                <FilterProvider>
+                  <DensityShell>
+                    <StickinessSync />
+                    <PwaRegister />
+                    <div className="site-shell">
+                      <MainNav />
+                      <div className="site-main">
+                        <AppShell>
+                          <main id="main-content" tabIndex={-1}>
+                            <ErrorBoundary>{children}</ErrorBoundary>
+                          </main>
+                        </AppShell>
+                      </div>
+                      <MobileBottomNav />
                     </div>
-                    <MobileBottomNav />
-                  </div>
-                </DensityShell>
-              </FilterProvider>
+                  </DensityShell>
+                </FilterProvider>
               </Suspense>
             </MatchIntelligenceProvider>
           </ToastProvider>

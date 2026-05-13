@@ -14,8 +14,8 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="app-shell">
       <LeftSidebar />
-      <main className="app-main">
-        {/* Tablet-only "Insights" trigger — hidden on desktop (≥1280px) */}
+      <div className="app-main">
+        {/* Tablet-only "Insights" trigger — hidden on desktop (≥1200px) */}
         <button
           type="button"
           className="app-insights-trigger"
@@ -29,7 +29,7 @@ export function AppShell({ children }: AppShellProps) {
           Insights
         </button>
         {children}
-      </main>
+      </div>
 
       {/* Desktop: always visible sidebar */}
       <div className="app-right-desktop">

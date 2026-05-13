@@ -177,6 +177,9 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
   // Track whether we're past the first render so we don't push a URL on mount
   const isMounted = useRef(false)
+  // Keep pathname in a ref so the URL sync effect doesn't run on navigation
+  const pathnameRef = useRef(pathname)
+  useEffect(() => { pathnameRef.current = pathname }, [pathname])
 
   // Persist all filter state whenever any field changes
   useEffect(() => {
@@ -191,6 +194,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   }, [disabledLeagues, pinnedLeagues, statusFilter, kickoffFilter, valueOnly, minConfidence])
 
   // Sync filter changes → URL query params + toast (skip the initial mount)
+  // Reads pathname via ref so navigation alone never triggers this effect
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return }
     const params = new URLSearchParams()
@@ -200,9 +204,9 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     if (valueOnly) params.set("value", "1")
     if (disabledLeagues.size > 0) params.set("leagues", Array.from(disabledLeagues).join(","))
     const qs = params.toString()
-    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false })
+    router.replace(`${pathnameRef.current}${qs ? `?${qs}` : ""}`, { scroll: false })
     toast.push("info", "Filters updated")
-  }, [statusFilter, kickoffFilter, minConfidence, valueOnly, disabledLeagues, pathname, router, toast])
+  }, [statusFilter, kickoffFilter, minConfidence, valueOnly, disabledLeagues, router, toast])
 
   // ---------------------------------------------------------------------------
   // League actions
