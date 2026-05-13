@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils/cn"
 const FAQS = [
   {
     q: "What is AreBet?",
-    a: "AreBet is a football betting intelligence platform. We aggregate live matches, model predictions, and bookmaker odds in one command center so you can spot value faster.",
+    a: "AreBet is a football betting intelligence platform. We aggregate live matches, model predictions, and bookmaker odds in one command centre so you can spot value faster.",
   },
   {
     q: "Is AreBet free?",
@@ -19,15 +19,23 @@ const FAQS = [
   },
   {
     q: "Where does match data come from?",
-    a: "By default the app runs in demo mode with a simulation engine that updates matches every 30s. With an API-Football key configured, you can switch to live data.",
+    a: "Match data is sourced live from API-Football, covering 900+ leagues worldwide. Fixtures, lineups, live scores, player stats, and bookmaker odds all update in real time via our polling engine.",
+  },
+  {
+    q: "How often does the data update?",
+    a: "Live matches poll every 10 seconds. When no live matches are on, the feed refreshes every 30 seconds. The app pauses updates automatically when you switch tabs to save bandwidth.",
   },
   {
     q: "Can I use AreBet on mobile?",
-    a: "Yes. AreBet is a PWA — install it from your browser for an app-like experience with offline support and push-ready notifications.",
+    a: "Yes. AreBet is a Progressive Web App — install it from your browser on iOS or Android for an app-like experience with offline support and push notifications.",
   },
   {
     q: "Is AreBet a betting operator?",
     a: "No. AreBet is a pure information and analytics platform. We do not accept wagers; we help you understand them.",
+  },
+  {
+    q: "How do I track my bets?",
+    a: "Use the Bet Tracker in your Dashboard to log stakes, odds, and outcomes. Your bet history is saved to your account and synced across devices when you're signed in.",
   },
 ]
 

@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
       // validated in the webhook before any tier update is applied.
       client_reference_id: user.id,
       metadata:            { tier: tierNorm, userId: user.id },
+      subscription_data:   { trial_period_days: 7 },
       success_url:         safeSuccess,
       cancel_url:          safeCancel,
     })
