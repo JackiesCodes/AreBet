@@ -15,6 +15,7 @@ interface FavoritesState {
   favorites: LocalFavorite[]
   loading: boolean
   isFavorite: (type: FavoriteEntityType, id: string) => boolean
+  isPendingFavorite: (type: FavoriteEntityType, id: string) => boolean
   toggleFavorite: (fav: Omit<LocalFavorite, "created_at">) => void
 }
 
@@ -25,6 +26,7 @@ export function useFavorites(): FavoritesState {
   const { user } = useAuth()
   const [favorites, setFavorites] = useState<LocalFavorite[]>([])
   const [loading, setLoading] = useState(true)
+  const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set())
   const intentRef = useRef<Map<string, number>>(new Map())
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
 
@@ -93,6 +95,11 @@ export function useFavorites(): FavoritesState {
     [favorites],
   )
 
+  const isPendingFavorite = useCallback(
+    (type: FavoriteEntityType, id: string) => pendingKeys.has(`${type}:${id}`),
+    [pendingKeys],
+  )
+
   const toggleFavorite = useCallback(
     (fav: Omit<LocalFavorite, "created_at">) => {
       const key = `${fav.entity_type}:${fav.entity_id}`
@@ -118,6 +125,7 @@ export function useFavorites(): FavoritesState {
         // Remote write — last intent wins
         if (user && supabaseRef.current) {
           const supabase = supabaseRef.current
+          setPendingKeys((prev) => new Set([...prev, key]))
           ;(async () => {
             try {
               if (exists) {
@@ -141,6 +149,8 @@ export function useFavorites(): FavoritesState {
               if (intentRef.current.get(key) === intent) {
                 setFavorites(loadLocalFavorites())
               }
+            } finally {
+              setPendingKeys((prev) => { const next = new Set(prev); next.delete(key); return next })
             }
           })()
         }
@@ -150,5 +160,5 @@ export function useFavorites(): FavoritesState {
     [user],
   )
 
-  return { favorites, loading, isFavorite, toggleFavorite }
+  return { favorites, loading, isFavorite, isPendingFavorite, toggleFavorite }
 }

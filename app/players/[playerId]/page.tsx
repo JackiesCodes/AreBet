@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { fetchPlayerById, currentSeason } from "@/lib/api-football/client"
+import { fetchPlayerById, fetchFixturesByTeam, fetchRecentFixturesByTeam, currentSeason } from "@/lib/api-football/client"
+import { mapFixtureToMatch } from "@/lib/api-football/mapper"
+import { RelatedMatchesList } from "@/components/features/entity/RelatedMatchesList"
 
 interface PageProps {
   params: Promise<{ playerId: string }>
@@ -20,6 +22,21 @@ export default async function PlayerPage({ params }: PageProps) {
   const stat = statistics?.[0]
   const team = stat?.team
   const league = stat?.league
+
+  // Fetch team fixtures for cross-linking
+  const teamFixtures = team?.id
+    ? await Promise.allSettled([
+        fetchFixturesByTeam(team.id, 3),
+        fetchRecentFixturesByTeam(team.id, 2),
+      ])
+    : null
+
+  const relatedMatches = teamFixtures
+    ? [
+        ...(teamFixtures[0].status === "fulfilled" ? teamFixtures[0].value.map(mapFixtureToMatch).filter((m) => m.status === "UPCOMING") : []),
+        ...(teamFixtures[1].status === "fulfilled" ? teamFixtures[1].value.map(mapFixtureToMatch).filter((m) => m.status === "FINISHED") : []),
+      ].slice(0, 5)
+    : []
 
   const goals = stat?.goals?.total ?? 0
   const assists = stat?.goals?.assists ?? 0
@@ -261,6 +278,12 @@ export default async function PlayerPage({ params }: PageProps) {
       {apps === 0 && (
         <div className="player-empty">No statistics available for this player this season.</div>
       )}
+
+      <RelatedMatchesList
+        matches={relatedMatches}
+        title={team ? `${team.name} Fixtures` : "Fixtures"}
+        teamId={team?.id}
+      />
     </div>
   )
 }

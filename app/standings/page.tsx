@@ -1,7 +1,7 @@
 import { fetchAllStandings } from "@/lib/api-football/client"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState } from "@/components/primitives/EmptyState"
-import { LeagueStandingsSearch } from "@/components/features/LeagueStandingsSearch"
+import { LeagueStandingsSearch } from "@/components/features/entity/LeagueStandingsSearch"
 import type { ApiStandingRow } from "@/lib/api-football/types"
 
 export const dynamic = "force-dynamic"

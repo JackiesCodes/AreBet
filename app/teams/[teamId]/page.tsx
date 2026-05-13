@@ -11,6 +11,7 @@ import {
 } from "@/lib/api-football/client"
 import { mapFixtureToMatch } from "@/lib/api-football/mapper"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
+import { RelatedMatchesList } from "@/components/features/entity/RelatedMatchesList"
 import type { Match } from "@/types/match"
 import type { ApiTeamSeasonStats } from "@/lib/api-football/types"
 
@@ -256,6 +257,12 @@ export default async function TeamPage({ params }: PageProps) {
           </div>
         </section>
       )}
+
+      <RelatedMatchesList
+        matches={[...upcoming, ...recent].slice(0, 5)}
+        title="Fixtures"
+        teamId={id}
+      />
 
       {!teamStats && upcoming.length === 0 && recent.length === 0 && squad.length === 0 && (
         <div className="team-empty">No data available for this team this season.</div>

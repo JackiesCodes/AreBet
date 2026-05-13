@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { PageHeader } from "@/components/layout/PageHeader"
+import { FeatureGate } from "@/components/primitives/FeatureGate"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { leaguePrioritySort } from "@/lib/utils/league-groups"
@@ -362,11 +363,13 @@ export default function PredictionsPage() {
       )}
 
       {!loading && filtered.length > 0 && (
-        <div className="tip-league-groups">
-          {groupedByLeague.map(({ label, tips }) => (
-            <TipLeagueSection key={label} league={label} tips={tips} fmt={fmt} />
-          ))}
-        </div>
+        <FeatureGate feature="advanced-odds" featureName="Full predictions breakdown">
+          <div className="tip-league-groups">
+            {groupedByLeague.map(({ label, tips }) => (
+              <TipLeagueSection key={label} league={label} tips={tips} fmt={fmt} />
+            ))}
+          </div>
+        </FeatureGate>
       )}
     </div>
   )

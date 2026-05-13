@@ -434,6 +434,24 @@ svg {
   }
 }
 
+.mobile-bottom-nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-bottom-nav-badge {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--negative);
+  border: 1.5px solid var(--bg);
+}
+
 /* ----- Command Center 3-col layout --------------------------------------- */
 .cc-root {
   display: grid;
@@ -5512,6 +5530,9 @@ svg {
   .app-right {
     display: none;
   }
+  .app-right-desktop {
+    display: none;
+  }
 }
 
 /* Tablet: sidebar narrows further to give content more room */
@@ -5536,6 +5557,99 @@ svg {
   .app-main {
     border-left: none;
     border-right: none;
+  }
+}
+
+/* Tablet Insights drawer — visible between 768px and 1200px */
+.app-insights-trigger {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .app-insights-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 16px 0;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: color var(--motion-fast), border-color var(--motion-fast);
+  }
+  .app-insights-trigger:hover {
+    color: var(--text);
+    border-color: var(--border-hover);
+  }
+}
+
+.app-insights-backdrop {
+  display: none;
+}
+
+.app-insights-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  background: var(--surface-1);
+  border-left: 1px solid var(--border);
+  transform: translateX(100%);
+  transition: transform var(--motion-normal);
+  z-index: 300;
+  overflow-y: auto;
+  padding-top: 48px;
+}
+
+.app-insights-drawer--open {
+  transform: translateX(0);
+}
+
+.app-insights-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+}
+
+.app-insights-close:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .app-insights-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 299;
+    backdrop-filter: blur(2px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .app-insights-drawer {
+    display: none;
+  }
+  .app-insights-backdrop {
+    display: none;
   }
 }
 
@@ -9833,4 +9947,148 @@ svg {
   text-align: center;
   font-size: 14px;
   color: var(--text-muted);
+}
+
+/* ============================================================================
+ * RelatedMatchesList — entity page cross-linking
+ * ============================================================================ */
+
+.related-matches {
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.related-matches-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+}
+
+.related-matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.related-matches-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto 1fr 120px 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text);
+  font-size: 13px;
+  transition: background var(--motion-fast);
+}
+
+.related-matches-row:hover {
+  background: var(--surface-3);
+}
+
+.related-matches-status {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.related-matches-status--live {
+  color: var(--live);
+  font-weight: 600;
+}
+
+.related-matches-home {
+  text-align: right;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-matches-score,
+.related-matches-vs {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 40px;
+}
+
+.related-matches-score {
+  font-weight: 600;
+}
+
+.related-matches-away {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-matches-league {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-matches-conf {
+  font-size: 11px;
+  color: var(--conf-high);
+  text-align: right;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .related-matches-row {
+    grid-template-columns: 60px 1fr auto 1fr;
+  }
+  .related-matches-league,
+  .related-matches-conf {
+    display: none;
+  }
+}
+
+/* ============================================================================
+ * FavoritesSwitcher — pending state pulse
+ * ============================================================================ */
+
+.fav-btn--pending {
+  animation: fav-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes fav-pulse {
+  from { opacity: 1; }
+  to   { opacity: 0.35; }
+}
+
+/* ============================================================================
+ * UpgradeCTA — inline feature gate upsell card
+ * ============================================================================ */
+
+.upgrade-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.upgrade-cta-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }

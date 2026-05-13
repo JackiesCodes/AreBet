@@ -29,12 +29,21 @@ const REVALIDATE_STANDINGS = 5 * 60    // standings (5 min — updates after goa
 const REVALIDATE_PLAYERS  = 24 * 60 * 60 // top scorers / transfers (1 day)
 const REVALIDATE_DETAIL   = 2 * 60     // match detail / stats (2 min)
 
-// Rate limit tracking — updated from response headers on every live fetch
-let _rateLimitRemaining: number | null = null
-let _rateLimitTotal: number | null = null
+// Rate limit tracking — singleton safe for concurrent server-side use
+class RateLimitStore {
+  private remaining: number | null = null
+  private total: number | null = null
+  update(remaining: string | null, total: string | null) {
+    if (remaining !== null) this.remaining = parseInt(remaining, 10)
+    if (total !== null) this.total = parseInt(total, 10)
+  }
+  getStatus() { return { remaining: this.remaining, total: this.total } }
+}
+
+const rateLimitStore = new RateLimitStore()
 
 export function getRateLimitStatus(): { remaining: number | null; total: number | null } {
-  return { remaining: _rateLimitRemaining, total: _rateLimitTotal }
+  return rateLimitStore.getStatus()
 }
 
 function getApiKey(): string {
@@ -61,10 +70,10 @@ async function apiFetch<T>(path: string, revalidate: number, noCache = false): P
   })
 
   // Capture rate limit from response headers (only on a live network request)
-  const remaining = res.headers.get("x-ratelimit-requests-remaining")
-  const total = res.headers.get("x-ratelimit-requests-limit")
-  if (remaining !== null) _rateLimitRemaining = parseInt(remaining, 10)
-  if (total !== null) _rateLimitTotal = parseInt(total, 10)
+  rateLimitStore.update(
+    res.headers.get("x-ratelimit-requests-remaining"),
+    res.headers.get("x-ratelimit-requests-limit"),
+  )
 
   if (!res.ok) {
     throw new Error(`API-Football error: ${res.status} ${res.statusText}`)
@@ -96,10 +105,10 @@ async function apiFetchObject<T>(path: string, revalidate: number): Promise<T | 
     next: { revalidate },
   })
 
-  const remaining = res.headers.get("x-ratelimit-requests-remaining")
-  const total = res.headers.get("x-ratelimit-requests-limit")
-  if (remaining !== null) _rateLimitRemaining = parseInt(remaining, 10)
-  if (total !== null) _rateLimitTotal = parseInt(total, 10)
+  rateLimitStore.update(
+    res.headers.get("x-ratelimit-requests-remaining"),
+    res.headers.get("x-ratelimit-requests-limit"),
+  )
 
   if (!res.ok) throw new Error(`API-Football error: ${res.status} ${res.statusText}`)
 

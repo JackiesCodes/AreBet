@@ -9,7 +9,7 @@ import { formatTime, formatShortDate } from "@/lib/utils/time"
 import { calculateValueEdge } from "@/lib/utils/value-bet"
 import { confTier } from "@/lib/utils/match-status"
 import { FormGuide } from "@/components/primitives/FormGuide"
-import { FavoritesSwitcher } from "./FavoritesSwitcher"
+import { FavoritesSwitcher } from "@/components/features/nav/FavoritesSwitcher"
 import type { MatchChange } from "@/types/alerts"
 import { CHANGE_ICONS } from "@/lib/utils/match-changes"
 

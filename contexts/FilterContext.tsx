@@ -10,8 +10,10 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { Match } from "@/types/match"
 import { readJSON, writeJSON, STORAGE_KEYS } from "@/lib/storage/stickiness"
+import { useToast } from "@/components/primitives/Toast"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -128,28 +130,53 @@ function matchesKickoffFilter(m: Match, filter: KickoffFilter): boolean {
 // ---------------------------------------------------------------------------
 
 export function FilterProvider({ children }: { children: ReactNode }) {
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+  const toast = useToast()
+
   // Read localStorage once at init — stored in a ref so all useState lazy
   // initialisers share the same parsed object without calling readJSON 6× times.
   const savedRef = useRef(readJSON<PersistedFilters>(STORAGE_KEYS.filters, DEFAULT_PERSISTED))
 
-  const [disabledLeagues, setDisabledLeagues] = useState<Set<string>>(
-    () => new Set(savedRef.current.disabledLeagues),
-  )
+  // URL params take priority over localStorage on mount (read once via closure)
+  const initUrlLeagues  = searchParams.get("leagues")
+  const initUrlStatus   = searchParams.get("status")
+  const initUrlKickoff  = searchParams.get("kickoff")
+  const initUrlConf     = searchParams.get("confidence")
+  const initUrlValue    = searchParams.get("value")
+
+  const [disabledLeagues, setDisabledLeagues] = useState<Set<string>>(() => {
+    if (initUrlLeagues !== null)
+      return initUrlLeagues ? new Set(initUrlLeagues.split(",")) : new Set()
+    return new Set(savedRef.current.disabledLeagues)
+  })
   const [pinnedLeagues, setPinnedLeagues] = useState<Set<string>>(
     () => new Set(savedRef.current.pinnedLeagues),
   )
-  const [statusFilter, setStatusFilter] = useState<GlobalStatusFilter>(
-    () => savedRef.current.statusFilter,
-  )
-  const [kickoffFilter, setKickoffFilter] = useState<KickoffFilter>(
-    () => savedRef.current.kickoffFilter,
-  )
-  const [valueOnly, setValueOnly] = useState<boolean>(
-    () => savedRef.current.valueOnly,
-  )
-  const [minConfidence, setMinConfidence] = useState<number>(
-    () => savedRef.current.minConfidence,
-  )
+  const [statusFilter, setStatusFilter] = useState<GlobalStatusFilter>(() => {
+    const v = initUrlStatus
+    if (v && (["all", "live", "upcoming", "finished"] as string[]).includes(v))
+      return v as GlobalStatusFilter
+    return savedRef.current.statusFilter
+  })
+  const [kickoffFilter, setKickoffFilter] = useState<KickoffFilter>(() => {
+    const v = initUrlKickoff
+    if (v && (["all", "next2h", "today", "tonight", "tomorrow"] as string[]).includes(v))
+      return v as KickoffFilter
+    return savedRef.current.kickoffFilter
+  })
+  const [valueOnly, setValueOnly] = useState<boolean>(() => {
+    if (initUrlValue !== null) return initUrlValue === "1"
+    return savedRef.current.valueOnly
+  })
+  const [minConfidence, setMinConfidence] = useState<number>(() => {
+    if (initUrlConf !== null) return Number(initUrlConf) || 0
+    return savedRef.current.minConfidence
+  })
+
+  // Track whether we're past the first render so we don't push a URL on mount
+  const isMounted = useRef(false)
 
   // Persist all filter state whenever any field changes
   useEffect(() => {
@@ -162,6 +189,20 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       minConfidence,
     })
   }, [disabledLeagues, pinnedLeagues, statusFilter, kickoffFilter, valueOnly, minConfidence])
+
+  // Sync filter changes → URL query params + toast (skip the initial mount)
+  useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return }
+    const params = new URLSearchParams()
+    if (statusFilter !== "all") params.set("status", statusFilter)
+    if (kickoffFilter !== "all") params.set("kickoff", kickoffFilter)
+    if (minConfidence > 0) params.set("confidence", String(minConfidence))
+    if (valueOnly) params.set("value", "1")
+    if (disabledLeagues.size > 0) params.set("leagues", Array.from(disabledLeagues).join(","))
+    const qs = params.toString()
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false })
+    toast.push("info", "Filters updated")
+  }, [statusFilter, kickoffFilter, minConfidence, valueOnly, disabledLeagues, pathname, router, toast])
 
   // ---------------------------------------------------------------------------
   // League actions

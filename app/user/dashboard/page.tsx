@@ -7,8 +7,8 @@ import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
 import { TierBadge } from "@/components/primitives/TierBadge"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { useBets } from "@/hooks/useBets"
-import { BankrollTracker } from "@/components/features/BankrollTracker"
-import { LogBetModal } from "@/components/features/LogBetModal"
+import { BankrollTracker } from "@/components/features/betting/BankrollTracker"
+import { LogBetModal } from "@/components/features/betting/LogBetModal"
 import type { BetRecord } from "@/types/bet"
 
 export default function UserDashboard() {

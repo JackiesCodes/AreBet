@@ -1,6 +1,6 @@
-import { HomeBoard } from "@/components/features/HomeBoard"
-import { OnboardingModal } from "@/components/features/OnboardingModal"
-import { HighlightedMatches } from "@/components/features/HighlightedMatches"
+import { HomeBoard } from "@/components/features/match/HomeBoard"
+import { OnboardingModal } from "@/components/features/onboarding/OnboardingModal"
+import { HighlightedMatches } from "@/components/features/match/HighlightedMatches"
 
 export default function HomePage() {
   return (

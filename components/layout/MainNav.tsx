@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils/cn"
 import { useAuth } from "@/lib/auth/context"
-import { ProfilePanel } from "@/components/features/ProfilePanel"
-import { GlobalSearch } from "@/components/features/GlobalSearch"
-import { AlertBell } from "@/components/features/AlertBell"
+import { ProfilePanel } from "@/components/features/nav/ProfilePanel"
+import { GlobalSearch } from "@/components/features/search/GlobalSearch"
+import { AlertBell } from "@/components/features/alerts/AlertBell"
 
 const NAV_LINKS = [
   {
@@ -81,6 +81,17 @@ const NAV_LINKS = [
       </svg>
     ),
   },
+  {
+    href: "/help",
+    label: "Help",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    ),
+  },
 ]
 
 export function MainNav() {
@@ -88,6 +99,7 @@ export function MainNav() {
   const { user } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const lastSearchQueryRef = useRef("")
 
   // Close drawer on route change
   useEffect(() => {
@@ -256,7 +268,15 @@ export function MainNav() {
         </div>
       </nav>
 
-      {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
+      {searchOpen && (
+        <GlobalSearch
+          defaultQuery={lastSearchQueryRef.current}
+          onClose={(lastQuery) => {
+            lastSearchQueryRef.current = lastQuery
+            setSearchOpen(false)
+          }}
+        />
+      )}
     </>
   )
 }

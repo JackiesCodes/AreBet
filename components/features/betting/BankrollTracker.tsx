@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
+import { FeatureGate } from "@/components/primitives/FeatureGate"
 import { useBets } from "@/hooks/useBets"
 import { kellyStake } from "@/lib/utils/value-bet"
 import type { ValueEdge } from "@/types/match"
@@ -135,6 +136,31 @@ export function BankrollTracker({ valueEdge }: BankrollTrackerProps) {
           </span>
         </div>
       </div>
+
+      <FeatureGate feature="bankroll-pro" featureName="ROI & win rate analytics">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+          <div>
+            <CardSubtitle>Win Rate</CardSubtitle>
+            <span style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: summary.winRate >= 50 ? "var(--positive)" : "var(--text)",
+            }}>
+              {summary.winRate.toFixed(1)}%
+            </span>
+          </div>
+          <div>
+            <CardSubtitle>ROI</CardSubtitle>
+            <span style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: summary.roi >= 0 ? "var(--positive)" : "var(--negative)",
+            }}>
+              {summary.roi >= 0 ? "+" : ""}{summary.roi.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      </FeatureGate>
 
       {kellySuggestion != null && kellySuggestion > 0 && (
         <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 6, background: "var(--surface-2)", fontSize: 12 }}>

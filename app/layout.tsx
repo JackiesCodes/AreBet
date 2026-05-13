@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import type { ReactNode } from "react"
+import { Suspense, type ReactNode } from "react"
 import "./globals.css"
 import "./highlight-matches.css"
 import { AuthProvider } from "@/lib/auth/context"
@@ -8,8 +8,8 @@ import { MainNav } from "@/components/layout/MainNav"
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav"
 import { DensityShell } from "@/components/layout/DensityShell"
 import { AppShell } from "@/components/layout/AppShell"
-import { StickinessSync } from "@/components/features/StickinessSync"
-import { PwaRegister } from "@/components/features/PwaRegister"
+import { StickinessSync } from "@/components/features/onboarding/StickinessSync"
+import { PwaRegister } from "@/components/features/onboarding/PwaRegister"
 import { ErrorBoundary } from "@/components/primitives/ErrorBoundary"
 import { MatchIntelligenceProvider } from "@/contexts/MatchIntelligenceContext"
 import { FilterProvider } from "@/contexts/FilterContext"
@@ -55,6 +55,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <ToastProvider>
             <MatchIntelligenceProvider>
+              <Suspense>
               <FilterProvider>
                 <DensityShell>
                   <StickinessSync />
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   </div>
                 </DensityShell>
               </FilterProvider>
+              </Suspense>
             </MatchIntelligenceProvider>
           </ToastProvider>
         </AuthProvider>

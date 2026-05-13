@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { loadOnboarding, markOnboardingSeen } from "@/lib/storage/onboarding"
 import { Button } from "@/components/primitives/Button"
+import { TierBadge } from "@/components/primitives/TierBadge"
 import { useFocusTrap, useEscapeKey } from "@/lib/utils/a11y"
 
 const STEPS = [
@@ -111,6 +113,18 @@ export function OnboardingModal() {
             {isLast ? "Get Started" : "Next →"}
           </Button>
         </div>
+
+        {isLast && (
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
+            <TierBadge tier="pro" />
+            <span style={{ fontSize: 12, color: "var(--text-muted)", flex: 1 }}>
+              Unlock market movement, advanced odds &amp; ROI analytics
+            </span>
+            <Link href="/subscription" className="md-btn md-btn--primary md-btn--sm" onClick={close}>
+              Upgrade
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
