@@ -5,9 +5,8 @@ import { useFilters, leagueKey } from "@/contexts/FilterContext"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { FilterPresetButtons } from "@/components/layout/FilterPresetButtons"
 import { StatusFilter } from "./sidebar/StatusFilter"
-import { KickoffFilter } from "./sidebar/KickoffFilter"
-import { ConfidenceFilter } from "./sidebar/ConfidenceFilter"
 import { LeagueTree } from "./sidebar/LeagueTree"
+import type { GlobalStatusFilter } from "@/contexts/FilterContext"
 
 /**
  * SidebarContent is shared between LeftSidebar (desktop) and MobileFilterSheet (bottom sheet).
@@ -23,26 +22,20 @@ export function SidebarContent() {
     setStatusFilter,
     resetFilters,
     activeFilterCount,
-    kickoffFilter,
-    setKickoffFilter,
     pinnedLeagues,
     togglePin,
-    valueOnly,
-    setValueOnly,
-    minConfidence,
-    setMinConfidence,
   } = useFilters()
 
-  const statusCounts = useMemo(() => ({
-    all:      matches.length,
+  const statusCounts = useMemo((): Record<GlobalStatusFilter, number> => ({
+    all:      matches.filter((m) => m.status !== "FINISHED").length,
     live:     matches.filter((m) => m.status === "LIVE").length,
     upcoming: matches.filter((m) => m.status === "UPCOMING").length,
-    finished: matches.filter((m) => m.status === "FINISHED").length,
   }), [matches])
 
   const leagues = useMemo(() => {
     const map = new Map<string, { key: string; name: string; country: string; total: number; live: number }>()
     for (const m of matches) {
+      if (m.status === "FINISHED") continue
       const key = leagueKey(m)
       const e = map.get(key) ?? { key, name: m.league, country: m.country, total: 0, live: 0 }
       e.total++
@@ -71,18 +64,6 @@ export function SidebarContent() {
         statusFilter={statusFilter}
         statusCounts={statusCounts}
         setStatusFilter={setStatusFilter}
-      />
-
-      <KickoffFilter
-        kickoffFilter={kickoffFilter}
-        setKickoffFilter={setKickoffFilter}
-      />
-
-      <ConfidenceFilter
-        valueOnly={valueOnly}
-        setValueOnly={setValueOnly}
-        minConfidence={minConfidence}
-        setMinConfidence={setMinConfidence}
       />
 
       <LeagueTree

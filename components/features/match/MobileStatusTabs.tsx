@@ -7,7 +7,6 @@ const STATUS_TABS: { key: GlobalStatusFilter; label: string }[] = [
   { key: "all",      label: "All" },
   { key: "live",     label: "Live" },
   { key: "upcoming", label: "Upcoming" },
-  { key: "finished", label: "Finished" },
 ]
 
 interface MobileStatusTabsProps {

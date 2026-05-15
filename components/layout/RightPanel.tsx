@@ -3,8 +3,11 @@
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useSelectedMatch } from "@/contexts/SelectedMatchContext"
 import { calculateValueEdge } from "@/lib/utils/value-bet"
 import type { ApiStandingRow, ApiPlayerStat } from "@/lib/api-football/types"
+import { LeagueTopScorers } from "@/components/features/entity/LeagueTopScorers"
+import { LeagueInsights } from "@/components/features/entity/LeagueInsights"
 
 // ── Live ticker ───────────────────────────────────────────────────────────────
 
@@ -40,11 +43,7 @@ function LiveTicker() {
         </Link>
       ))}
       {hidden > 0 && (
-        <button
-          type="button"
-          className="rp-ticker-toggle"
-          onClick={() => setExpanded((e) => !e)}
-        >
+        <button type="button" className="rp-ticker-toggle" onClick={() => setExpanded((e) => !e)}>
           {expanded ? "Show less" : `Show ${hidden} more`}
         </button>
       )}
@@ -54,7 +53,7 @@ function LiveTicker() {
 
 // ── Mini standings ────────────────────────────────────────────────────────────
 
-const STANDING_LEAGUES: [number, string][] = [
+const DEFAULT_LEAGUES: [number, string][] = [
   [39, "PL"],
   [140, "La Liga"],
   [135, "Serie A"],
@@ -62,69 +61,74 @@ const STANDING_LEAGUES: [number, string][] = [
   [61, "Ligue 1"],
 ]
 
-const STANDINGS_INITIAL = 3
+const STANDINGS_INITIAL = 5
 
-function MiniStandings() {
+function MiniStandings({ leagueId, leagueName }: { leagueId?: number; leagueName?: string }) {
   const { hasLive } = useMatchIntelligence()
-  const [leagueId, setLeagueId] = useState(39)
+  const [activeId, setActiveId] = useState(leagueId ?? 39)
   const [rows, setRows] = useState<ApiStandingRow[]>([])
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
+  // Sync with selected league
+  useEffect(() => {
+    if (leagueId) setActiveId(leagueId)
+  }, [leagueId])
+
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setExpanded(false)
 
-    const load = () => {
-      setLoading(true)
-      fetch(`/api/standings?league=${leagueId}`)
+    fetch(`/api/standings?league=${activeId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return
+        const league = d.standings?.[0]?.league
+        setRows(league?.standings?.[0] ?? [])
+      })
+      .catch(() => { if (!cancelled) setRows([]) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    const interval = setInterval(() => {
+      fetch(`/api/standings?league=${activeId}`)
         .then((r) => r.json())
         .then((d) => {
           if (cancelled) return
           const league = d.standings?.[0]?.league
           setRows(league?.standings?.[0] ?? [])
         })
-        .catch(() => { if (!cancelled) setRows([]) })
-        .finally(() => { if (!cancelled) setLoading(false) })
-    }
+        .catch(() => {})
+    }, hasLive ? 3 * 60 * 1000 : 5 * 60 * 1000)
 
-    setExpanded(false)
-    load()
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [activeId, hasLive])
 
-    // Auto-refresh: 3min when live matches are on, 5min otherwise
-    const interval = setInterval(load, hasLive ? 3 * 60 * 1000 : 5 * 60 * 1000)
-
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
-  }, [leagueId, hasLive])
-
-  const leagueName = STANDING_LEAGUES.find(([id]) => id === leagueId)?.[1] ?? "League"
+  const displayName = leagueName ?? DEFAULT_LEAGUES.find(([id]) => id === activeId)?.[1] ?? "League"
   const visible = expanded ? rows : rows.slice(0, STANDINGS_INITIAL)
   const hidden = rows.length - STANDINGS_INITIAL
 
   return (
     <div>
-      <div className="rp-standings-tabs">
-        {STANDING_LEAGUES.map(([id, name]) => (
-          <button
-            key={id}
-            type="button"
-            className={`rp-standings-tab ${leagueId === id ? "rp-standings-tab--active" : ""}`}
-            onClick={() => setLeagueId(id)}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      {!leagueId && (
+        <div className="rp-standings-tabs">
+          {DEFAULT_LEAGUES.map(([id, name]) => (
+            <button
+              key={id}
+              type="button"
+              className={`rp-standings-tab ${activeId === id ? "rp-standings-tab--active" : ""}`}
+              onClick={() => setActiveId(id)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className="rp-section-title">{leagueName} Top {expanded ? rows.length : STANDINGS_INITIAL}</div>
+      <div className="rp-section-title">{displayName} Standings</div>
 
       {loading && <div className="rp-loading">Loading…</div>}
-
-      {!loading && rows.length === 0 && (
-        <div className="rp-empty">No standings data</div>
-      )}
+      {!loading && rows.length === 0 && <div className="rp-empty">No standings data</div>}
 
       {visible.map((row, i) => (
         <div key={row.team.id} className="rp-standings-row">
@@ -138,11 +142,7 @@ function MiniStandings() {
       ))}
 
       {!loading && hidden > 0 && (
-        <button
-          type="button"
-          className="rp-ticker-toggle"
-          onClick={() => setExpanded((e) => !e)}
-        >
+        <button type="button" className="rp-ticker-toggle" onClick={() => setExpanded((e) => !e)}>
           {expanded ? "Show less" : `Show ${hidden} more`}
         </button>
       )}
@@ -150,9 +150,9 @@ function MiniStandings() {
   )
 }
 
-// ── Today's Insights ──────────────────────────────────────────────────────────
+// ── Default today's insights (no match selected) ──────────────────────────────
 
-function TodayInsights() {
+function DefaultInsights() {
   const { matches } = useMatchIntelligence()
   const [topScorer, setTopScorer] = useState<ApiPlayerStat | null>(null)
 
@@ -184,31 +184,16 @@ function TodayInsights() {
     for (const m of matches.filter((x) => x.status === "UPCOMING")) {
       const edge = calculateValueEdge(m)
       if (edge?.isValue && (!best || edge.edge > best.edge)) {
-        best = {
-          label: `${m.home.name} vs ${m.away.name}`,
-          edge: edge.edge,
-        }
+        best = { label: `${m.home.name} vs ${m.away.name}`, edge: edge.edge }
       }
     }
     return best
   }, [matches])
 
   const cards = [
-    hotStreak && {
-      icon: "🔥",
-      title: "Hot Streak",
-      text: `${hotStreak.name} — ${hotStreak.wins}W in last 5`,
-    },
-    topValue && {
-      icon: "💰",
-      title: "Value Alert",
-      text: `${topValue.label} · +${(topValue.edge * 100).toFixed(0)}% edge`,
-    },
-    topScorer && {
-      icon: "⚽",
-      title: "Top Scorer",
-      text: `${topScorer.player.name} · ${topScorer.statistics[0]?.goals.total ?? 0} goals`,
-    },
+    hotStreak && { icon: "🔥", title: "Hot Streak", text: `${hotStreak.name} — ${hotStreak.wins}W in last 5` },
+    topValue && { icon: "💰", title: "Value Alert", text: `${topValue.label} · +${(topValue.edge * 100).toFixed(0)}% edge` },
+    topScorer && { icon: "⚽", title: "Top Scorer (PL)", text: `${topScorer.player.name} · ${topScorer.statistics[0]?.goals.total ?? 0} goals` },
   ].filter(Boolean) as { icon: string; title: string; text: string }[]
 
   if (cards.length === 0) return null
@@ -233,34 +218,68 @@ function TodayInsights() {
 
 export function RightPanel() {
   const { matches } = useMatchIntelligence()
+  const { selectedLeagueId, selectedLeagueName, setSelectedMatch } = useSelectedMatch()
   const liveCount = useMemo(() => matches.filter((m) => m.status === "LIVE").length, [matches])
+
+  const hasSelection = selectedLeagueId !== null && selectedLeagueName !== null
 
   return (
     <aside className="app-right">
       <div className="rp-header">
-        <span className="rp-header-title">Live Analytics</span>
-        <span className="rp-header-badge" aria-hidden>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
+        <span className="rp-header-title">
+          {hasSelection ? selectedLeagueName : "Live Analytics"}
         </span>
-      </div>
-
-      <div className="rp-section">
-        <div className="rp-section-title">
-          <span className="rp-live-dot" aria-hidden />
-          Live Now
-          <span className="rp-live-count">{liveCount} total</span>
+        <div className="rp-header-actions">
+          {hasSelection && (
+            <button
+              type="button"
+              className="rp-clear-btn"
+              onClick={() => setSelectedMatch(null)}
+              title="Back to overview"
+              aria-label="Clear selection"
+            >
+              ← All
+            </button>
+          )}
+          <span className="rp-header-badge" aria-hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </span>
         </div>
-        <LiveTicker />
       </div>
 
-      <div className="rp-section rp-section--standings">
-        <MiniStandings />
-      </div>
-
+      {/* Top section: top scorers for selected league, or live ticker */}
       <div className="rp-section">
-        <TodayInsights />
+        {hasSelection ? (
+          <LeagueTopScorers leagueId={selectedLeagueId!} leagueName={selectedLeagueName!} />
+        ) : (
+          <>
+            <div className="rp-section-title">
+              <span className="rp-live-dot" aria-hidden />
+              Live Now
+              <span className="rp-live-count">{liveCount} total</span>
+            </div>
+            <LiveTicker />
+          </>
+        )}
+      </div>
+
+      {/* Standings: parameterised by selected league, or default tabs */}
+      <div className="rp-section rp-section--standings">
+        <MiniStandings
+          leagueId={hasSelection ? selectedLeagueId! : undefined}
+          leagueName={hasSelection ? selectedLeagueName! : undefined}
+        />
+      </div>
+
+      {/* Insights: league-specific or generic */}
+      <div className="rp-section">
+        {hasSelection ? (
+          <LeagueInsights leagueId={selectedLeagueId!} leagueName={selectedLeagueName!} />
+        ) : (
+          <DefaultInsights />
+        )}
       </div>
     </aside>
   )

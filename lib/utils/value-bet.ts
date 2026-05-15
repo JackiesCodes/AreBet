@@ -197,13 +197,3 @@ export function buildPredictionFactors(match: Match): PredictionFactor[] {
   return factors.slice(0, 4)
 }
 
-/** Kelly criterion stake suggestion (fractional Kelly at 25%) */
-export function kellyStake(edge: ValueEdge, bankroll: number): number {
-  if (!edge.isValue || edge.odds <= 1) return 0
-  const b = edge.odds - 1
-  const p = edge.modelProb
-  const q = 1 - p
-  const fullKelly = (b * p - q) / b
-  const fractional = Math.max(0, fullKelly * 0.25) // quarter Kelly = safer
-  return Math.round(fractional * bankroll * 100) / 100
-}

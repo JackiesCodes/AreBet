@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
+import { useSelectedMatch } from "@/contexts/SelectedMatchContext"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
 import { calculateValueEdge } from "@/lib/utils/value-bet"
 import { confTier } from "@/lib/utils/match-status"
@@ -78,6 +79,7 @@ interface MatchCardProps {
 
 export function MatchCard({ match, selected, onSelect, latestChange, compact, showLeague = true }: MatchCardProps) {
   const router     = useRouter()
+  const { setSelectedMatch } = useSelectedMatch()
   const isLive     = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
   const isUpcoming = match.status === "UPCOMING"
@@ -89,9 +91,8 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
 
   const valueEdge  = useMemo(() => calculateValueEdge(match), [match])
   const isValue    = valueEdge?.isValue === true
-  const isHighConf = conf >= 72 && !isValue
 
-  const showFooter = isValue || isHighConf || hasPrediction
+  const showFooter = isValue || hasPrediction
 
   const homeScore = isLive || isFinished ? match.score.home : null
   const awayScore = isLive || isFinished ? match.score.away : null
@@ -132,7 +133,7 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
         isLive       && "cc-card--live",
         isFinished   && "cc-card--finished",
       )}
-      onClick={() => { onSelect?.(match); router.push(`/match/${match.id}`) }}
+      onClick={() => { onSelect?.(match); setSelectedMatch(match); router.push(`/match/${match.id}`) }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
@@ -230,11 +231,6 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
             {isValue && (
               <span className="cc-card-pill cc-card-pill--value">
                 ▲ VALUE +{(valueEdge!.edge * 100).toFixed(0)}%
-              </span>
-            )}
-            {isHighConf && (
-              <span className="cc-card-pill cc-card-pill--conf">
-                ✦ {Math.round(conf)}%
               </span>
             )}
           </div>

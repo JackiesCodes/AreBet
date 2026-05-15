@@ -8,7 +8,6 @@ export const STORAGE_KEYS = {
   theme: "arebet:theme:v1",
   density: "arebet:density:v1",
   uiState: "arebet:ui:v1",
-  betSlip: "arebet:bet-slip:v1",
   ratings: "arebet:ratings:v1",
   predictions: "arebet:predictions:v1",
   onboarding: "arebet:onboarding:v1",

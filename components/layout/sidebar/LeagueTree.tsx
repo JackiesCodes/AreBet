@@ -16,6 +16,7 @@ interface LeagueRowProps {
   isOn: boolean
   isIsolated: boolean
   isPinned: boolean
+  allKeys: string[]
   onToggle: () => void
   onIsolate: () => void
   onPin: () => void
@@ -23,24 +24,20 @@ interface LeagueRowProps {
 
 function LeagueRow({ league, isOn, isIsolated, isPinned, onToggle, onIsolate, onPin }: LeagueRowProps) {
   return (
-    <div className={cn("sidebar-league-row", !isOn && "sidebar-league-row--disabled")}>
-      <div className="sidebar-league-info">
-        {league.live > 0 && <span className="sidebar-live-dot" aria-label="has live matches" />}
-        <span className="sidebar-league-name">{league.name}</span>
+    <div className={cn("league-row", !isOn && "league-row--hidden")}>
+      <div className="league-row-left">
+        {league.live > 0 && (
+          <span className="league-live-dot" aria-label={`${league.live} live`} />
+        )}
+        <span className="league-row-name">{league.name}</span>
+        {league.live > 0 && (
+          <span className="league-match-count league-match-count--live">{league.live}</span>
+        )}
       </div>
-      <div className="sidebar-league-right">
-        <span className="sidebar-league-count">{league.total}</span>
+      <div className="league-row-actions">
         <button
           type="button"
-          className={cn("sidebar-pin-btn", isPinned && "sidebar-pin-btn--active")}
-          onClick={onPin}
-          aria-label={isPinned ? `Unpin ${league.name}` : `Pin ${league.name}`}
-        >
-          📌
-        </button>
-        <button
-          type="button"
-          className={cn("sidebar-only-btn", isIsolated && "sidebar-only-btn--active")}
+          className={cn("league-only-btn", isIsolated && "league-only-btn--active")}
           onClick={onIsolate}
           title={isIsolated ? "Show all leagues" : "Show only this league"}
         >
@@ -48,11 +45,20 @@ function LeagueRow({ league, isOn, isIsolated, isPinned, onToggle, onIsolate, on
         </button>
         <button
           type="button"
-          className={cn("sidebar-toggle", isOn && "sidebar-toggle--on")}
+          className={cn("league-pin-btn", isPinned && "league-pin-btn--active")}
+          onClick={onPin}
+          aria-label={isPinned ? `Remove ${league.name} from Top Leagues` : `Add ${league.name} to Top Leagues`}
+          title={isPinned ? "Remove from Top Leagues" : "Add to Top Leagues"}
+        >
+          ★
+        </button>
+        <button
+          type="button"
+          className={cn("league-toggle", isOn && "league-toggle--on")}
           onClick={onToggle}
           aria-label={`${isOn ? "Hide" : "Show"} ${league.name}`}
         >
-          <span className="sidebar-toggle-knob" />
+          <span className="league-toggle-knob" />
         </button>
       </div>
     </div>
@@ -79,147 +85,98 @@ export function LeagueTree({
   clearDisabledLeagues,
 }: LeagueTreeProps) {
   const [leagueSearch, setLeagueSearch] = useState("")
-  const [collapsedCountries, setCollapsedCountries] = useState<Set<string>>(new Set())
+  const [allCompOpen, setAllCompOpen] = useState(false)
 
   const allKeys = useMemo(() => leagues.map((l) => l.key), [leagues])
 
-  const byCountry = useMemo(() => {
-    const map = new Map<string, LeagueInfo[]>()
-    for (const l of leagues) {
-      const arr = map.get(l.country) ?? []
-      arr.push(l)
-      map.set(l.country, arr)
-    }
-    return Array.from(map.entries())
-      .map(([country, ls]) => ({
-        country,
-        leagues: ls,
-        live: ls.reduce((s, l) => s + l.live, 0),
-        total: ls.reduce((s, l) => s + l.total, 0),
-      }))
-      .sort((a, b) => b.live !== a.live ? b.live - a.live : b.total - a.total)
-  }, [leagues])
-
-  const filteredGroups = useMemo(() => {
-    if (!leagueSearch.trim()) return byCountry
-    const q = leagueSearch.toLowerCase()
-    return byCountry
-      .map((g) => ({
-        ...g,
-        leagues: g.leagues.filter(
-          (l) => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q),
-        ),
-      }))
-      .filter((g) => g.leagues.length > 0)
-  }, [byCountry, leagueSearch])
-
-  const pinnedLeaguesList = useMemo(
+  const topLeagues = useMemo(
     () => leagues.filter((l) => pinnedLeagues.has(l.key)),
     [leagues, pinnedLeagues],
   )
 
-  const allCountryNames = useMemo(() => byCountry.map((g) => g.country), [byCountry])
-  const allCollapsed = collapsedCountries.size === allCountryNames.length && allCountryNames.length > 0
+  const otherLeagues = useMemo(
+    () => leagues.filter((l) => !pinnedLeagues.has(l.key)),
+    [leagues, pinnedLeagues],
+  )
 
-  const toggleCountry = (country: string) => {
-    setCollapsedCountries((prev) => {
-      const next = new Set(prev)
-      if (next.has(country)) next.delete(country)
-      else next.add(country)
-      return next
-    })
+  const filteredOther = useMemo(() => {
+    if (!leagueSearch.trim()) return otherLeagues
+    const q = leagueSearch.toLowerCase()
+    return otherLeagues.filter(
+      (l) => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q),
+    )
+  }, [otherLeagues, leagueSearch])
+
+  function renderRow(league: LeagueInfo) {
+    const isOn = !disabledLeagues.has(league.key)
+    const wouldDisable = allKeys.filter((k) => k !== league.key)
+    const isIsolated = disabledLeagues.size === wouldDisable.length && wouldDisable.every((k) => disabledLeagues.has(k))
+    return (
+      <LeagueRow
+        key={league.key}
+        league={league}
+        isOn={isOn}
+        isIsolated={isIsolated}
+        isPinned={pinnedLeagues.has(league.key)}
+        allKeys={allKeys}
+        onToggle={() => toggleLeague(league.key)}
+        onIsolate={() => isolateLeague(league.key, allKeys)}
+        onPin={() => togglePin(league.key)}
+      />
+    )
   }
 
   return (
-    <div className="sidebar-section">
-      <div className="sidebar-section-label">
-        Leagues &amp; Competitions
-        {disabledLeagues.size > 0 && (
-          <span className="sidebar-section-count"> ({disabledLeagues.size} hidden)</span>
+    <div className="sidebar-section league-tree">
+      {/* Top Leagues group */}
+      <div className="league-tree-group">
+        <div className="league-tree-group-header">
+          <span className="league-tree-group-title">Top Leagues</span>
+          <span className="league-tree-group-hint">★ to pin</span>
+        </div>
+        {topLeagues.length === 0 ? (
+          <p className="league-tree-empty">Pin a league using ★ to add it here.</p>
+        ) : (
+          topLeagues.map(renderRow)
         )}
-        <button
-          type="button"
-          className="sidebar-collapse-all-btn"
-          onClick={() => setCollapsedCountries(allCollapsed ? new Set() : new Set(allCountryNames))}
-          title={allCollapsed ? "Expand all" : "Collapse all"}
-        >
-          {allCollapsed ? "Expand all" : "Collapse all"}
-        </button>
       </div>
 
-      {pinnedLeaguesList.length > 0 && (
-        <div className="sidebar-pinned-group">
-          <div className="sidebar-section-label sidebar-section-label--sub">📌 Pinned</div>
-          {pinnedLeaguesList.map((league) => {
-            const isOn = !disabledLeagues.has(league.key)
-            const wouldDisable = allKeys.filter((k) => k !== league.key)
-            const isIsolated = disabledLeagues.size === wouldDisable.length && wouldDisable.every((k) => disabledLeagues.has(k))
-            return (
-              <LeagueRow
-                key={league.key}
-                league={league}
-                isOn={isOn}
-                isIsolated={isIsolated}
-                isPinned
-                onToggle={() => toggleLeague(league.key)}
-                onIsolate={() => isolateLeague(league.key, allKeys)}
-                onPin={() => togglePin(league.key)}
-              />
-            )
-          })}
-        </div>
-      )}
-
-      {leagues.length > 8 && (
-        <input
-          type="search"
-          className="sidebar-league-search"
-          placeholder="Search leagues…"
-          value={leagueSearch}
-          onChange={(e) => setLeagueSearch(e.target.value)}
-        />
-      )}
-
-      {filteredGroups.length === 0 && (
-        <p className="sidebar-empty">No leagues match &ldquo;{leagueSearch}&rdquo;</p>
-      )}
-
-      {filteredGroups.map(({ country, leagues: countryLeagues, live: countryLive }) => (
-        <div key={country} className="sidebar-country-group">
-          <button
-            type="button"
-            className="sidebar-country-heading"
-            onClick={() => toggleCountry(country)}
-            aria-expanded={!collapsedCountries.has(country)}
-          >
-            <span className={cn("sidebar-country-chevron", collapsedCountries.has(country) && "sidebar-country-chevron--collapsed")}>
-              ▾
+      {/* All Competitions group */}
+      <div className="league-tree-group">
+        <button
+          type="button"
+          className="league-tree-group-header league-tree-group-header--toggle"
+          onClick={() => setAllCompOpen((v) => !v)}
+          aria-expanded={allCompOpen}
+        >
+          <span className="league-tree-group-title">All Competitions</span>
+          <span className="league-tree-chevron" aria-hidden>{allCompOpen ? "▴" : "▾"}</span>
+          {!allCompOpen && otherLeagues.filter((l) => l.live > 0).length > 0 && (
+            <span className="league-live-summary">
+              {otherLeagues.filter((l) => l.live > 0).length} live
             </span>
-            <span className="sidebar-country-name">{country}</span>
-            {countryLive > 0 && (
-              <span className="sidebar-league-live">{countryLive}● live</span>
-            )}
-          </button>
+          )}
+        </button>
 
-          {!collapsedCountries.has(country) && countryLeagues.map((league) => {
-            const isOn = !disabledLeagues.has(league.key)
-            const wouldDisable = allKeys.filter((k) => k !== league.key)
-            const isIsolated = disabledLeagues.size === wouldDisable.length && wouldDisable.every((k) => disabledLeagues.has(k))
-            return (
-              <LeagueRow
-                key={league.key}
-                league={league}
-                isOn={isOn}
-                isIsolated={isIsolated}
-                isPinned={pinnedLeagues.has(league.key)}
-                onToggle={() => toggleLeague(league.key)}
-                onIsolate={() => isolateLeague(league.key, allKeys)}
-                onPin={() => togglePin(league.key)}
+        {allCompOpen && (
+          <>
+            {leagues.length > 6 && (
+              <input
+                type="search"
+                className="sidebar-league-search"
+                placeholder="Search competitions…"
+                value={leagueSearch}
+                onChange={(e) => setLeagueSearch(e.target.value)}
               />
-            )
-          })}
-        </div>
-      ))}
+            )}
+            {filteredOther.length === 0 ? (
+              <p className="league-tree-empty">No competitions match &ldquo;{leagueSearch}&rdquo;</p>
+            ) : (
+              filteredOther.map(renderRow)
+            )}
+          </>
+        )}
+      </div>
 
       {disabledLeagues.size > 0 && (
         <button type="button" className="sidebar-clear-btn sidebar-clear-btn--leagues" onClick={clearDisabledLeagues}>

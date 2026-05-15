@@ -6,14 +6,12 @@ import type { Tier } from "@/types/user"
 export type Feature =
   | "market-movement"    // Market movement sparkline — pro+
   | "advanced-odds"      // Advanced model breakdown — pro+
-  | "bankroll-pro"       // Advanced bankroll ROI stats — pro+
   | "push-notifications" // PWA push notifications — pro+
   | "trust-full"         // Full calibration data — pro+
 
 const FEATURE_TIERS: Record<Feature, Tier[]> = {
   "market-movement":    ["pro", "elite"],
   "advanced-odds":      ["pro", "elite"],
-  "bankroll-pro":       ["pro", "elite"],
   "push-notifications": ["pro", "elite"],
   "trust-full":         ["pro", "elite"],
 }

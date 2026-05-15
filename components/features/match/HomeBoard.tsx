@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import type { Match, SortKey } from "@/types/match"
+import type { Match } from "@/types/match"
 import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { useFilters, leagueKey } from "@/contexts/FilterContext"
 import { useFavorites } from "@/hooks/useFavorites"
@@ -12,12 +12,11 @@ import { ActiveFilterChips } from "@/components/features/nav/ActiveFilterChips"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
 import { ErrorState } from "@/components/primitives/ErrorState"
-import { cn } from "@/lib/utils/cn"
 import { loadUiState, saveUiState, type UiState } from "@/lib/storage/ui-state"
 import { MobileFilterSheet } from "@/components/layout/MobileFilterSheet"
 import { MobileStatusTabs } from "./MobileStatusTabs"
 import { MatchBucketList } from "./MatchBucketList"
-import { MatchTableView } from "./MatchTableView"
+import type { GlobalStatusFilter } from "@/contexts/FilterContext"
 
 export function HomeBoard() {
   const {
@@ -33,14 +32,12 @@ export function HomeBoard() {
   const { applyToMatches, disabledLeagues, activeFilterCount, statusFilter, setStatusFilter } = useFilters()
   const { favorites, isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
-  const [sort, setSort] = useState<SortKey>("kickoff")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
-  const statusCounts = useMemo(() => ({
-    all:      matches.length,
+  const statusCounts = useMemo((): Record<GlobalStatusFilter, number> => ({
+    all:      matches.filter((m) => m.status !== "FINISHED").length,
     live:     matches.filter((m) => m.status === "LIVE").length,
     upcoming: matches.filter((m) => m.status === "UPCOMING").length,
-    finished: matches.filter((m) => m.status === "FINISHED").length,
   }), [matches])
 
   useEffect(() => { saveUiState(ui) }, [ui])
@@ -69,28 +66,33 @@ export function HomeBoard() {
           m.away.name.toLowerCase().includes(q) ||
           m.league.toLowerCase().includes(q),
       )
+    } else {
+      // When not searching, always hide finished
+      list = list.filter((m) => m.status !== "FINISHED")
     }
 
     switch (ui.quickFilter) {
-      case "live":     list = list.filter((m) => m.status === "LIVE");                                                                      break
-      case "soon":     list = list.filter((m) => m.status === "UPCOMING" && new Date(m.kickoffISO).getTime() <= Date.now() + 3_600_000);    break
-      case "favorites": list = list.filter((m) => isFavorite("match", String(m.id)));                                                       break
-      case "high":     list = list.filter((m) => (m.prediction?.confidence ?? 0) >= 70);                                                    break
+      case "live":      list = list.filter((m) => m.status === "LIVE");                                                                     break
+      case "soon":      list = list.filter((m) => m.status === "UPCOMING" && new Date(m.kickoffISO).getTime() <= Date.now() + 3_600_000);   break
+      case "favorites": list = list.filter((m) => isFavorite("match", String(m.id)));                                                      break
+      case "high":      list = list.filter((m) => (m.prediction?.confidence ?? 0) >= 70);                                                  break
     }
 
-    const sorted = rankMatches(list, sort)
+    const sorted = rankMatches(list, "kickoff")
     return sorted.sort((a, b) => {
       if (a.status !== b.status) return 0
       return (changedMatchIds.has(a.id) ? 0 : 1) - (changedMatchIds.has(b.id) ? 0 : 1)
     })
-  }, [matches, applyToMatches, disabledLeagues, ui, sort, isFavorite, changedMatchIds])
+  }, [matches, applyToMatches, disabledLeagues, ui, isFavorite, changedMatchIds])
 
   const grouped = useMemo(() => {
-    const groups: Record<TimeBucket, Match[]> = {
-      live: [], in1h: [], today: [], tomorrow: [], upcoming: [], finished: [],
+    const groups: Partial<Record<TimeBucket, Match[]>> = {}
+    for (const b of BUCKET_ORDER) groups[b] = []
+    for (const m of filtered) {
+      const b = bucketFor(m)
+      if (b in groups) groups[b]!.push(m)
     }
-    for (const m of filtered) groups[bucketFor(m)].push(m)
-    return groups
+    return groups as Record<TimeBucket, Match[]>
   }, [filtered])
 
   return (
@@ -107,14 +109,6 @@ export function HomeBoard() {
             value={ui.search}
             onChange={(e) => setUi((u) => ({ ...u, search: e.target.value }))}
           />
-        </div>
-        <div className="cc-toolbar-group">
-          <button type="button" aria-pressed={sort === "confidence"} className={cn("cc-toolbar-btn", sort === "confidence" && "cc-toolbar-btn--active")} onClick={() => setSort("confidence")}>Conf.</button>
-          <button type="button" aria-pressed={sort === "kickoff"} className={cn("cc-toolbar-btn", sort === "kickoff" && "cc-toolbar-btn--active")} onClick={() => setSort("kickoff")}>Kickoff</button>
-        </div>
-        <div className="cc-toolbar-group">
-          <button type="button" aria-pressed={ui.view === "card"} className={cn("cc-toolbar-btn", ui.view === "card" && "cc-toolbar-btn--active")} onClick={() => setUi((u) => ({ ...u, view: "card" }))}>Cards</button>
-          <button type="button" aria-pressed={ui.view === "table"} className={cn("cc-toolbar-btn", ui.view === "table" && "cc-toolbar-btn--active")} onClick={() => setUi((u) => ({ ...u, view: "table" }))}>Table</button>
         </div>
       </div>
 
@@ -154,19 +148,15 @@ export function HomeBoard() {
             : <ErrorState text={error} />
         )}
         {!loading && !error && filtered.length === 0 && (
-          <EmptyState title="No matches" text="Try clearing filters or selecting a different league." />
+          <EmptyState title="No matches" text={ui.search ? "No matches found. Try a different search term." : "No live or upcoming matches right now."} />
         )}
 
-        {!loading && !error && filtered.length > 0 && ui.view === "card" && (
+        {!loading && !error && filtered.length > 0 && (
           BUCKET_ORDER.map((bucket) => {
             const items = grouped[bucket]
-            if (items.length === 0) return null
+            if (!items || items.length === 0) return null
             return <MatchBucketList key={bucket} bucket={bucket} items={items} latestChangeMap={latestChangeMap} />
           })
-        )}
-
-        {!loading && !error && filtered.length > 0 && ui.view === "table" && (
-          <MatchTableView filtered={filtered} />
         )}
       </div>
     </section>

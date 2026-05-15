@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/auth/context"
 import { ToastProvider } from "@/components/primitives/Toast"
 import { MainNav } from "@/components/layout/MainNav"
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav"
+import { Footer } from "@/components/layout/Footer"
 import { DensityShell } from "@/components/layout/DensityShell"
 import { AppShell } from "@/components/layout/AppShell"
 import { StickinessSync } from "@/components/features/onboarding/StickinessSync"
@@ -13,6 +14,7 @@ import { PwaRegister } from "@/components/features/onboarding/PwaRegister"
 import { ErrorBoundary } from "@/components/primitives/ErrorBoundary"
 import { MatchIntelligenceProvider } from "@/contexts/MatchIntelligenceContext"
 import { FilterProvider } from "@/contexts/FilterContext"
+import { SelectedMatchProvider } from "@/contexts/SelectedMatchContext"
 
 export const metadata: Metadata = {
   title: "AreBet — Smart Betting. Simple Insights.",
@@ -57,6 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <MatchIntelligenceProvider>
               <Suspense>
                 <FilterProvider>
+                  <SelectedMatchProvider>
                   <DensityShell>
                     <StickinessSync />
                     <PwaRegister />
@@ -70,8 +73,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                         </AppShell>
                       </div>
                       <MobileBottomNav />
+                      <Footer />
                     </div>
                   </DensityShell>
+                  </SelectedMatchProvider>
                 </FilterProvider>
               </Suspense>
             </MatchIntelligenceProvider>

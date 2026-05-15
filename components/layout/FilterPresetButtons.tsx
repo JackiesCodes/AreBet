@@ -42,18 +42,6 @@ const PRESETS: Preset[] = [
       ctx.isolateLeagues(topKeys, allKeys)
     },
   },
-  {
-    key: "value-bets",
-    label: "💰 Value Bets",
-    isActive: (ctx) => ctx.valueOnly && ctx.activeFilterCount === 1,
-    apply: (ctx) => { ctx.resetFilters(); ctx.setValueOnly(true) },
-  },
-  {
-    key: "starting-soon",
-    label: "🕐 Starting Soon",
-    isActive: (ctx) => ctx.kickoffFilter === "next2h" && ctx.activeFilterCount === 1,
-    apply: (ctx) => { ctx.resetFilters(); ctx.setKickoffFilter("next2h") },
-  },
 ]
 
 export function FilterPresetButtons() {

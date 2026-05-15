@@ -81,17 +81,6 @@ const NAV_LINKS = [
       </svg>
     ),
   },
-  {
-    href: "/help",
-    label: "Help",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
-  },
 ]
 
 export function MainNav() {
@@ -114,6 +103,30 @@ export function MainNav() {
 
   return (
     <>
+      <div className="sport-switcher" role="tablist" aria-label="Sport selection">
+        <button type="button" role="tab" aria-selected className="sport-tab sport-tab--active">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M5 12s2-4 7-4 7 4 7 4-2 4-7 4-7-4-7-4z" />
+          </svg>
+          Football
+        </button>
+        <button type="button" role="tab" aria-selected={false} className="sport-tab sport-tab--disabled" title="Coming Soon" aria-disabled="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M4.93 4.93l14.14 14.14" />
+          </svg>
+          Basketball
+        </button>
+        <button type="button" role="tab" aria-selected={false} className="sport-tab sport-tab--disabled" title="Coming Soon" aria-disabled="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <ellipse cx="12" cy="12" rx="4" ry="10" />
+            <path d="M2 12h20" />
+          </svg>
+          Tennis
+        </button>
+      </div>
+
       <header className="nav-root">
         <div className="nav-inner">
           {/* Hamburger — mobile only */}

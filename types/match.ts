@@ -228,6 +228,7 @@ export interface Match {
   leagueId?: number
   league: string
   country: string
+  sport?: "football" | "basketball" | "tennis" | string
   venue: string
   kickoffISO: string
   status: MatchStatus

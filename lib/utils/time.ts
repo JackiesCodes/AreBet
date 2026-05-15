@@ -55,4 +55,4 @@ export const BUCKET_LABELS: Record<TimeBucket, string> = {
   finished: "Finished",
 }
 
-export const BUCKET_ORDER: TimeBucket[] = ["live", "in1h", "today", "tomorrow", "upcoming", "finished"]
+export const BUCKET_ORDER: TimeBucket[] = ["live", "in1h", "today", "tomorrow", "upcoming"]

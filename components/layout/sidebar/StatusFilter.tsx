@@ -7,7 +7,6 @@ const STATUS_OPTIONS: { key: GlobalStatusFilter; label: string }[] = [
   { key: "all",      label: "All Matches" },
   { key: "live",     label: "Live" },
   { key: "upcoming", label: "Upcoming" },
-  { key: "finished", label: "Finished" },
 ]
 
 interface StatusFilterProps {
@@ -35,7 +34,6 @@ export function StatusFilter({ statusFilter, statusCounts, setStatusFilter }: St
                 "sidebar-status-badge",
                 key === "live"     && "sidebar-status-badge--live",
                 key === "upcoming" && "sidebar-status-badge--upcoming",
-                key === "finished" && "sidebar-status-badge--finished",
               )}>
                 {count}
               </span>
