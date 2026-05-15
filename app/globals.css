@@ -8595,6 +8595,10 @@ svg {
   }
 }
 
+/* Dashboard quick-link cards */
+.dashboard-card-link { text-decoration: none; }
+.dashboard-card-clickable { cursor: pointer; }
+
 /* ==========================================================================
  * Team detail page
  * ========================================================================== */

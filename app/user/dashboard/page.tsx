@@ -25,8 +25,8 @@ export default function UserDashboard() {
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <Link href="/predictions" style={{ textDecoration: "none" }}>
-          <Card style={{ cursor: "pointer" }}>
+        <Link href="/predictions" className="dashboard-card-link">
+          <Card className="dashboard-card-clickable">
             <CardSubtitle>Predictions</CardSubtitle>
             <CardTitle>Today&apos;s Tips</CardTitle>
             <p className="md-text-muted" style={{ fontSize: 12, marginTop: 4 }}>
@@ -35,8 +35,8 @@ export default function UserDashboard() {
           </Card>
         </Link>
 
-        <Link href="/standings" style={{ textDecoration: "none" }}>
-          <Card style={{ cursor: "pointer" }}>
+        <Link href="/standings" className="dashboard-card-link">
+          <Card className="dashboard-card-clickable">
             <CardSubtitle>Standings</CardSubtitle>
             <CardTitle>League Tables</CardTitle>
             <p className="md-text-muted" style={{ fontSize: 12, marginTop: 4 }}>
@@ -45,8 +45,8 @@ export default function UserDashboard() {
           </Card>
         </Link>
 
-        <Link href="/leagues" style={{ textDecoration: "none" }}>
-          <Card style={{ cursor: "pointer" }}>
+        <Link href="/leagues" className="dashboard-card-link">
+          <Card className="dashboard-card-clickable">
             <CardSubtitle>Leagues</CardSubtitle>
             <CardTitle>Browse Competitions</CardTitle>
             <p className="md-text-muted" style={{ fontSize: 12, marginTop: 4 }}>
@@ -55,8 +55,8 @@ export default function UserDashboard() {
           </Card>
         </Link>
 
-        <Link href="/subscription" style={{ textDecoration: "none" }}>
-          <Card style={{ cursor: "pointer" }}>
+        <Link href="/subscription" className="dashboard-card-link">
+          <Card className="dashboard-card-clickable">
             <CardSubtitle>Subscription</CardSubtitle>
             <CardTitle>Upgrade Your Plan</CardTitle>
             <p className="md-text-muted" style={{ fontSize: 12, marginTop: 4 }}>
