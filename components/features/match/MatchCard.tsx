@@ -13,6 +13,7 @@ import { FormGuide } from "@/components/primitives/FormGuide"
 import { FavoritesSwitcher } from "@/components/features/nav/FavoritesSwitcher"
 import type { MatchChange } from "@/types/alerts"
 import { CHANGE_ICONS } from "@/lib/utils/match-changes"
+import { OddsButton } from "@/components/features/betslip/OddsButton"
 
 // ── Team circle ────────────────────────────────────────────────────────────────
 
@@ -221,6 +222,47 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
           <span className="cc-card-prob-label cc-card-prob-label--r">
             {Math.round(probs.away * 100)}%
           </span>
+        </div>
+      )}
+
+      {/* ── Odds buttons (upcoming, non-compact) ── */}
+      {isUpcoming && !compact && match.odds && match.odds.home > 0 && (
+        <div className="odds-row" onClick={(e) => e.stopPropagation()} role="group" aria-label="Match odds">
+          <OddsButton
+            fixtureId={match.id}
+            matchLabel={`${match.home.name} vs ${match.away.name}`}
+            league={match.league}
+            market="MATCH_WINNER"
+            marketLabel="Match Winner"
+            selection="HOME"
+            selectionLabel={match.home.short || "Home"}
+            odds={match.odds.home}
+            kickoffISO={match.kickoffISO}
+          />
+          {match.odds.draw > 0 && (
+            <OddsButton
+              fixtureId={match.id}
+              matchLabel={`${match.home.name} vs ${match.away.name}`}
+              league={match.league}
+              market="MATCH_WINNER"
+              marketLabel="Match Winner"
+              selection="DRAW"
+              selectionLabel="Draw"
+              odds={match.odds.draw}
+              kickoffISO={match.kickoffISO}
+            />
+          )}
+          <OddsButton
+            fixtureId={match.id}
+            matchLabel={`${match.home.name} vs ${match.away.name}`}
+            league={match.league}
+            market="MATCH_WINNER"
+            marketLabel="Match Winner"
+            selection="AWAY"
+            selectionLabel={match.away.short || "Away"}
+            odds={match.odds.away}
+            kickoffISO={match.kickoffISO}
+          />
         </div>
       )}
 
