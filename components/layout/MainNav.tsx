@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth/context"
 import { ProfilePanel } from "@/components/features/nav/ProfilePanel"
 import { GlobalSearch } from "@/components/features/search/GlobalSearch"
 import { AlertBell } from "@/components/features/alerts/AlertBell"
+import { useBetSlip } from "@/contexts/BetSlipContext"
+import { createClient } from "@/lib/supabase/client"
 
 const NAV_LINKS = [
   {
@@ -81,13 +83,36 @@ const NAV_LINKS = [
       </svg>
     ),
   },
+  {
+    href: "/my-bets",
+    label: "My Bets",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+        <rect x="9" y="3" width="6" height="4" rx="1" />
+        <line x1="9" y1="12" x2="15" y2="12" />
+        <line x1="9" y1="16" x2="13" y2="16" />
+      </svg>
+    ),
+  },
+  {
+    href: "/promotions",
+    label: "Promotions",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+    ),
+  },
 ]
 
 export function MainNav() {
   const pathname = usePathname()
   const { user } = useAuth()
+  const { betCount, setIsOpen: setBetSlipOpen } = useBetSlip()
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [balance, setBalance] = useState<number | null>(null)
   const lastSearchQueryRef = useRef("")
 
   // Close drawer on route change
@@ -100,6 +125,20 @@ export function MainNav() {
     document.body.style.overflow = drawerOpen ? "hidden" : ""
     return () => { document.body.style.overflow = "" }
   }, [drawerOpen])
+
+  // Load user balance
+  useEffect(() => {
+    if (!user) { setBalance(null); return }
+    const supabase = createClient()
+    supabase
+      .from("profiles")
+      .select("bankroll")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setBalance(data.bankroll ?? 0)
+      })
+  }, [user])
 
   return (
     <>
@@ -205,6 +244,32 @@ export function MainNav() {
               </svg>
             </button>
             <AlertBell />
+            {user && balance !== null && (
+              <Link href="/deposit" className="balance-chip" aria-label={`Account balance: $${balance.toFixed(2)}, click to deposit`}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <line x1="12" y1="1" x2="12" y2="23" />
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                ${balance.toFixed(2)}
+              </Link>
+            )}
+            <button
+              type="button"
+              className={cn("nav-bet-slip-btn", betCount > 0 && "nav-bet-slip-btn--has-bets")}
+              onClick={() => setBetSlipOpen(true)}
+              aria-label={`Open bet slip${betCount > 0 ? `, ${betCount} selection${betCount !== 1 ? "s" : ""}` : ""}`}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <line x1="9" y1="12" x2="15" y2="12" />
+                <line x1="9" y1="16" x2="13" y2="16" />
+              </svg>
+              <span className="nav-bet-slip-label">Slip</span>
+              {betCount > 0 && (
+                <span className="nav-bet-slip-badge" aria-hidden>{betCount}</span>
+              )}
+            </button>
             {user ? (
               <ProfilePanel />
             ) : (

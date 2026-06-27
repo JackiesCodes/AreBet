@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/primitives/ErrorBoundary"
 import { MatchIntelligenceProvider } from "@/contexts/MatchIntelligenceContext"
 import { FilterProvider } from "@/contexts/FilterContext"
 import { SelectedMatchProvider } from "@/contexts/SelectedMatchContext"
+import { BetSlipProvider } from "@/contexts/BetSlipContext"
 
 export const metadata: Metadata = {
   title: "AreBet — Smart Betting. Simple Insights.",
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <AuthProvider>
           <ToastProvider>
+            <BetSlipProvider>
             <MatchIntelligenceProvider>
               <Suspense>
                 <FilterProvider>
@@ -80,6 +82,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </FilterProvider>
               </Suspense>
             </MatchIntelligenceProvider>
+            </BetSlipProvider>
           </ToastProvider>
         </AuthProvider>
       </body>

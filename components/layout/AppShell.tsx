@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react"
 import { LeftSidebar } from "./LeftSidebar"
 import { RightPanel } from "./RightPanel"
+import { BetSlip } from "@/components/features/betslip/BetSlip"
 
 interface AppShellProps {
   children: ReactNode
@@ -59,6 +60,9 @@ export function AppShell({ children }: AppShellProps) {
         </button>
         <RightPanel />
       </div>
+
+      {/* Bet Slip — fixed positioned overlay */}
+      <BetSlip />
     </div>
   )
 }
