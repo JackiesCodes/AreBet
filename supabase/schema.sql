@@ -67,23 +67,24 @@ create policy "Users manage their own favorites"
 
 -- =====================
 -- USER BET HISTORY
--- Records every bet placed via BetSlipPanel
--- Drop and recreate because the old schema used a single jsonb column
+-- Records every bet placed via the BetSlip
 -- =====================
 drop table if exists public.user_bets cascade;
 create table public.user_bets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   fixture_id integer not null,
-  teams text not null,
+  match_label text,          -- human-readable "Arsenal vs Chelsea"
   league text,
-  market text not null,    -- '1X2' | 'BTTS' | 'OVER25' | 'UNDER25' | 'DNB'
-  selection text not null, -- 'HOME' | 'DRAW' | 'AWAY' | 'YES' | 'NO' | 'OVER' | 'UNDER'
+  market text not null,      -- 'MATCH_WINNER' | 'BTTS' | 'OVER_25' etc.
+  market_label text,         -- human-readable "Match Winner"
+  selection text not null,   -- 'HOME' | 'DRAW' | 'AWAY' | 'YES' | 'NO' etc.
+  selection_label text,      -- human-readable "Arsenal" | "Draw" | "Away"
+  bet_type text not null default 'SINGLE',  -- 'SINGLE' | 'ACCUMULATOR'
   stake numeric(10,2) not null,
   odds numeric(6,2) not null,
-  result text not null default 'PENDING', -- 'WIN' | 'LOSS' | 'PUSH' | 'PENDING'
-  model_confidence integer,  -- 0-100, confidence at time of bet
-  value_edge numeric(5,3),   -- edge % at time of bet (value bet detection)
+  result text not null default 'PENDING',   -- 'PENDING' | 'WIN' | 'LOSS' | 'PUSH' | 'VOID'
+  kickoff_iso text,          -- ISO timestamp of the fixture kickoff
   placed_at timestamptz not null default now()
 );
 

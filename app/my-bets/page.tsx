@@ -46,6 +46,7 @@ export default function MyBetsPage() {
   const { user, loading: authLoading } = useAuth()
   const [bets, setBets] = useState<UserBet[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>("open")
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function MyBetsPage() {
 
     async function fetchBets() {
       setLoading(true)
+      setFetchError(null)
       const supabase = createClient()
       const { data, error } = await supabase
         .from("user_bets")
@@ -64,7 +66,9 @@ export default function MyBetsPage() {
         .eq("user_id", user!.id)
         .order("placed_at", { ascending: false })
 
-      if (!error && data) {
+      if (error) {
+        setFetchError("Failed to load your bets. Please try again.")
+      } else if (data) {
         setBets(data as UserBet[])
       }
       setLoading(false)
@@ -87,6 +91,17 @@ export default function MyBetsPage() {
         <div className="my-bets-empty">
           <h2>Sign in to view your bets</h2>
           <Link href="/auth/login" className="md-btn md-btn--primary">Sign In</Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="my-bets-page">
+        <div className="my-bets-empty">
+          <h2>Something went wrong</h2>
+          <p>{fetchError}</p>
         </div>
       </div>
     )

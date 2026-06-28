@@ -73,7 +73,6 @@
   --nav-height: 64px;
   --bottom-nav-height: 56px;
   --sidebar-width: 280px;
-  --insight-width: 360px;
 
   /* Motion */
   --t-fast: 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -452,37 +451,6 @@ svg {
   border: 1.5px solid var(--bg);
 }
 
-/* ----- Command Center 3-col layout --------------------------------------- */
-.cc-root {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr var(--insight-width);
-  gap: var(--space-4);
-  padding: var(--space-4);
-  max-width: 1600px;
-  margin: 0 auto;
-  min-height: calc(100vh - var(--nav-height));
-  min-height: calc(100dvh - var(--nav-height));
-}
-
-@media (max-width: 1279px) {
-  .cc-root {
-    grid-template-columns: 240px 1fr;
-  }
-  .cc-insight {
-    display: none;
-  }
-}
-
-@media (max-width: 767px) {
-  .cc-root {
-    grid-template-columns: 1fr;
-    padding: var(--space-2);
-    gap: var(--space-3);
-  }
-  .cc-leagues {
-    display: none;
-  }
-}
 
 .cc-leagues,
 .cc-feed,
@@ -4877,7 +4845,7 @@ svg {
   padding-bottom: 0;
 }
 
-/* 3-col grid: sidebar | main | right panel */
+/* 2-col grid: sidebar | main */
 .app-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -10695,4 +10663,131 @@ svg {
   font-size: 14px;
   font-weight: 700;
   color: var(--positive);
+}
+
+/* ── Popular Markets ────────────────────────────────────────────────────────── */
+.popular-markets {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.popular-markets-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.popular-markets-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.popular-markets-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.popular-markets-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.popular-markets-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.popular-markets-row:last-child {
+  border-bottom: none;
+}
+
+.popular-markets-row:hover {
+  background: var(--surface-2);
+}
+
+.popular-markets-row--skeleton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.popular-markets-row--skeleton:hover {
+  background: transparent;
+}
+
+.popular-markets-match-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.popular-markets-league {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popular-markets-teams {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popular-markets-vs {
+  font-weight: 400;
+  color: var(--text-muted);
+  margin: 0 2px;
+}
+
+.popular-markets-odds {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Skeleton shimmer bars used in popular-markets loading state */
+.skel-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s ease infinite;
+}
+
+.skel-line--medium {
+  width: 140px;
+}
+
+.skel-line--short {
+  width: 80px;
+}
+
+@keyframes skel-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
