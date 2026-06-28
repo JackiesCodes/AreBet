@@ -12,7 +12,6 @@
  */
 
 import { createClient } from "@/lib/supabase/client"
-import type { MatchPopularity } from "@/lib/utils/highlight-engine"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -58,66 +57,6 @@ export async function fetchEditorialBoosts(): Promise<Map<number, { score: numbe
   } catch {
     return new Map()
   }
-}
-
-// ── Server-only reads (service client, called from route handlers) ────────────
-
-/**
- * Aggregate popularity data for a set of fixture IDs.
- * Uses the service-role client to bypass RLS on user_bets and favorites.
- * Returns a Map<fixtureId, MatchPopularity> — always returns a value for every ID.
- *
- * Call this from route handlers ONLY — never from client components.
- */
-export async function fetchMatchPopularity(
-  fixtureIds: number[],
-): Promise<Map<number, MatchPopularity>> {
-  const empty = new Map<number, MatchPopularity>(
-    fixtureIds.map((id) => [id, { betCount: 0, favoriteCount: 0 }]),
-  )
-  if (fixtureIds.length === 0) return empty
-
-  // Dynamic import: keeps service client out of the browser bundle
-  const { createServiceClient } = await import("@/lib/supabase/service")
-
-  try {
-    const supabase = createServiceClient()
-    const idStrings = fixtureIds.map(String)
-
-    // Two parallel batch queries — much cheaper than N individual queries
-    const [betResult, favResult] = await Promise.allSettled([
-      supabase
-        .from("user_bets")
-        .select("fixture_id")
-        .in("fixture_id", fixtureIds),
-      supabase
-        .from("favorites")
-        .select("entity_id")
-        .eq("entity_type", "match")
-        .in("entity_id", idStrings),
-    ])
-
-    if (betResult.status === "fulfilled" && betResult.value.data) {
-      for (const row of betResult.value.data) {
-        const entry = empty.get(row.fixture_id)
-        if (entry) entry.betCount++
-      }
-    }
-
-    if (favResult.status === "fulfilled" && favResult.value.data) {
-      for (const row of favResult.value.data) {
-        const id = parseInt(row.entity_id, 10)
-        if (Number.isFinite(id)) {
-          const entry = empty.get(id)
-          if (entry) entry.favoriteCount++
-        }
-      }
-    }
-  } catch {
-    // Graceful degradation — engine still works with zero popularity counts
-  }
-
-  return empty
 }
 
 // ── Admin reads ───────────────────────────────────────────────────────────────

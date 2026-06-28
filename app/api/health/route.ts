@@ -33,9 +33,9 @@ async function checkSupabase(): Promise<"ok" | "error" | "unconfigured"> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 3000)
 
-    // Query a known system table — works regardless of anon key format
+    // Query profiles table to verify Supabase connectivity
     const res = await fetch(
-      `${url}/rest/v1/signal_snapshots?select=signal_id&limit=1`,
+      `${url}/rest/v1/profiles?select=id&limit=1`,
       {
         headers: {
           apikey: key,
