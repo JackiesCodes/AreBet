@@ -16,7 +16,6 @@ interface LeagueRowProps {
   isOn: boolean
   isIsolated: boolean
   isPinned: boolean
-  allKeys: string[]
   onToggle: () => void
   onIsolate: () => void
   onPin: () => void
@@ -118,7 +117,6 @@ export function LeagueTree({
         isOn={isOn}
         isIsolated={isIsolated}
         isPinned={pinnedLeagues.has(league.key)}
-        allKeys={allKeys}
         onToggle={() => toggleLeague(league.key)}
         onIsolate={() => isolateLeague(league.key, allKeys)}
         onPin={() => togglePin(league.key)}

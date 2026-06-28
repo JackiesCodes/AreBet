@@ -426,7 +426,7 @@ export async function fetchTeamStatistics(
 
 /** Available seasons for a league (or all seasons if no leagueId given) */
 export async function fetchSeasons(leagueId?: number): Promise<number[]> {
-  const path = leagueId ? `/leagues/seasons` : `/leagues/seasons`
+  const path = leagueId ? `/leagues/seasons?league=${leagueId}` : `/leagues/seasons`
   const results = await apiFetch<number>(path, REVALIDATE_PLAYERS)
   return results
 }

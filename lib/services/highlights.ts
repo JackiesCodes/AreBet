@@ -11,8 +11,6 @@
  *   listEditorialBoosts()    — service client, admin panel
  */
 
-import { createClient } from "@/lib/supabase/client"
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface EditorialBoost {
@@ -38,7 +36,8 @@ export interface EditorialBoostRow extends EditorialBoost {
  */
 export async function fetchEditorialBoosts(): Promise<Map<number, { score: number; label: string | null }>> {
   try {
-    const supabase = createClient()
+    const { createServiceClient } = await import("@/lib/supabase/service")
+    const supabase = createServiceClient()
     const now = new Date().toISOString()
 
     const { data, error } = await supabase

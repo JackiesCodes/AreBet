@@ -177,7 +177,7 @@ export function MainNav() {
                 <circle cx="11" cy="11" r="8" />
                 <path d="M21 21l-4.35-4.35" />
               </svg>
-              <input readOnly placeholder="Search teams, leagues, players…" style={{ marginLeft: 8 }} tabIndex={-1} />
+              <span style={{ marginLeft: 8 }} aria-hidden="true">Search teams, leagues, players…</span>
             </button>
             {/* Search icon for mobile (always visible) */}
             <button

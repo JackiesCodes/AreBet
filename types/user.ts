@@ -16,7 +16,7 @@ export interface Profile {
 export interface UserPreferences {
   density: Density
   default_sort: "confidence" | "kickoff" | "odds" | "league"
-  default_filter_status: "all" | "live" | "soon" | "favorites" | "high"
+  default_filter_status: "all" | "live" | "upcoming"
   show_favorites_first: boolean
   hide_finished: boolean
   odds_format: OddsFormat

@@ -53,7 +53,7 @@ export function MatchStatsTab({ match }: { match: Match }) {
             <MatchStatBar
               label="Draw probability"
               home={Math.round(match.prediction.modelProbs.draw * 100)}
-              away={Math.round(match.prediction.modelProbs.draw * 100)}
+              away={Math.round(match.prediction.modelProbs.away * 100)}
               unit="%"
             />
           </>

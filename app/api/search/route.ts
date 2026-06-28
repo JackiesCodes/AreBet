@@ -110,11 +110,6 @@ export async function GET(request: NextRequest) {
         return bScore - aScore
       })
 
-    console.log(
-      `[search] q="${q}" teams=${teams.length} leagues=${leagues.length} ` +
-      `directPlayers=${directPlayers.length} squadPlayers=${squadResults.length} ` +
-      `coaches=${coaches.length} venues=${venues.length}`
-    )
 
     // ── Step 3: build entity list ──────────────────────────────────────────
     const entities: SearchEntity[] = []
@@ -204,11 +199,6 @@ export async function GET(request: NextRequest) {
     const fixtureLeagueIds = leagues.slice(0, 2).map((l) => l.league.id)
     const fixtureVenueIds  = venues.slice(0, 2).map((v) => v.id)
 
-    console.log(
-      `[search] fixture sources — teams=${[...fixtureTeamIds].join(",")} ` +
-      `leagues=${fixtureLeagueIds.join(",")} venues=${fixtureVenueIds.join(",")}`
-    )
-
     if (fixtureTeamIds.size === 0 && fixtureLeagueIds.length === 0 && fixtureVenueIds.length === 0) {
       return NextResponse.json({ entities, matches: [] })
     }
@@ -247,7 +237,6 @@ export async function GET(request: NextRequest) {
       return a.status === "FINISHED" ? tb - ta : ta - tb
     })
 
-    console.log(`[search] returning entities=${entities.length} matches=${matches.length}`)
     return NextResponse.json({ entities, matches: matches.slice(0, 20) })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

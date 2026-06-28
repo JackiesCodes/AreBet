@@ -83,8 +83,7 @@ export async function POST(request: Request) {
       kickoff_iso: bet.kickoffISO,
     }))
 
-    // For accumulator, insert as a single row
-    const insertRows = betType === "ACCUMULATOR" ? [rows[0]] : rows
+    const insertRows = rows
 
     const { data: insertedBets, error: insertError } = await supabase
       .from("user_bets")

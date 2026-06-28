@@ -7,14 +7,14 @@ import { Card, CardTitle, CardSubtitle } from "@/components/primitives/Card"
 import { TierBadge } from "@/components/primitives/TierBadge"
 
 export default function UserDashboard() {
-  const { user } = useAuth()
+  const { user, tier } = useAuth()
 
   return (
     <div className="md-page">
       <PageHeader
         title="Your Dashboard"
         subtitle={user?.email ? `Signed in as ${user.email}` : "Sign in to sync your preferences across devices"}
-        actions={<TierBadge tier="free" />}
+        actions={<TierBadge tier={tier ?? "free"} />}
       />
 
       {!user && (

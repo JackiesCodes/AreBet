@@ -37,11 +37,7 @@ export function HomeBoard() {
   useEffect(() => { saveUiState(ui) }, [ui])
 
   const filtered = useMemo(() => {
-    let list: Match[] = ui.search
-      ? (disabledLeagues.size > 0
-          ? matches.filter((m) => !disabledLeagues.has(leagueKey(m)))
-          : matches)
-      : applyToMatches(matches)
+    let list: Match[] = applyToMatches(matches)
 
     if (ui.search) {
       const q = ui.search.toLowerCase()
