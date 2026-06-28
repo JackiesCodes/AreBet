@@ -102,6 +102,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   // Keep pathname in a ref so the URL sync effect doesn't run on navigation
   const pathnameRef = useRef(pathname)
   useEffect(() => { pathnameRef.current = pathname }, [pathname])
+  // Stable refs for router and toast — prevents them re-triggering the sync effect
+  const routerRef = useRef(router)
+  useEffect(() => { routerRef.current = router }, [router])
+  const toastRef = useRef(toast)
+  useEffect(() => { toastRef.current = toast }, [toast])
 
   // Persist filter state whenever any field changes
   useEffect(() => {
@@ -113,15 +118,16 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   }, [disabledLeagues, pinnedLeagues, statusFilter])
 
   // Sync filter changes → URL query params + toast (skip the initial mount)
+  // router and toast are accessed via refs so they never re-trigger this effect
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return }
     const params = new URLSearchParams()
     if (statusFilter !== "all") params.set("status", statusFilter)
     if (disabledLeagues.size > 0) params.set("leagues", Array.from(disabledLeagues).join(","))
     const qs = params.toString()
-    router.replace(`${pathnameRef.current}${qs ? `?${qs}` : ""}`, { scroll: false })
-    toast.push("info", "Filters updated")
-  }, [statusFilter, disabledLeagues, router, toast])
+    routerRef.current.replace(`${pathnameRef.current}${qs ? `?${qs}` : ""}`, { scroll: false })
+    toastRef.current.push("info", "Filters updated")
+  }, [statusFilter, disabledLeagues])
 
   // ---------------------------------------------------------------------------
   // League actions

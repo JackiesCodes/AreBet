@@ -2,12 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import type { Match } from "@/types/match"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import { useFilters, leagueKey } from "@/contexts/FilterContext"
 import { useFavorites } from "@/hooks/useFavorites"
-import { rankMatches } from "@/lib/utils/rank-matches"
 import { BUCKET_ORDER, bucketFor, type TimeBucket } from "@/lib/utils/time"
-import { IntelligenceBar } from "@/components/features/nav/IntelligenceBar"
 import { ActiveFilterChips } from "@/components/features/nav/ActiveFilterChips"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
@@ -23,14 +21,10 @@ export function HomeBoard() {
     matches,
     loading,
     error,
-    fetchedAt,
-    latestChangeMap,
-    changedMatchIds,
-    setWatchedMatchIds,
-  } = useMatchIntelligence()
+  } = useMatchFeedCtx()
 
   const { applyToMatches, disabledLeagues, activeFilterCount, statusFilter, setStatusFilter } = useFilters()
-  const { favorites, isFavorite } = useFavorites()
+  const { isFavorite } = useFavorites()
   const [ui, setUi] = useState<UiState>(loadUiState())
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
@@ -41,15 +35,6 @@ export function HomeBoard() {
   }), [matches])
 
   useEffect(() => { saveUiState(ui) }, [ui])
-
-  useEffect(() => {
-    const ids = new Set(
-      favorites
-        .filter((f) => f.entity_type === "match")
-        .map((f) => f.entity_id),
-    )
-    setWatchedMatchIds(ids)
-  }, [favorites, setWatchedMatchIds])
 
   const filtered = useMemo(() => {
     let list: Match[] = ui.search
@@ -75,15 +60,15 @@ export function HomeBoard() {
       case "live":      list = list.filter((m) => m.status === "LIVE");                                                                     break
       case "soon":      list = list.filter((m) => m.status === "UPCOMING" && new Date(m.kickoffISO).getTime() <= Date.now() + 3_600_000);   break
       case "favorites": list = list.filter((m) => isFavorite("match", String(m.id)));                                                      break
-      case "high":      list = list.filter((m) => (m.prediction?.confidence ?? 0) >= 70);                                                  break
     }
 
-    const sorted = rankMatches(list, "kickoff")
-    return sorted.sort((a, b) => {
-      if (a.status !== b.status) return 0
-      return (changedMatchIds.has(a.id) ? 0 : 1) - (changedMatchIds.has(b.id) ? 0 : 1)
+    return [...list].sort((a, b) => {
+      const order: Record<string, number> = { LIVE: 0, UPCOMING: 1, FINISHED: 2 }
+      const diff = (order[a.status] ?? 2) - (order[b.status] ?? 2)
+      if (diff !== 0) return diff
+      return new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime()
     })
-  }, [matches, applyToMatches, disabledLeagues, ui, isFavorite, changedMatchIds])
+  }, [matches, applyToMatches, disabledLeagues, ui, isFavorite])
 
   const grouped = useMemo(() => {
     const groups: Partial<Record<TimeBucket, Match[]>> = {}
@@ -97,8 +82,6 @@ export function HomeBoard() {
 
   return (
     <section className="cc-feed">
-      <IntelligenceBar matches={matches} fetchedAt={fetchedAt ?? undefined} />
-
       {/* Desktop toolbar */}
       <div className="cc-toolbar cc-toolbar--desktop">
         <div className="cc-search">
@@ -155,7 +138,7 @@ export function HomeBoard() {
           BUCKET_ORDER.map((bucket) => {
             const items = grouped[bucket]
             if (!items || items.length === 0) return null
-            return <MatchBucketList key={bucket} bucket={bucket} items={items} latestChangeMap={latestChangeMap} />
+            return <MatchBucketList key={bucket} bucket={bucket} items={items} />
           })
         )}
       </div>

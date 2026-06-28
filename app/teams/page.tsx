@@ -1,6 +1,6 @@
 "use client"
 
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/primitives/Skeleton"
 import { EmptyState } from "@/components/primitives/EmptyState"
@@ -10,7 +10,7 @@ import { FormGuide } from "@/components/primitives/FormGuide"
 import Link from "next/link"
 
 export default function TeamsPage() {
-  const { matches, loading } = useMatchIntelligence()
+  const { matches, loading } = useMatchFeedCtx()
   const [search, setSearch] = useState("")
 
   const teams = useMemo(() => {

@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils/cn"
 import { useAuth } from "@/lib/auth/context"
 import { ProfilePanel } from "@/components/features/nav/ProfilePanel"
 import { GlobalSearch } from "@/components/features/search/GlobalSearch"
-import { AlertBell } from "@/components/features/alerts/AlertBell"
 import { useBetSlip } from "@/contexts/BetSlipContext"
 import { createClient } from "@/lib/supabase/client"
 
@@ -24,62 +23,11 @@ const NAV_LINKS = [
   },
   {
     href: "/live-matches",
-    label: "Live",
+    label: "In-Play",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="10" />
         <circle cx="12" cy="12" r="3" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    href: "/upcoming-matches",
-    label: "Upcoming",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    ),
-  },
-  {
-    href: "/predictions",
-    label: "Predictions",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-      </svg>
-    ),
-  },
-  {
-    href: "/odds-comparison",
-    label: "Odds",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <line x1="12" y1="1" x2="12" y2="23" />
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-      </svg>
-    ),
-  },
-  {
-    href: "/insights",
-    label: "Intelligence",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
-  },
-  {
-    href: "/trust",
-    label: "Track Record",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
   },
@@ -243,7 +191,6 @@ export function MainNav() {
                 <path d="M21 21l-4.35-4.35" />
               </svg>
             </button>
-            <AlertBell />
             {user && balance !== null && (
               <Link href="/deposit" className="balance-chip" aria-label={`Account balance: $${balance.toFixed(2)}, click to deposit`}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>

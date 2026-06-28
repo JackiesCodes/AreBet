@@ -7,12 +7,9 @@ import { cn } from "@/lib/utils/cn"
 import type { Match } from "@/types/match"
 import { useSelectedMatch } from "@/contexts/SelectedMatchContext"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
-import { calculateValueEdge } from "@/lib/utils/value-bet"
 import { confTier } from "@/lib/utils/match-status"
 import { FormGuide } from "@/components/primitives/FormGuide"
 import { FavoritesSwitcher } from "@/components/features/nav/FavoritesSwitcher"
-import type { MatchChange } from "@/types/alerts"
-import { CHANGE_ICONS } from "@/lib/utils/match-changes"
 import { OddsButton } from "@/components/features/betslip/OddsButton"
 
 // ── Team circle ────────────────────────────────────────────────────────────────
@@ -53,55 +50,32 @@ function TeamCircle({ name, logo, size = "md" }: { name: string; logo?: string; 
   )
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function shortAdvice(advice: string): string {
-  const a = advice.toLowerCase()
-  if (a.includes("home")) return "Home Win"
-  if (a.includes("away")) return "Away Win"
-  if (a.includes("draw")) return "Draw"
-  if (a.includes("over")) return "Over 2.5"
-  if (a.includes("btts") || a.includes("both")) return "BTTS"
-  return advice.split(" ").slice(0, 2).join(" ")
-}
-
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface MatchCardProps {
   match: Match
   selected?: boolean
   onSelect?: (match: Match) => void
-  latestChange?: MatchChange
   compact?: boolean
   showLeague?: boolean
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function MatchCard({ match, selected, onSelect, latestChange, compact, showLeague = true }: MatchCardProps) {
+export function MatchCard({ match, selected, onSelect, compact, showLeague = true }: MatchCardProps) {
   const router     = useRouter()
   const { setSelectedMatch } = useSelectedMatch()
   const isLive     = match.status === "LIVE"
   const isFinished = match.status === "FINISHED"
   const isUpcoming = match.status === "UPCOMING"
-  const conf       = match.prediction.confidence
-  const tier       = confTier(conf)
-  const hasPrediction = Boolean(
-    match.prediction.advice && match.prediction.advice !== "No prediction available"
-  )
 
-  const valueEdge  = useMemo(() => calculateValueEdge(match), [match])
-  const isValue    = valueEdge?.isValue === true
-
-  const showFooter = isValue || hasPrediction
+  // Win-probability bar data (upcoming only)
+  const probs = isUpcoming && !compact ? match.prediction?.modelProbs : null
 
   const homeScore = isLive || isFinished ? match.score.home : null
   const awayScore = isLive || isFinished ? match.score.away : null
   const homeWon   = isFinished && homeScore != null && awayScore != null && homeScore > awayScore
   const awayWon   = isFinished && homeScore != null && awayScore != null && awayScore > homeScore
-
-  // Win-probability bar data (upcoming only)
-  const probs = isUpcoming && !compact ? match.prediction.modelProbs : null
 
   const kickoff = new Date(match.kickoffISO)
   const isToday = kickoff.toDateString() === new Date().toDateString()
@@ -130,7 +104,6 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
         "cc-card",
         compact      && "cc-card--compact",
         selected     && "cc-card--selected",
-        isValue      && "cc-card--value",
         isLive       && "cc-card--live",
         isFinished   && "cc-card--finished",
       )}
@@ -263,37 +236,6 @@ export function MatchCard({ match, selected, onSelect, latestChange, compact, sh
             odds={match.odds.away}
             kickoffISO={match.kickoffISO}
           />
-        </div>
-      )}
-
-      {/* ── Footer: pills (left) · advice (right) ── */}
-      {showFooter && (
-        <div className="cc-card-footer">
-          <div className="cc-card-pills">
-            {isValue && (
-              <span className="cc-card-pill cc-card-pill--value">
-                ▲ VALUE +{(valueEdge!.edge * 100).toFixed(0)}%
-              </span>
-            )}
-          </div>
-          {hasPrediction && (
-            <span className={cn("cc-card-advice", `cc-card-advice--${tier}`)}>
-              {shortAdvice(match.prediction.advice)}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* ── Change alert strip ── */}
-      {latestChange && (
-        <div className={cn("cc-change-strip", `cc-change-strip--${latestChange.severity}`)}>
-          <span className="cc-change-strip-icon" aria-hidden>
-            {CHANGE_ICONS[latestChange.type]}
-          </span>
-          <span className="cc-change-strip-summary">{latestChange.summary}</span>
-          {latestChange.detail && (
-            <span className="cc-change-strip-detail">{latestChange.detail}</span>
-          )}
         </div>
       )}
     </article>

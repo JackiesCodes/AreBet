@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import type { ApiStandingResponse } from "@/lib/api-football/types"
 
 interface LeagueOption {
@@ -89,7 +89,7 @@ function StandingsTable({ rows }: { rows: ApiStandingResponse["league"]["standin
 }
 
 export function LeagueStandingsSearch() {
-  const { matches } = useMatchIntelligence()
+  const { matches } = useMatchFeedCtx()
   const [search, setSearch] = useState("")
   const [selected, setSelected] = useState<LeagueOption | null>(null)
   const [standingsData, setStandingsData] = useState<ApiStandingResponse | null>(null)

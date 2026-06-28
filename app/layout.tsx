@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Suspense, type ReactNode } from "react"
 import "./globals.css"
-import "./highlight-matches.css"
 import { AuthProvider } from "@/lib/auth/context"
 import { ToastProvider } from "@/components/primitives/Toast"
 import { MainNav } from "@/components/layout/MainNav"
@@ -12,15 +11,15 @@ import { AppShell } from "@/components/layout/AppShell"
 import { StickinessSync } from "@/components/features/onboarding/StickinessSync"
 import { PwaRegister } from "@/components/features/onboarding/PwaRegister"
 import { ErrorBoundary } from "@/components/primitives/ErrorBoundary"
-import { MatchIntelligenceProvider } from "@/contexts/MatchIntelligenceContext"
+import { MatchFeedProvider } from "@/contexts/MatchFeedContext"
 import { FilterProvider } from "@/contexts/FilterContext"
 import { SelectedMatchProvider } from "@/contexts/SelectedMatchContext"
 import { BetSlipProvider } from "@/contexts/BetSlipContext"
 
 export const metadata: Metadata = {
-  title: "AreBet — Smart Betting. Simple Insights.",
+  title: "AreBet — Sports Betting",
   description:
-    "AreBet is a smart football betting intelligence platform. Track live matches, predictions, and odds in one place.",
+    "AreBet is a sports betting platform. Bet on live and upcoming matches with real-time odds.",
   applicationName: "AreBet",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/arebet-logo.svg", apple: "/arebet-logo.svg" },
@@ -58,7 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <ToastProvider>
             <BetSlipProvider>
-            <MatchIntelligenceProvider>
+            <MatchFeedProvider>
               <Suspense>
                 <FilterProvider>
                   <SelectedMatchProvider>
@@ -81,7 +80,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   </SelectedMatchProvider>
                 </FilterProvider>
               </Suspense>
-            </MatchIntelligenceProvider>
+            </MatchFeedProvider>
             </BetSlipProvider>
           </ToastProvider>
         </AuthProvider>

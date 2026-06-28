@@ -3,20 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils/cn"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { useBetSlip } from "@/contexts/BetSlipContext"
 
 const ITEMS = [
   { href: "/", label: "Home", icon: "⌂" },
-  { href: "/live-matches", label: "Live", icon: "●" },
+  { href: "/live-matches", label: "In-Play", icon: "●" },
   { href: "/my-bets", label: "Bets", icon: "✦", betBadge: true },
-  { href: "/favorites", label: "Watch", icon: "♥" },
-  { href: "/user/profile", label: "Me", icon: "◉", alertBadge: true },
+  { href: "/user/profile", label: "Account", icon: "◉" },
 ]
 
 export function MobileBottomNav() {
   const pathname = usePathname()
-  const { unreadCount } = useMatchIntelligence()
   const { betCount, setIsOpen } = useBetSlip()
 
   return (
@@ -24,7 +21,6 @@ export function MobileBottomNav() {
       <div className="mobile-bottom-nav-inner">
         {ITEMS.map((item) => {
           const active = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
-          const showAlertBadge = item.alertBadge && unreadCount > 0
           const showBetBadge = item.betBadge && betCount > 0
           return (
             <Link
@@ -34,9 +30,6 @@ export function MobileBottomNav() {
             >
               <span className="mobile-bottom-nav-icon-wrap" aria-hidden>
                 <span style={{ fontSize: 16 }}>{item.icon}</span>
-                {showAlertBadge && (
-                  <span className="mobile-bottom-nav-badge" aria-label={`${unreadCount} unread alerts`} />
-                )}
                 {showBetBadge && (
                   <span className="mobile-bottom-nav-badge mobile-bottom-nav-badge--bet" aria-label={`${betCount} bets`}>
                     {betCount}

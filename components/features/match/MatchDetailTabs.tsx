@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils/cn"
 import { Skeleton } from "@/components/primitives/Skeleton"
 
 // Lazy-load each tab for code splitting — only the active tab is bundled on demand
-const MatchTipsTab     = lazy(() => import("./tabs/MatchTipsTab").then((m) => ({ default: m.MatchTipsTab })))
 const MatchLineupTab   = lazy(() => import("./tabs/MatchLineupTab").then((m) => ({ default: m.MatchLineupTab })))
 const MatchOverviewTab = lazy(() => import("./tabs/MatchOverviewTab").then((m) => ({ default: m.MatchOverviewTab })))
 const MatchStatsTab    = lazy(() => import("./tabs/MatchStatsTab").then((m) => ({ default: m.MatchStatsTab })))
@@ -16,12 +15,11 @@ const MatchH2HTab      = lazy(() => import("./tabs/MatchH2HTab").then((m) => ({ 
 const MatchOddsTab     = lazy(() => import("./tabs/MatchOddsTab").then((m) => ({ default: m.MatchOddsTab })))
 const MatchSquadTab    = lazy(() => import("./tabs/MatchSquadTab").then((m) => ({ default: m.MatchSquadTab })))
 
-type Tab = "tips" | "lineup" | "overview" | "stats" | "players" | "timeline" | "h2h" | "odds" | "squad"
+type Tab = "overview" | "lineup" | "stats" | "players" | "timeline" | "h2h" | "odds" | "squad"
 
 const TABS: Array<{ key: Tab; label: string }> = [
-  { key: "tips",     label: "Tips" },
-  { key: "lineup",   label: "Lineup" },
   { key: "overview", label: "Overview" },
+  { key: "lineup",   label: "Lineup" },
   { key: "stats",    label: "Stats" },
   { key: "players",  label: "Players" },
   { key: "timeline", label: "Timeline" },
@@ -31,9 +29,8 @@ const TABS: Array<{ key: Tab; label: string }> = [
 ]
 
 const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ match: Match }>> = {
-  tips:     MatchTipsTab,
-  lineup:   MatchLineupTab,
   overview: MatchOverviewTab,
+  lineup:   MatchLineupTab,
   stats:    MatchStatsTab,
   players:  MatchPlayersTab,
   timeline: MatchTimelineTab,
@@ -43,7 +40,7 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ match: Match }>> = {
 }
 
 export function MatchDetailTabs({ match }: { match: Match }) {
-  const [tab, setTab] = useState<Tab>("tips")
+  const [tab, setTab] = useState<Tab>("overview")
   const uid     = useId()
   const tabsRef = useRef<HTMLDivElement>(null)
 

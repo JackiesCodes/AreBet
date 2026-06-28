@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from "react"
 import type { Match } from "@/types/match"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import { useFilters } from "@/contexts/FilterContext"
-import { rankMatches } from "@/lib/utils/rank-matches"
 import { LeagueSection } from "./LeagueSection"
 import { groupByLeague } from "@/lib/utils/league-groups"
 import { Skeleton } from "@/components/primitives/Skeleton"
@@ -18,7 +17,7 @@ interface MatchDirectoryPageProps {
 }
 
 export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPageProps) {
-  const { matches, loading, error } = useMatchIntelligence()
+  const { matches, loading, error } = useMatchFeedCtx()
   const { applyToMatches } = useFilters()
   const [search, setSearch] = useState("")
 
@@ -34,7 +33,12 @@ export function MatchDirectoryPage({ title, filter, compact }: MatchDirectoryPag
           m.league.toLowerCase().includes(q),
       )
     }
-    return rankMatches(list, "kickoff")
+    return [...list].sort((a, b) => {
+      const order: Record<string, number> = { LIVE: 0, UPCOMING: 1, FINISHED: 2 }
+      const diff = (order[a.status] ?? 2) - (order[b.status] ?? 2)
+      if (diff !== 0) return diff
+      return new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime()
+    })
   }, [matches, applyToMatches, filter, search])
 
   const leagueGroups = useMemo(() => groupByLeague(filtered), [filtered])

@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { Badge } from "@/components/primitives/Badge"
 import { FormGuide } from "@/components/primitives/FormGuide"
 import { MatchDetailTabs } from "@/components/features/match/MatchDetailTabs"
-import { MatchIntelligenceSummary } from "@/components/features/match/MatchIntelligenceSummary"
 import { formatTime } from "@/lib/utils/time"
 
 interface PageProps {
@@ -95,9 +94,6 @@ export default async function MatchDetailPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-
-      {/* Intelligence Summary (signals before tabs) */}
-      <MatchIntelligenceSummary match={match} />
 
       {/* Detail tabs */}
       <MatchDetailTabs match={match} />

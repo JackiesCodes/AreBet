@@ -3,13 +3,11 @@
 import { useState } from "react"
 import type { Match } from "@/types/match"
 import { MatchCard } from "./MatchCard"
-import type { MatchChange } from "@/types/alerts"
 
 interface LeagueSectionProps {
   league: string
   matches: Match[]
   compact?: boolean
-  latestChangeMap?: Map<number, MatchChange>
   defaultExpanded?: boolean
 }
 
@@ -17,7 +15,6 @@ export function LeagueSection({
   league,
   matches,
   compact,
-  latestChangeMap,
   defaultExpanded = true,
 }: LeagueSectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded)
@@ -45,7 +42,6 @@ export function LeagueSection({
               match={m}
               compact={compact}
               showLeague={false}
-              latestChange={latestChangeMap?.get(m.id)}
             />
           ))}
         </div>

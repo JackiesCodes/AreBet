@@ -2,81 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { usePreferences } from "@/hooks/usePreferences"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
 import { useTheme, type Theme } from "@/hooks/useTheme"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardSubtitle, CardTitle } from "@/components/primitives/Card"
 import { SelectField } from "@/components/primitives/SelectField"
-import { Toggle } from "@/components/primitives/Toggle"
 import { Button } from "@/components/primitives/Button"
 import { cn } from "@/lib/utils/cn"
-import type { AlertPreferences } from "@/types/alerts"
 
 type NotifPermission = "default" | "granted" | "denied" | "unsupported"
-
-// ── Grouped alert toggle config ──────────────────────────────────────────────
-
-interface AlertToggleDef {
-  key: keyof Omit<AlertPreferences, "watchedOnly">
-  label: string
-  description: string
-}
-
-const CRITICAL_ALERTS: AlertToggleDef[] = [
-  {
-    key: "wentLive",
-    label: "Match went live",
-    description: "Alert when a tracked match kicks off",
-  },
-  {
-    key: "goals",
-    label: "Goals scored",
-    description: "Alert every time a goal is scored",
-  },
-  {
-    key: "redCards",
-    label: "Red cards",
-    description: "Alert when a player is sent off",
-  },
-  {
-    key: "valueAppeared",
-    label: "Value spot appeared",
-    description: "Alert when model detects a value edge ≥ 5%",
-  },
-]
-
-const SECONDARY_ALERTS: AlertToggleDef[] = [
-  {
-    key: "kickoffSoon",
-    label: "Kicking off in 30 min",
-    description: "Alert when a tracked match is approaching kickoff",
-  },
-  {
-    key: "confidenceUp",
-    label: "Confidence rising",
-    description: "Alert when signal strength increases by 8+ points",
-  },
-  {
-    key: "oddsDrift",
-    label: "Odds movement",
-    description: "Alert when a market moves more than 5%",
-  },
-  {
-    key: "valueDisappeared",
-    label: "Value spot closed",
-    description: "Alert when a value edge drops below threshold",
-  },
-  {
-    key: "confidenceDown",
-    label: "Confidence falling",
-    description: "Alert when signal strength drops by 8+ points",
-  },
-  {
-    key: "matchFinished",
-    label: "Match finished",
-    description: "Alert when a tracked match ends",
-  },
-]
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -87,7 +20,6 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: string; desc: string }
 
 export default function SettingsPage() {
   const { prefs, setPrefs, loading } = usePreferences()
-  const { alertPrefs, setAlertPrefs } = useMatchIntelligence()
   const { theme, setTheme } = useTheme()
   const [notifPerm, setNotifPerm] = useState<NotifPermission>("default")
 
@@ -105,13 +37,6 @@ export default function SettingsPage() {
     const result = await Notification.requestPermission()
     setNotifPerm(result as NotifPermission)
   }, [])
-
-  const setPref = useCallback(
-    (key: keyof AlertPreferences, value: boolean) => {
-      setAlertPrefs({ ...alertPrefs, [key]: value })
-    },
-    [alertPrefs, setAlertPrefs],
-  )
 
   if (loading) {
     return (
@@ -161,7 +86,7 @@ export default function SettingsPage() {
       {/* ── Display ───────────────────────────────────────────────────────── */}
       <Card className="mb-6">
         <CardTitle>Display</CardTitle>
-        <CardSubtitle>Density, odds format, and default view</CardSubtitle>
+        <CardSubtitle>Density and odds format</CardSubtitle>
         <div className="settings-grid">
           <SelectField
             label="Density"
@@ -182,79 +107,41 @@ export default function SettingsPage() {
               { label: "American (−118)", value: "american" },
             ]}
           />
-          <SelectField
-            label="Default sort"
-            value={prefs.default_sort}
-            onChange={(e) => setPrefs({ default_sort: e.target.value as "confidence" | "kickoff" | "odds" | "league" })}
-            options={[
-              { label: "Kickoff", value: "kickoff" },
-              { label: "Confidence", value: "confidence" },
-              { label: "Best odds", value: "odds" },
-              { label: "League", value: "league" },
-            ]}
-          />
-          <SelectField
-            label="Default filter"
-            value={prefs.default_filter_status}
-            onChange={(e) => setPrefs({ default_filter_status: e.target.value as "all" | "live" | "soon" | "favorites" | "high" })}
-            options={[
-              { label: "All matches", value: "all" },
-              { label: "Live now", value: "live" },
-              { label: "Kicking off soon", value: "soon" },
-              { label: "My watchlist", value: "favorites" },
-
-              { label: "High confidence", value: "high" },
-            ]}
-          />
         </div>
       </Card>
 
-      {/* ── Alerts ────────────────────────────────────────────────────────── */}
+      {/* ── Responsible Gambling ──────────────────────────────────────────── */}
       <Card className="mb-6">
-        <CardTitle>Alerts &amp; Signals</CardTitle>
-        <CardSubtitle>Control which match events appear in your alert feed</CardSubtitle>
+        <CardTitle>Responsible Gambling</CardTitle>
+        <CardSubtitle>Set limits to help manage your betting activity</CardSubtitle>
 
-        {/* Watchlist scope toggle */}
-        <div className="settings-scope-banner">
-          <Toggle
-            checked={alertPrefs.watchedOnly}
-            onChange={(v) => setPref("watchedOnly", v)}
-            label="Watchlist only"
-            description="Only surface alerts for matches, teams, and leagues you follow. Off = alerts for all live matches."
-          />
-        </div>
-
-        <div className="settings-alert-cols">
-          {/* Critical alerts */}
-          <div className="settings-alert-group">
-            <div className="settings-alert-group-label">High-priority signals</div>
-            <div className="settings-toggles">
-              {CRITICAL_ALERTS.map(({ key, label, description }) => (
-                <Toggle
-                  key={key}
-                  checked={alertPrefs[key]}
-                  onChange={(v) => setPref(key, v)}
-                  label={label}
-                  description={description}
-                />
-              ))}
+        <div className="settings-rg-block">
+          <div className="settings-rg-row">
+            <div className="settings-rg-label">
+              <strong>Deposit Limit</strong>
+              <p className="settings-rg-desc">Set a daily, weekly, or monthly deposit cap.</p>
             </div>
+            <Button variant="secondary" onClick={() => {}}>
+              Set limit
+            </Button>
           </div>
-
-          {/* Secondary alerts */}
-          <div className="settings-alert-group">
-            <div className="settings-alert-group-label">Secondary signals</div>
-            <div className="settings-toggles">
-              {SECONDARY_ALERTS.map(({ key, label, description }) => (
-                <Toggle
-                  key={key}
-                  checked={alertPrefs[key]}
-                  onChange={(v) => setPref(key, v)}
-                  label={label}
-                  description={description}
-                />
-              ))}
+          <div className="settings-rg-row">
+            <div className="settings-rg-label">
+              <strong>Session Limit</strong>
+              <p className="settings-rg-desc">Get a reminder when you&apos;ve been logged in for a set duration.</p>
             </div>
+            <Button variant="secondary" onClick={() => {}}>
+              Set limit
+            </Button>
+          </div>
+          <div className="settings-rg-row">
+            <div className="settings-rg-label">
+              <strong>Self-Exclusion</strong>
+              <p className="settings-rg-desc">Temporarily or permanently pause your account.</p>
+            </div>
+            <Button variant="secondary" onClick={() => {}}>
+              Learn more
+            </Button>
           </div>
         </div>
       </Card>
@@ -262,7 +149,7 @@ export default function SettingsPage() {
       {/* ── Browser notifications ─────────────────────────────────────────── */}
       <Card>
         <CardTitle>Browser Notifications</CardTitle>
-        <CardSubtitle>Get notified of goals and value spots even when AreBet is in the background</CardSubtitle>
+        <CardSubtitle>Get notified about live matches even when AreBet is in the background</CardSubtitle>
 
         <div className="settings-notif-block">
           {notifPerm === "unsupported" && (
@@ -273,15 +160,14 @@ export default function SettingsPage() {
 
           {notifPerm === "denied" && (
             <div className="settings-notif-status settings-notif-status--warning">
-              Notifications are blocked. To enable them, update your browser's site permissions for this page, then reload.
+              Notifications are blocked. To enable them, update your browser&apos;s site permissions for this page, then reload.
             </div>
           )}
 
           {notifPerm === "default" && (
             <div className="settings-notif-enable">
               <p className="settings-notif-copy">
-                AreBet can notify you about goals, value spots, and live starts — even when you're on another tab.
-                We only send high-priority alerts, never marketing.
+                AreBet can notify you about live match starts and score updates — even when you&apos;re on another tab.
               </p>
               <Button variant="primary" onClick={requestNotifPermission}>
                 Enable notifications
@@ -291,8 +177,7 @@ export default function SettingsPage() {
 
           {notifPerm === "granted" && (
             <div className="settings-notif-status settings-notif-status--ok">
-              ✓ Notifications enabled — you'll be alerted for goals, value spots, and live starts.
-              Manage which alerts fire using the toggles above.
+              ✓ Notifications enabled — you&apos;ll be alerted for live match starts and score updates.
             </div>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import { useDebounce } from "@/hooks/useDebounce"
 import type { Match } from "@/types/match"
 import { LEAGUE_POP } from "@/lib/utils/league-groups"
@@ -48,7 +48,7 @@ export function GlobalSearch({ onClose, defaultQuery = "" }: GlobalSearchProps) 
   const inputRef  = useRef<HTMLInputElement>(null)
   const tilesRef  = useRef<HTMLDivElement>(null)
   const listRef   = useRef<HTMLUListElement>(null)
-  const { matches: feedMatches } = useMatchIntelligence()
+  const { matches: feedMatches } = useMatchFeedCtx()
   const debouncedQuery = useDebounce(query, 350)
 
   // Load recent searches + focus input on mount

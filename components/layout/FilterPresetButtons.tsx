@@ -1,7 +1,7 @@
 "use client"
 
 import { useFilters } from "@/contexts/FilterContext"
-import { useMatchIntelligence } from "@/contexts/MatchIntelligenceContext"
+import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import { LEAGUE_POP } from "@/lib/utils/league-groups"
 import { leagueKey } from "@/contexts/FilterContext"
 import { cn } from "@/lib/utils/cn"
@@ -46,7 +46,7 @@ const PRESETS: Preset[] = [
 
 export function FilterPresetButtons() {
   const ctx = useFilters()
-  const { matches } = useMatchIntelligence()
+  const { matches } = useMatchFeedCtx()
 
   const allLeagueKeys = [...new Set(matches.map((m) => leagueKey(m)))]
 
