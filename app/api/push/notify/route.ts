@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     // Basic auth guard — internal use only
     const secret = process.env.PUSH_NOTIFY_SECRET
-    if (secret && body.secret !== secret) {
+    if (!secret || body.secret !== secret) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
