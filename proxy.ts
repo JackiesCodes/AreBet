@@ -20,7 +20,9 @@ const PROTECTED_PREFIXES = [
   "/settings",
   "/subscription",
   "/favorites",
-  "/insights",
+  "/wallet",
+  "/casino",
+  "/account",
 ] as const
 
 // Pages that authenticated users should be redirected away from

@@ -28,6 +28,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           NEXT_PUBLIC_USE_DEMO_DATA: "true"
+          REAL_MONEY_ENABLED: "false"
 
   # ── Dependency audit ────────────────────────────────────────────────────────
   audit:
@@ -69,6 +70,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           NEXT_PUBLIC_USE_DEMO_DATA: "true"
+          REAL_MONEY_ENABLED: "false"
           # Stripe and other keys are not needed for a build check
           STRIPE_SECRET_KEY: sk_test_placeholder
           STRIPE_WEBHOOK_SECRET: whsec_placeholder
