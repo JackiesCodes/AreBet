@@ -10,6 +10,7 @@ import { formatTime, formatShortDate } from "@/lib/utils/time"
 import { FormGuide } from "@/components/primitives/FormGuide"
 import { FavoritesSwitcher } from "@/components/features/nav/FavoritesSwitcher"
 import { OddsButton } from "@/components/features/betslip/OddsButton"
+import { useMatchWinnerOdds } from "@/hooks/useMatchWinnerOdds"
 
 // ── Team circle ────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,8 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
 
   // Win-probability bar data (upcoming only)
   const probs = isUpcoming && !compact ? match.prediction?.modelProbs : null
+
+  const { odds } = useMatchWinnerOdds(match.id, isUpcoming && !compact)
 
   const homeScore = isLive || isFinished ? match.score.home : null
   const awayScore = isLive || isFinished ? match.score.away : null
@@ -198,7 +201,7 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
       )}
 
       {/* ── Odds buttons (upcoming, non-compact) ── */}
-      {isUpcoming && !compact && match.odds && match.odds.home > 0 && (
+      {isUpcoming && !compact && odds.home && odds.away && (
         <div className="odds-row" onClick={(e) => e.stopPropagation()} role="group" aria-label="Match odds">
           <OddsButton
             fixtureId={match.id}
@@ -208,10 +211,11 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
             marketLabel="Match Winner"
             selection="HOME"
             selectionLabel={match.home.short || "Home"}
-            odds={match.odds.home}
+            odds={odds.home.odds}
+            oddsSnapshotId={odds.home.snapshotId}
             kickoffISO={match.kickoffISO}
           />
-          {match.odds.draw > 0 && (
+          {odds.draw && (
             <OddsButton
               fixtureId={match.id}
               matchLabel={`${match.home.name} vs ${match.away.name}`}
@@ -220,7 +224,8 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
               marketLabel="Match Winner"
               selection="DRAW"
               selectionLabel="Draw"
-              odds={match.odds.draw}
+              odds={odds.draw.odds}
+              oddsSnapshotId={odds.draw.snapshotId}
               kickoffISO={match.kickoffISO}
             />
           )}
@@ -232,7 +237,8 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
             marketLabel="Match Winner"
             selection="AWAY"
             selectionLabel={match.away.short || "Away"}
-            odds={match.odds.away}
+            odds={odds.away.odds}
+            oddsSnapshotId={odds.away.snapshotId}
             kickoffISO={match.kickoffISO}
           />
         </div>

@@ -4,19 +4,15 @@ import { useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useMatchFeedCtx } from "@/contexts/MatchFeedContext"
 import { OddsButton } from "@/components/features/betslip/OddsButton"
+import { useMatchWinnerOdds } from "@/hooks/useMatchWinnerOdds"
+import type { Match } from "@/types/match"
 
 export function PopularMarkets() {
   const { matches, loading } = useMatchFeedCtx()
-  const router = useRouter()
 
   const marketMatches = useMemo(() => {
     return matches
-      .filter(
-        (m) =>
-          m.status === "UPCOMING" &&
-          m.odds?.home != null &&
-          m.odds.home > 0,
-      )
+      .filter((m) => m.status === "UPCOMING")
       .sort((a, b) => new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime())
       .slice(0, 6)
   }, [matches])
@@ -38,72 +34,83 @@ export function PopularMarkets() {
                 <div className="skel-line skel-line--short" />
               </div>
             ))
-          : marketMatches.map((m) => (
-              <div
-                key={m.id}
-                className="popular-markets-row"
-                onClick={() => router.push(`/match/${m.id}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    router.push(`/match/${m.id}`)
-                  }
-                }}
-                aria-label={`${m.home.name} vs ${m.away.name} — click to view match`}
-              >
-                <div className="popular-markets-match-info">
-                  <span className="popular-markets-league">{m.league}</span>
-                  <span className="popular-markets-teams">
-                    {m.home.name} <span className="popular-markets-vs">vs</span> {m.away.name}
-                  </span>
-                </div>
-                <div
-                  className="popular-markets-odds"
-                  onClick={(e) => e.stopPropagation()}
-                  role="group"
-                  aria-label="1X2 odds"
-                >
-                  <OddsButton
-                    fixtureId={m.id}
-                    matchLabel={`${m.home.name} vs ${m.away.name}`}
-                    league={m.league}
-                    market="MATCH_WINNER"
-                    marketLabel="Match Winner"
-                    selection="HOME"
-                    selectionLabel={m.home.short || "Home"}
-                    odds={m.odds.home}
-                    kickoffISO={m.kickoffISO}
-                  />
-                  {m.odds.draw > 0 && (
-                    <OddsButton
-                      fixtureId={m.id}
-                      matchLabel={`${m.home.name} vs ${m.away.name}`}
-                      league={m.league}
-                      market="MATCH_WINNER"
-                      marketLabel="Match Winner"
-                      selection="DRAW"
-                      selectionLabel="Draw"
-                      odds={m.odds.draw}
-                      kickoffISO={m.kickoffISO}
-                    />
-                  )}
-                  <OddsButton
-                    fixtureId={m.id}
-                    matchLabel={`${m.home.name} vs ${m.away.name}`}
-                    league={m.league}
-                    market="MATCH_WINNER"
-                    marketLabel="Match Winner"
-                    selection="AWAY"
-                    selectionLabel={m.away.short || "Away"}
-                    odds={m.odds.away}
-                    kickoffISO={m.kickoffISO}
-                  />
-                </div>
-              </div>
-            ))}
+          : marketMatches.map((m) => <PopularMarketRow key={m.id} match={m} />)}
       </div>
     </section>
+  )
+}
+
+function PopularMarketRow({ match: m }: { match: Match }) {
+  const router = useRouter()
+  const { odds } = useMatchWinnerOdds(m.id)
+
+  if (!odds.home || !odds.away) return null
+
+  return (
+    <div
+      className="popular-markets-row"
+      onClick={() => router.push(`/match/${m.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          router.push(`/match/${m.id}`)
+        }
+      }}
+      aria-label={`${m.home.name} vs ${m.away.name} — click to view match`}
+    >
+      <div className="popular-markets-match-info">
+        <span className="popular-markets-league">{m.league}</span>
+        <span className="popular-markets-teams">
+          {m.home.name} <span className="popular-markets-vs">vs</span> {m.away.name}
+        </span>
+      </div>
+      <div
+        className="popular-markets-odds"
+        onClick={(e) => e.stopPropagation()}
+        role="group"
+        aria-label="1X2 odds"
+      >
+        <OddsButton
+          fixtureId={m.id}
+          matchLabel={`${m.home.name} vs ${m.away.name}`}
+          league={m.league}
+          market="MATCH_WINNER"
+          marketLabel="Match Winner"
+          selection="HOME"
+          selectionLabel={m.home.short || "Home"}
+          odds={odds.home.odds}
+          oddsSnapshotId={odds.home.snapshotId}
+          kickoffISO={m.kickoffISO}
+        />
+        {odds.draw && (
+          <OddsButton
+            fixtureId={m.id}
+            matchLabel={`${m.home.name} vs ${m.away.name}`}
+            league={m.league}
+            market="MATCH_WINNER"
+            marketLabel="Match Winner"
+            selection="DRAW"
+            selectionLabel="Draw"
+            odds={odds.draw.odds}
+            oddsSnapshotId={odds.draw.snapshotId}
+            kickoffISO={m.kickoffISO}
+          />
+        )}
+        <OddsButton
+          fixtureId={m.id}
+          matchLabel={`${m.home.name} vs ${m.away.name}`}
+          league={m.league}
+          market="MATCH_WINNER"
+          marketLabel="Match Winner"
+          selection="AWAY"
+          selectionLabel={m.away.short || "Away"}
+          odds={odds.away.odds}
+          oddsSnapshotId={odds.away.snapshotId}
+          kickoffISO={m.kickoffISO}
+        />
+      </div>
+    </div>
   )
 }

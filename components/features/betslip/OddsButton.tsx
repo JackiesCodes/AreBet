@@ -12,6 +12,7 @@ interface OddsButtonProps {
   selection: string
   selectionLabel: string
   odds: number
+  oddsSnapshotId: string
   kickoffISO: string
   className?: string
 }
@@ -25,6 +26,7 @@ export function OddsButton({
   selection,
   selectionLabel,
   odds,
+  oddsSnapshotId,
   kickoffISO,
   className,
 }: OddsButtonProps) {
@@ -43,6 +45,7 @@ export function OddsButton({
       selection,
       selectionLabel,
       odds,
+      oddsSnapshotId,
       kickoffISO,
     })
   }

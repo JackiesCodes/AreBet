@@ -25,6 +25,10 @@ export interface BetSlipItem {
   selection: string // 'HOME' | 'DRAW' | 'AWAY' | 'YES' | 'NO' | 'OVER' | 'UNDER'
   selectionLabel: string // "Home Win", "Draw", "Away Win", etc
   odds: number
+  // Id of the odds_snapshots row these odds were captured from
+  // (lib/services/odds-snapshot.ts) — the server re-verifies this at bet
+  // placement instead of trusting `odds` above verbatim.
+  oddsSnapshotId: string
   stake: number
   kickoffISO: string
 }

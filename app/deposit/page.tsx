@@ -1,90 +1,95 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth/context"
-import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils/cn"
 import Link from "next/link"
 
 const QUICK_AMOUNTS = [10, 25, 50, 100, 200]
 
-interface Transaction {
+interface WalletTransaction {
   id: string
-  amount: number
   type: string
+  amount: number
+  balance_after: number
+  reference_type: string | null
   created_at: string
 }
 
-export default function DepositPage() {
+interface WalletState {
+  currency: string
+  isRealMoney: boolean
+  withdrawalsEnabled: boolean
+  balance: number
+  transactions: WalletTransaction[]
+  providers: { id: string; label: string }[]
+}
+
+type Mode = "deposit" | "withdraw"
+
+export default function WalletPage() {
   const { user, loading: authLoading } = useAuth()
-  const [balance, setBalance] = useState<number | null>(null)
+  const [wallet, setWallet] = useState<WalletState | null>(null)
+  const [mode, setMode] = useState<Mode>("deposit")
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
   const [customAmount, setCustomAmount] = useState("")
-  const [depositing, setDepositing] = useState(false)
+  const [providerId, setProviderId] = useState<string>("")
+  const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  const loadWallet = useCallback(async () => {
+    const res = await fetch("/api/wallet")
+    if (!res.ok) return
+    const json = (await res.json()) as WalletState
+    setWallet(json)
+    setProviderId((current) => current || json.providers[0]?.id || "")
+  }, [])
 
   useEffect(() => {
     if (!user) return
-
-    async function loadData() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("profiles")
-        .select("bankroll")
-        .eq("id", user!.id)
-        .single()
-
-      if (data) setBalance(data.bankroll ?? 0)
-    }
-
-    loadData()
-  }, [user])
+    loadWallet()
+  }, [user, loadWallet])
 
   const effectiveAmount = selectedAmount ?? (parseFloat(customAmount) || 0)
 
-  async function handleDeposit() {
-    if (!user) return
+  async function handleSubmit() {
+    if (!user || !wallet) return
     if (effectiveAmount <= 0) {
       setMessage({ type: "error", text: "Please select or enter an amount." })
       return
     }
 
-    setDepositing(true)
+    setSubmitting(true)
     setMessage(null)
 
     try {
-      const res = await fetch("/api/wallet/deposit", {
+      const endpoint = mode === "deposit" ? "/api/wallet/deposit" : "/api/wallet/withdraw"
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: effectiveAmount }),
+        body: JSON.stringify({ amount: effectiveAmount, providerId }),
       })
 
       const json = await res.json()
 
       if (!res.ok) {
-        setMessage({ type: "error", text: json.error || "Deposit failed." })
+        setMessage({ type: "error", text: json.error || `${mode === "deposit" ? "Deposit" : "Withdrawal"} failed.` })
       } else {
-        setBalance(json.newBalance)
-        setMessage({ type: "success", text: `Successfully deposited $${effectiveAmount.toFixed(2)}! New balance: $${json.newBalance.toFixed(2)}` })
+        setMessage({
+          type: "success",
+          text:
+            mode === "deposit"
+              ? `Successfully deposited ${effectiveAmount.toFixed(2)} ${wallet.currency}.`
+              : `Withdrawal request submitted (${json.status}).`,
+        })
         setSelectedAmount(null)
         setCustomAmount("")
-
-        // Add to local transaction list
-        setTransactions((prev) => [
-          {
-            id: Date.now().toString(),
-            amount: effectiveAmount,
-            type: "Deposit",
-            created_at: new Date().toISOString(),
-          },
-          ...prev,
-        ])
+        await loadWallet()
       }
     } catch {
       setMessage({ type: "error", text: "Network error. Please try again." })
     } finally {
-      setDepositing(false)
+      setSubmitting(false)
     }
   }
 
@@ -100,7 +105,7 @@ export default function DepositPage() {
     return (
       <div className="deposit-page">
         <div className="deposit-empty">
-          <h2>Sign in to deposit funds</h2>
+          <h2>Sign in to manage your wallet</h2>
           <Link href="/auth/login" className="md-btn md-btn--primary">Sign In</Link>
         </div>
       </div>
@@ -110,16 +115,57 @@ export default function DepositPage() {
   return (
     <div className="deposit-page">
       <div className="deposit-header">
-        <h1 className="deposit-title">Deposit Funds</h1>
+        <h1 className="deposit-title">
+          Wallet
+          {wallet && (
+            <span className={cn("deposit-mode-badge", wallet.isRealMoney ? "deposit-mode-badge--real" : "deposit-mode-badge--sandbox")}>
+              {wallet.isRealMoney ? "Real Money" : "Demo"}
+            </span>
+          )}
+        </h1>
       </div>
 
       {/* Balance display */}
       <div className="deposit-balance-card">
         <span className="deposit-balance-label">Current Balance</span>
         <span className="deposit-balance-value">
-          {balance !== null ? `$${balance.toFixed(2)}` : "Loading…"}
+          {wallet ? `${wallet.balance.toFixed(2)} ${wallet.currency}` : "Loading…"}
         </span>
       </div>
+
+      {/* Deposit / withdraw tabs */}
+      <div className="deposit-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "deposit"}
+          className={cn("deposit-tab", mode === "deposit" && "deposit-tab--active")}
+          onClick={() => {
+            setMode("deposit")
+            setMessage(null)
+          }}
+        >
+          Deposit
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "withdraw"}
+          className={cn("deposit-tab", mode === "withdraw" && "deposit-tab--active")}
+          onClick={() => {
+            setMode("withdraw")
+            setMessage(null)
+          }}
+        >
+          Withdraw
+        </button>
+      </div>
+
+      {mode === "withdraw" && wallet && !wallet.withdrawalsEnabled && (
+        <div className="deposit-message deposit-message--error">
+          Withdrawals are currently unavailable.
+        </div>
+      )}
 
       {/* Amount selector */}
       <div className="deposit-section">
@@ -136,7 +182,7 @@ export default function DepositPage() {
                 setCustomAmount("")
               }}
             >
-              ${amount}
+              {amount}
             </button>
           ))}
         </div>
@@ -146,7 +192,7 @@ export default function DepositPage() {
             Custom Amount
           </label>
           <div className="deposit-custom-input-wrap">
-            <span className="deposit-currency">$</span>
+            <span className="deposit-currency">{wallet?.currency ?? ""}</span>
             <input
               id="custom-amount"
               type="number"
@@ -162,6 +208,19 @@ export default function DepositPage() {
             />
           </div>
         </div>
+
+        {wallet && wallet.providers.length > 0 && (
+          <select
+            className="deposit-provider-select"
+            value={providerId}
+            onChange={(e) => setProviderId(e.target.value)}
+            aria-label="Payment method"
+          >
+            {wallet.providers.map((p) => (
+              <option key={p.id} value={p.id}>{p.label}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Message */}
@@ -171,29 +230,33 @@ export default function DepositPage() {
         </div>
       )}
 
-      {/* Deposit button */}
+      {/* Submit button */}
       <button
         type="button"
         className="deposit-btn"
-        onClick={handleDeposit}
-        disabled={depositing || effectiveAmount <= 0}
+        onClick={handleSubmit}
+        disabled={submitting || effectiveAmount <= 0 || (mode === "withdraw" && wallet !== null && !wallet.withdrawalsEnabled)}
       >
-        {depositing ? "Processing…" : `Deposit ${effectiveAmount > 0 ? `$${effectiveAmount.toFixed(2)}` : ""}`}
+        {submitting
+          ? "Processing…"
+          : `${mode === "deposit" ? "Deposit" : "Withdraw"} ${effectiveAmount > 0 ? effectiveAmount.toFixed(2) : ""}`}
       </button>
 
       <p className="deposit-disclaimer">
-        This is a demo platform. No real money is involved. 18+ | Please gamble responsibly.
+        {wallet?.isRealMoney
+          ? "18+ | Please gamble responsibly."
+          : "This is a demo wallet. No real money is involved. 18+ | Please gamble responsibly."}
       </p>
 
       {/* Transaction history */}
-      {transactions.length > 0 && (
+      {wallet && wallet.transactions.length > 0 && (
         <div className="deposit-history">
           <h2 className="deposit-section-title">Recent Transactions</h2>
           <div className="deposit-tx-list">
-            {transactions.map((tx) => (
+            {wallet.transactions.map((tx) => (
               <div key={tx.id} className="deposit-tx-item">
                 <div className="deposit-tx-info">
-                  <span className="deposit-tx-type">{tx.type}</span>
+                  <span className="deposit-tx-type">{formatTxType(tx.type)}</span>
                   <span className="deposit-tx-date">
                     {new Date(tx.created_at).toLocaleString("en-GB", {
                       day: "2-digit",
@@ -203,8 +266,9 @@ export default function DepositPage() {
                     })}
                   </span>
                 </div>
-                <span className="deposit-tx-amount deposit-tx-amount--credit">
-                  +${tx.amount.toFixed(2)}
+                <span className={cn("deposit-tx-amount", tx.amount >= 0 ? "deposit-tx-amount--credit" : "deposit-tx-amount--debit")}>
+                  {tx.amount >= 0 ? "+" : ""}
+                  {tx.amount.toFixed(2)}
                 </span>
               </div>
             ))}
@@ -213,4 +277,19 @@ export default function DepositPage() {
       )}
     </div>
   )
+}
+
+function formatTxType(type: string): string {
+  switch (type) {
+    case "deposit": return "Deposit"
+    case "withdrawal": return "Withdrawal"
+    case "bet_debit": return "Bet Placed"
+    case "bet_credit": return "Bet Won"
+    case "bet_void_refund": return "Bet Void / Refund"
+    case "bonus_credit": return "Bonus"
+    case "adjustment": return "Adjustment"
+    case "casino_debit": return "Casino Bet"
+    case "casino_credit": return "Casino Win"
+    default: return type
+  }
 }

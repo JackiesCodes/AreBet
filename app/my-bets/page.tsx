@@ -22,6 +22,7 @@ interface UserBet {
   bet_type?: string
   kickoff_iso?: string
   placed_at: string
+  currency?: string
 }
 
 type Tab = "open" | "settled"
@@ -155,6 +156,7 @@ export default function MyBetsPage() {
         <div className="bet-history-list">
           {displayBets.map((bet) => {
             const potentialReturn = bet.stake * bet.odds
+            const currency = bet.currency ?? "BWP"
             const date = new Date(bet.placed_at).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
@@ -194,7 +196,7 @@ export default function MyBetsPage() {
                 <div className="bet-history-financials">
                   <div className="bet-history-financial-row">
                     <span>Stake</span>
-                    <span>${bet.stake.toFixed(2)}</span>
+                    <span>{bet.stake.toFixed(2)} {currency}</span>
                   </div>
                   <div className="bet-history-financial-row">
                     <span>Odds</span>
@@ -203,7 +205,7 @@ export default function MyBetsPage() {
                   <div className="bet-history-financial-row bet-history-financial-row--return">
                     <span>{bet.result === "WIN" ? "Returns" : "Potential Return"}</span>
                     <span className={cn("bet-history-return", bet.result === "WIN" && "bet-history-return--win")}>
-                      ${potentialReturn.toFixed(2)}
+                      {potentialReturn.toFixed(2)} {currency}
                     </span>
                   </div>
                 </div>
