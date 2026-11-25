@@ -30,35 +30,11 @@ export function MatchStatsTab({ match }: { match: Match }) {
     )
   }
 
-  // Upcoming match — show model forecast
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <p className="md-text-muted" style={{ fontSize: 13 }}>
-        Live statistics are available once the match kicks off. Pre-match model forecast below.
+        Match statistics will be available once this game kicks off.
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <MatchStatBar
-          label="xG forecast"
-          home={match.prediction.expectedGoals.home}
-          away={match.prediction.expectedGoals.away}
-        />
-        {match.prediction.modelProbs && (
-          <>
-            <MatchStatBar
-              label="Win probability"
-              home={Math.round(match.prediction.modelProbs.home * 100)}
-              away={Math.round(match.prediction.modelProbs.away * 100)}
-              unit="%"
-            />
-            <MatchStatBar
-              label="Draw probability"
-              home={Math.round(match.prediction.modelProbs.draw * 100)}
-              away={Math.round(match.prediction.modelProbs.away * 100)}
-              unit="%"
-            />
-          </>
-        )}
-      </div>
     </div>
   )
 }

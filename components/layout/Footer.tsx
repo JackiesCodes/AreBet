@@ -8,13 +8,12 @@ export function Footer() {
       <div className="site-footer-inner">
         <div className="footer-grid">
           <div className="footer-col">
-            <span className="footer-col-heading">Platform</span>
+            <span className="footer-col-heading">Betting</span>
             <Link href="/" className="footer-link">Home</Link>
-            <Link href="/predictions" className="footer-link">Predictions</Link>
-            <Link href="/odds-comparison" className="footer-link">Odds Comparison</Link>
-            <Link href="/insights" className="footer-link">Intelligence</Link>
-            <Link href="/standings" className="footer-link">Standings</Link>
-            <Link href="/trust" className="footer-link">Track Record</Link>
+            <Link href="/live-matches" className="footer-link">In-Play</Link>
+            <Link href="/my-bets" className="footer-link">My Bets</Link>
+            <Link href="/promotions" className="footer-link">Promotions</Link>
+            <Link href="/deposit" className="footer-link">Deposit</Link>
           </div>
 
           <div className="footer-col">
@@ -65,7 +64,7 @@ export function Footer() {
 
         <div className="footer-legal">
           <span>© {CURRENT_YEAR} AreBet. All rights reserved.</span>
-          <span className="footer-disclaimer">AreBet is an information and analytics platform. We do not accept wagers or facilitate gambling.</span>
+          <span className="footer-disclaimer">Please bet responsibly. AreBet is a demo betting platform. 18+. Gambling can be addictive.</span>
         </div>
       </div>
     </footer>

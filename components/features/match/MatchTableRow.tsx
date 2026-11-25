@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation"
 import type { Match } from "@/types/match"
 import { formatTime, formatShortDate } from "@/lib/utils/time"
-import { ConfidenceHeat } from "@/components/primitives/ConfidenceHeat"
 import { Badge } from "@/components/primitives/Badge"
 import { useFormatOdds } from "@/hooks/useFormatOdds"
 
@@ -32,7 +31,6 @@ export function MatchTableRow({ match }: MatchTableRowProps) {
           </span>
         )}
       </td>
-      <td><ConfidenceHeat value={match.prediction.confidence} /></td>
       <td className="md-mono">{fmt(match.odds.home)}</td>
       <td className="md-mono">{fmt(match.odds.draw)}</td>
       <td className="md-mono">{fmt(match.odds.away)}</td>

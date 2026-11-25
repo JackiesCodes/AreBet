@@ -18,13 +18,13 @@ const MatchSquadTab    = lazy(() => import("./tabs/MatchSquadTab").then((m) => (
 type Tab = "overview" | "lineup" | "stats" | "players" | "timeline" | "h2h" | "odds" | "squad"
 
 const TABS: Array<{ key: Tab; label: string }> = [
-  { key: "overview", label: "Overview" },
+  { key: "odds",     label: "Bet" },
+  { key: "overview", label: "Info" },
   { key: "lineup",   label: "Lineup" },
   { key: "stats",    label: "Stats" },
-  { key: "players",  label: "Players" },
-  { key: "timeline", label: "Timeline" },
   { key: "h2h",      label: "H2H" },
-  { key: "odds",     label: "Odds" },
+  { key: "timeline", label: "Timeline" },
+  { key: "players",  label: "Players" },
   { key: "squad",    label: "Squad" },
 ]
 
@@ -40,7 +40,7 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ match: Match }>> = {
 }
 
 export function MatchDetailTabs({ match }: { match: Match }) {
-  const [tab, setTab] = useState<Tab>("overview")
+  const [tab, setTab] = useState<Tab>("odds")
   const uid     = useId()
   const tabsRef = useRef<HTMLDivElement>(null)
 

@@ -2,18 +2,24 @@
 
 import Image from "next/image"
 import type { Match } from "@/types/match"
+import { formatTime, formatShortDate } from "@/lib/utils/time"
 
 export function MatchOverviewTab({ match }: { match: Match }) {
+  const kickoff = new Date(match.kickoffISO)
+  const isToday = kickoff.toDateString() === new Date().toDateString()
+  const kickoffLabel = isToday
+    ? `Today · ${formatTime(match.kickoffISO)}`
+    : `${formatShortDate(match.kickoffISO)} · ${formatTime(match.kickoffISO)}`
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <h3 className="md-card-title">{match.prediction.advice}</h3>
+        <h3 className="md-card-title">{match.home.name} vs {match.away.name}</h3>
         <p className="md-card-subtitle">
-          Model confidence {Math.round(match.prediction.confidence)}%. Expected goals{" "}
-          {match.prediction.expectedGoals.home} – {match.prediction.expectedGoals.away}.
+          {match.status === "UPCOMING" ? kickoffLabel : match.status === "LIVE" ? `Live — ${match.minute ?? 0}′` : "Full Time"}
         </p>
         <p className="md-text-secondary" style={{ fontSize: 13 }}>
-          {match.venue}, {match.country}
+          {match.venue}{match.country ? `, ${match.country}` : ""}
         </p>
       </div>
 

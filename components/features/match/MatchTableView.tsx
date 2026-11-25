@@ -22,7 +22,6 @@ export function MatchTableView({ filtered }: MatchTableViewProps) {
             <th>League</th>
             <th>Match</th>
             <th>Score</th>
-            <th>Conf.</th>
             <th title="Home Win">1</th>
             <th title="Draw">X</th>
             <th title="Away Win">2</th>

@@ -9,24 +9,24 @@ import { useFocusTrap, useEscapeKey } from "@/lib/utils/a11y"
 
 const STEPS = [
   {
-    icon: "⚡",
-    title: "Find value before the market does",
-    text: "AreBet's model compares its own win probabilities against bookmaker odds. When there's a 5%+ gap, it flags it as a value edge — the same logic professional bettors use.",
+    icon: "⚽",
+    title: "Live odds across top leagues",
+    text: "Bet on Premier League, La Liga, Bundesliga, Serie A and more — all in one place. Click any odds button to add it straight to your bet slip.",
   },
   {
-    icon: "📊",
-    title: "Every tip is fully transparent",
-    text: "Each prediction shows confidence %, the rationale behind it, and a data quality badge — so you always know whether it's API-confirmed or model-estimated. No black boxes.",
+    icon: "🎫",
+    title: "Singles and accumulators",
+    text: "Build a slip with one click. Switch between singles and accumulator mode to see combined odds and your potential return before you place.",
   },
   {
-    icon: "🎯",
-    title: "Track record, not promises",
-    text: "The Track Record page shows exactly how AreBet's signals have performed on real completed matches: hit rate, ROI, calibration by confidence tier. If it doesn't work, you'll see it.",
+    icon: "💰",
+    title: "Track every bet you place",
+    text: "Head to My Bets to see your open and settled wagers. Your balance updates instantly after each bet is placed.",
   },
   {
-    icon: "❤️",
-    title: "Follow what matters to you",
-    text: "Add matches, teams, and leagues to your Watchlist. Get live alerts when goals are scored, odds shift, or a value edge appears for teams you follow.",
+    icon: "🎁",
+    title: "Bonuses and promotions",
+    text: "New members get a 100% welcome bonus up to $200. Check the Promotions page regularly for free bets, acca boosts and loyalty rewards.",
   },
 ]
 

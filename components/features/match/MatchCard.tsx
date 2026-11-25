@@ -69,9 +69,6 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
   const isFinished = match.status === "FINISHED"
   const isUpcoming = match.status === "UPCOMING"
 
-  // Win-probability bar data (upcoming only)
-  const probs = isUpcoming && !compact ? match.prediction?.modelProbs : null
-
   const { odds } = useMatchWinnerOdds(match.id, isUpcoming && !compact)
 
   const homeScore = isLive || isFinished ? match.score.home : null
@@ -184,21 +181,6 @@ export function MatchCard({ match, selected, onSelect, compact, showLeague = tru
           )}
         </div>
       </div>
-
-      {/* ── Win-probability bar (upcoming, non-compact) ── */}
-      {probs && (
-        <div className="cc-card-prob">
-          <span className="cc-card-prob-label">{Math.round(probs.home * 100)}%</span>
-          <div className="cc-card-prob-track">
-            <div className="cc-card-prob-home" style={{ width: `${probs.home * 100}%` }} />
-            <div className="cc-card-prob-draw" style={{ width: `${probs.draw * 100}%` }} />
-            <div className="cc-card-prob-away" style={{ width: `${probs.away * 100}%` }} />
-          </div>
-          <span className="cc-card-prob-label cc-card-prob-label--r">
-            {Math.round(probs.away * 100)}%
-          </span>
-        </div>
-      )}
 
       {/* ── Odds buttons (upcoming, non-compact) ── */}
       {isUpcoming && !compact && odds.home && odds.away && (

@@ -49,8 +49,8 @@ export function RelatedMatchesList({ matches, title = "Related Matches", teamId 
               )}
               <span className="related-matches-away">{m.away.name}</span>
               <span className="related-matches-league">{m.league}</span>
-              {m.prediction.confidence > 0 && (
-                <span className="related-matches-conf">{Math.round(m.prediction.confidence)}%</span>
+              {m.status === "UPCOMING" && m.odds && (
+                <span className="related-matches-conf">{m.odds.home}</span>
               )}
             </Link>
           )
