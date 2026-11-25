@@ -8,6 +8,11 @@ import type { BetMarket } from "@/contexts/BetSlipContext"
 
 export const dynamic = "force-dynamic"
 
+const isDemo =
+  process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true" ||
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL === "https://placeholder.supabase.co"
+
 // Default currency until a per-user currency preference exists (tracked
 // for Phase 2+ alongside multi-currency wallet UI).
 const DEFAULT_CURRENCY = "BWP"
@@ -26,6 +31,21 @@ interface IncomingBet {
 }
 
 export async function POST(request: Request) {
+  // Demo mode: simulate bet placement without Supabase
+  if (isDemo) {
+    const body = await request.json()
+    const { bets, betType, accumStake } = body as {
+      bets: IncomingBet[]
+      betType: "SINGLE" | "ACCUMULATOR"
+      accumStake?: number
+    }
+    if (!bets || !Array.isArray(bets) || bets.length === 0) {
+      return NextResponse.json({ error: "No bets provided" }, { status: 400 })
+    }
+    const fakeIds = bets.map((_, i) => `demo-bet-${Date.now()}-${i}`)
+    return NextResponse.json({ success: true, betIds: fakeIds, demo: true })
+  }
+
   try {
     const supabase = await createClient()
 
