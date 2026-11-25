@@ -27,6 +27,11 @@ import {
   enrichWithSidelined,
 } from "@/lib/api-football/mapper"
 import type { ApiFixture } from "@/lib/api-football/types"
+import { buildMockMatchFeed } from "@/lib/services/mock-matches"
+
+const useMock =
+  process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true" ||
+  !process.env.API_FOOTBALL_KEY
 
 /** Build a teamId → last-5-form map from standings (non-critical, silently fails) */
 async function buildFormMap(): Promise<Map<number, string>> {
@@ -148,6 +153,10 @@ export async function fetchMatchFeed(): Promise<MatchFeed> {
 }
 
 export async function fetchMatchById(id: number): Promise<Match | null> {
+  if (useMock) {
+    const feed = buildMockMatchFeed()
+    return feed.matches.find((m) => m.id === id) ?? null
+  }
   const fixture = await fetchFixtureDetail(id)
   if (!fixture) return null
 
