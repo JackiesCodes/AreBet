@@ -888,11 +888,6 @@ svg {
   min-width: 80px;
 }
 
-.cc-match-advice {
-  font-size: 11px;
-  color: var(--text-secondary);
-  text-align: right;
-}
 
 /* Confidence heatmap */
 .conf-heat {
@@ -942,46 +937,7 @@ svg {
 }
 
 /* CC Signals (badges/indicators) */
-.cc-signal {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-xs);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
 
-.cc-signal-live {
-  background: rgba(255, 68, 68, 0.15);
-  color: var(--live);
-}
-
-.cc-signal-live::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--live);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-.cc-signal-upcoming {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-}
-
-.cc-signal-finished {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-}
-
-.cc-signal-ht {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--warning);
-}
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -2852,36 +2808,7 @@ svg {
 }
 
 /* Signal pills row */
-.cc-signal-pills {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-}
 
-.cc-signal-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-}
-
-.cc-signal-pill--value {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--positive);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.cc-signal-pill--conf {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--warning);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
 
 /* Row 2: teams + scores */
 .cc-match-body {
@@ -2938,54 +2865,6 @@ svg {
   margin-left: 28px;
 }
 
-/* Win probability bar (upcoming matches) */
-.cc-prob-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.cc-prob-label {
-  font-size: 10px;
-  font-weight: 700;
-  font-family: var(--font-mono, monospace);
-  color: var(--text-muted);
-  min-width: 28px;
-}
-
-.cc-prob-label--right {
-  text-align: right;
-}
-
-.cc-prob-bar {
-  flex: 1;
-  height: 5px;
-  border-radius: 999px;
-  overflow: hidden;
-  display: flex;
-  background: var(--surface-4);
-}
-
-.cc-prob-bar-home {
-  background: var(--primary);
-  height: 100%;
-  transition: width 0.4s ease;
-}
-
-.cc-prob-bar-draw {
-  background: var(--text-muted);
-  height: 100%;
-  opacity: 0.5;
-  transition: width 0.4s ease;
-}
-
-.cc-prob-bar-away {
-  background: #ef4444;
-  height: 100%;
-  opacity: 0.7;
-  transition: width 0.4s ease;
-}
 
 /* Row 3: form + advice tag */
 .cc-match-footer {
@@ -3062,7 +2941,6 @@ svg {
   border-color: var(--primary);
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
 }
-
 
 
 .cc-card--live {
@@ -3242,37 +3120,12 @@ svg {
 }
 
 /* ── Win-probability bar (upcoming, full-size only) ── */
-.cc-card-prob {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
 
-.cc-card-prob-label {
-  font-size: 9px;
-  font-weight: 700;
-  font-family: var(--font-mono, monospace);
-  color: var(--text-muted);
-  min-width: 24px;
-}
 
 .cc-card-prob-label--r {
   text-align: right;
 }
 
-.cc-card-prob-track {
-  flex: 1;
-  height: 4px;
-  border-radius: 999px;
-  overflow: hidden;
-  display: flex;
-  background: var(--surface-4);
-}
-
-.cc-card-prob-home  { height: 100%; background: var(--primary); }
-.cc-card-prob-draw  { height: 100%; background: var(--text-muted); opacity: 0.45; }
-.cc-card-prob-away  { height: 100%; background: #ef4444; opacity: 0.65; }
 
 /* ── Footer: pills left · advice right ── */
 .cc-card-footer {
@@ -3311,29 +3164,6 @@ svg {
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
-.cc-card-advice {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: var(--radius-xs);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.cc-card-advice--high {
-  background: rgba(34, 197, 94, 0.1);
-  color: var(--positive);
-}
-
-.cc-card-advice--mid {
-  background: rgba(245, 158, 11, 0.08);
-  color: var(--warning);
-}
-
-.cc-card-advice--low {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-}
 
 /* ── Compact variant ── */
 .cc-card--compact {
@@ -3368,94 +3198,12 @@ svg {
 }
 
 .cc-card--compact .cc-card-pill,
-.cc-card--compact .cc-card-advice {
-  font-size: 9px;
-  padding: 1px 5px;
-}
+.cc-card--compact 
 
 /* ============================================================================
  * Intelligence Bar — home feed summary strip
  * ============================================================================ */
 
-.intel-bar {
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-3);
-}
-
-.intel-bar-inner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.intel-stat {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.intel-stat-icon {
-  font-size: 10px;
-}
-
-.intel-stat-value {
-  font-size: 16px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.intel-stat-label {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.intel-stat--live .intel-stat-value {
-  color: var(--live);
-}
-
-.intel-stat--value .intel-stat-value,
-.intel-stat--value .intel-stat-icon {
-  color: var(--positive);
-}
-
-.intel-stat--conf .intel-stat-value,
-.intel-stat--conf .intel-stat-icon {
-  color: var(--warning);
-}
-
-.intel-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--live);
-  animation: pulse 1.4s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-.intel-updated {
-  margin-left: auto;
-  font-size: 10px;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.intel-live-pulse {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--live);
-  animation: pulse 1s ease-in-out infinite;
-  flex-shrink: 0;
-}
 
 /* ============================================================================
  * Match Detail Hero
@@ -3795,14 +3543,7 @@ svg {
 }
 
 /* Signals sidebar */
-.watchlist-signals {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  position: sticky;
-  top: calc(var(--nav-height) + var(--space-4));
-}
+
 
 .watchlist-signals-empty {
   display: flex;
@@ -3817,39 +3558,11 @@ svg {
   gap: 2px;
 }
 
-.watchlist-signal-row {
-  display: grid;
-  grid-template-columns: 20px 1fr auto;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-2);
-  border-radius: var(--radius-sm);
-  border-left: 3px solid transparent;
-  text-decoration: none;
-  color: inherit;
-  transition: background var(--t-fast);
-}
 
 .watchlist-signal-row:hover {
   background: var(--surface-3);
 }
 
-.watchlist-signal-row--critical { border-left-color: var(--live); }
-.watchlist-signal-row--high     { border-left-color: var(--positive); }
-.watchlist-signal-row--medium   { border-left-color: var(--warning); }
-.watchlist-signal-row--low      { border-left-color: var(--border-strong); }
-
-.watchlist-signal-icon {
-  font-size: 13px;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.watchlist-signal-body {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
 
 .watchlist-signal-summary {
   font-size: 11px;
@@ -6072,15 +5785,7 @@ svg {
   }
 
   /* intel-bar: strip card styling on mobile — it looks detached at zero padding */
-  .intel-bar {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    margin-bottom: 0;
-    border-top: none;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
-  }
+  
 
   /* ── Toolbar switch ──────────────────────────────────────────────────── */
   .cc-toolbar--desktop {
@@ -10879,4 +10584,472 @@ svg {
   border-top: none;
   background: transparent;
   padding: 0;
+}
+
+/* ==========================================================================
+ * Missing classes — added to fix unstyled elements
+ * ========================================================================== */
+
+/* ── Spotlight / Featured Events (HighlightedMatches) ─────────────────────── */
+.spotlight-section {
+  margin-bottom: var(--space-6);
+}
+
+.spotlight-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.spotlight-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.spotlight-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.spotlight-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .spotlight-rail {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--space-3);
+    padding-bottom: var(--space-2);
+    -webkit-overflow-scrolling: touch;
+  }
+  .spotlight-rail > * {
+    scroll-snap-align: start;
+    flex: 0 0 260px;
+  }
+}
+
+/* ── Match card loading skeleton ─────────────────────────────────────────── */
+.cc-card--skeleton {
+  pointer-events: none;
+  gap: var(--space-2);
+  animation: none;
+}
+
+.cc-card--skeleton .skel-line {
+  display: block;
+}
+
+.skel-line--teams {
+  width: 100%;
+  height: 16px;
+  margin: 4px 0;
+}
+
+/* ── Nav link label ──────────────────────────────────────────────────────── */
+.nav-link-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Sidebar sports list + quicklinks ────────────────────────────────────── */
+.sidebar-section--sports,
+.sidebar-section--quicklinks {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-1);
+}
+
+.sidebar-sports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 0;
+}
+
+.sidebar-sport-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.sidebar-sport-btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.sidebar-sport-btn--active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.sidebar-sport-btn--active:hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.sidebar-sport-btn--disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.sidebar-sport-soon {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-3);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-quicklinks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 0;
+}
+
+.sidebar-quicklink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.sidebar-quicklink:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.sidebar-quicklink-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--border-strong);
+}
+
+.sidebar-quicklink-dot--live {
+  background: var(--live);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--live) 25%, transparent);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+/* ── Onboarding modal steps dots ─────────────────────────────────────────── */
+.md-modal-steps {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+/* ── Footer social column ────────────────────────────────────────────────── */
+.footer-col--social .footer-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Global search empty state ───────────────────────────────────────────── */
+.gs-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ── Odds market loading state ───────────────────────────────────────────── */
+.odds-markets-loading {
+  padding: var(--space-4);
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── Top scorers / related matches ──────────────────────────────────────── */
+.rp-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-3);
+}
+
+.rp-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: var(--space-3) 0;
+}
+
+.rp-live-pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+  margin-right: 4px;
+  vertical-align: middle;
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+.rp-scorer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.rp-scorer-row:last-child {
+  border-bottom: none;
+}
+
+.rp-scorer-rank {
+  width: 20px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.rp-scorer-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rp-scorer-name {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rp-scorer-team {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.rp-scorer-stats {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.rp-scorer-goals {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.rp-scorer-assists {
+  color: var(--text-secondary);
+}
+
+/* ── Player stats panel table headers ────────────────────────────────────── */
+.psp-th-name {
+  text-align: left;
+  min-width: 120px;
+}
+
+.psp-th-pos {
+  text-align: left;
+  min-width: 40px;
+}
+
+/* ── Lineup formation badge ──────────────────────────────────────────────── */
+.lu-formation-badge--home {
+  color: var(--primary);
+}
+
+/* ── Entity hero info blocks ─────────────────────────────────────────────── */
+.match-hero-team--home,
+.player-hero-info,
+.profile-hero-info,
+.team-hero-info,
+.venue-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ── Admin panel styles ──────────────────────────────────────────────────── */
+.admin-boost-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.admin-boost-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.admin-boost-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 100px;
+}
+
+.admin-boost-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  transition: border-color var(--t-fast);
+}
+
+.admin-boost-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.admin-btn {
+  padding: 7px 16px;
+  background: var(--primary);
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--t-fast);
+  white-space: nowrap;
+}
+
+.admin-btn:hover {
+  opacity: 0.85;
+}
+
+.admin-boost-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-boost-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.admin-boost-teams {
+  font-weight: 600;
+  flex: 1;
+}
+
+.admin-boost-score {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.admin-boost-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.admin-boost-remove {
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: border-color var(--t-fast), color var(--t-fast);
+}
+
+.admin-boost-remove:hover {
+  border-color: var(--live);
+  color: var(--live);
+}
+
+.admin-match-bucket {
+  margin-bottom: var(--space-4);
+}
+
+/* ── Settings responsible gambling ──────────────────────────────────────── */
+.settings-rg-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-rg-row:last-child {
+  border-bottom: none;
+}
+
+.settings-rg-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-rg-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.settings-rg-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 400px;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────── */
+.mb-6 {
+  margin-bottom: var(--space-6);
 }
