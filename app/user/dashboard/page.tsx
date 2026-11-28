@@ -25,12 +25,12 @@ export default function UserDashboard() {
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <Link href="/predictions" className="dashboard-card-link">
+        <Link href="/my-bets" className="dashboard-card-link">
           <Card className="dashboard-card-clickable">
-            <CardSubtitle>Predictions</CardSubtitle>
-            <CardTitle>Today&apos;s Tips</CardTitle>
+            <CardSubtitle>Betting</CardSubtitle>
+            <CardTitle>My Bets</CardTitle>
             <p className="md-text-muted" style={{ fontSize: 12, marginTop: 4 }}>
-              Value picks and match insights for today&apos;s fixtures.
+              Track your open and settled bets and your running balance.
             </p>
           </Card>
         </Link>
@@ -55,12 +55,12 @@ export default function UserDashboard() {
           </Card>
         </Link>
 
-        <Link href="/subscription" className="dashboard-card-link">
+        <Link href="/deposit" className="dashboard-card-link">
           <Card className="dashboard-card-clickable">
-            <CardSubtitle>Subscription</CardSubtitle>
-            <CardTitle>Upgrade Your Plan</CardTitle>
+            <CardSubtitle>Account</CardSubtitle>
+            <CardTitle>Deposit Funds</CardTitle>
             <p className="md-text-muted" style={{ fontSize: 12, marginTop: 4 }}>
-              Unlock full predictions, market movement, and advanced insights.
+              Add funds to your account and start placing bets.
             </p>
           </Card>
         </Link>
@@ -70,9 +70,9 @@ export default function UserDashboard() {
         <CardTitle>Getting Started</CardTitle>
         <ul style={{ marginTop: 12, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
           <li>Browse <Link href="/" style={{ color: "var(--primary)" }}>live and upcoming matches</Link> on the home feed.</li>
-          <li>Check <Link href="/predictions" style={{ color: "var(--primary)" }}>today&apos;s predictions</Link> for value picks and confidence tiers.</li>
-          <li>Follow leagues and teams via the <strong>Watchlist</strong> in the right panel.</li>
-          <li>Upgrade to <Link href="/subscription" style={{ color: "var(--primary)" }}>Pro or Elite</Link> to unlock market movement and advanced analytics.</li>
+          <li>Add selections to your <strong>Bet Slip</strong> by clicking any odds button.</li>
+          <li>Build accumulators by adding multiple selections before placing.</li>
+          <li>Head to <Link href="/promotions" style={{ color: "var(--primary)" }}>Promotions</Link> to claim your welcome bonus and free bets.</li>
         </ul>
       </Card>
     </div>

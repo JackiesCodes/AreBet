@@ -7,35 +7,35 @@ import { cn } from "@/lib/utils/cn"
 const FAQS = [
   {
     q: "What is AreBet?",
-    a: "AreBet is a football betting intelligence platform. We aggregate live matches, model predictions, and bookmaker odds in one command centre so you can spot value faster.",
+    a: "AreBet is a demo football betting platform. Browse live and upcoming matches across 900+ leagues, add selections to your bet slip, and place singles or accumulators.",
   },
   {
-    q: "Is AreBet free?",
-    a: "Yes — you can browse live matches and basic predictions on the Free tier. Pro and Elite plans unlock the full prediction model, odds comparison, and advanced analytics.",
+    q: "How do I place a bet?",
+    a: "Click any odds button on a match to add it to your bet slip. Open the slip from the top-right button, enter your stake, and hit Place Bet. You need to be signed in and have funds in your account.",
   },
   {
-    q: "How are confidence scores calculated?",
-    a: "Confidence combines our expected-goals model with market implied probability, form, and head-to-head records. Scores above 70% are considered high confidence.",
+    q: "What is an accumulator?",
+    a: "An accumulator (acca) combines multiple selections into one bet. All selections must win for the bet to pay out. Switch the bet slip to 'Acca' mode to see your combined odds and potential return.",
   },
   {
     q: "Where does match data come from?",
-    a: "Match data is sourced live from API-Football, covering 900+ leagues worldwide. Fixtures, lineups, live scores, player stats, and bookmaker odds all update in real time via our polling engine.",
+    a: "Match data covers 900+ leagues worldwide — fixtures, live scores, lineups, player stats, and odds all update in real time.",
   },
   {
     q: "How often does the data update?",
-    a: "Live matches poll every 10 seconds. When no live matches are on, the feed refreshes every 30 seconds. The app pauses updates automatically when you switch tabs to save bandwidth.",
+    a: "Live matches update every 10 seconds. When no live matches are on, the feed refreshes every 30 seconds. Updates pause automatically when you switch tabs.",
   },
   {
     q: "Can I use AreBet on mobile?",
-    a: "Yes. AreBet is a Progressive Web App — install it from your browser on iOS or Android for an app-like experience with offline support and push notifications.",
+    a: "Yes. AreBet is a Progressive Web App — install it from your browser on iOS or Android for a full app experience with push notifications.",
   },
   {
-    q: "Is AreBet a betting operator?",
-    a: "No. AreBet is a pure information and analytics platform. We do not accept wagers; we help you understand them.",
+    q: "How do I claim a bonus?",
+    a: "New members receive a 100% welcome bonus up to $200 on their first deposit. Visit the Promotions page for free bets, acca boosts, and ongoing offers.",
   },
   {
     q: "How do I track my bets?",
-    a: "Use the Bet Tracker in your Dashboard to log stakes, odds, and outcomes. Your bet history is saved to your account and synced across devices when you're signed in.",
+    a: "Go to My Bets to see your open wagers, settled results, and running profit/loss. Your history is synced across devices when you're signed in.",
   },
 ]
 

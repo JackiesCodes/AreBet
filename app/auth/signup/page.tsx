@@ -16,7 +16,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
     <div className="auth-shell">
       <div className="auth-card">
         <h1 className="auth-title">Create your account</h1>
-        <p className="auth-subtitle">Smart Betting. Simple Insights.</p>
+        <p className="auth-subtitle">Smart Betting. Live Odds.</p>
         {errorMsg && <div className="auth-error" role="alert">{errorMsg}</div>}
         <form action={signUpAction} className="auth-form">
           <input type="hidden" name="redirect" value={redirectTo} />

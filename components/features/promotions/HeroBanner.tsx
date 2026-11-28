@@ -6,7 +6,7 @@ export function HeroBanner() {
       <div className="hero-banner-content">
         <div className="hero-banner-text">
           <p className="hero-banner-eyebrow">Welcome to AreBet</p>
-          <h2 className="hero-banner-title">Smart Betting.<br />Real Insights.</h2>
+          <h2 className="hero-banner-title">Smart Betting.<br />Live Odds.</h2>
           <p className="hero-banner-sub">
             <strong>100% Welcome Bonus</strong> up to <strong>$200</strong> on your first deposit
           </p>

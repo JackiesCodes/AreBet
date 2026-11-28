@@ -70,12 +70,6 @@ export default async function MatchDetailPage({ params }: PageProps) {
                   {match.score.away}
                 </span>
               </>
-            ) : match.prediction.hasRealPrediction ? (
-              <>
-                <span className="match-hero-xg">{match.prediction.expectedGoals.home}</span>
-                <span className="match-hero-score-sep match-hero-score-sep--xs">xG</span>
-                <span className="match-hero-xg">{match.prediction.expectedGoals.away}</span>
-              </>
             ) : (
               <span className="match-hero-score-sep">vs</span>
             )}

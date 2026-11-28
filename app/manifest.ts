@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "AreBet — Smart Betting. Simple Insights.",
+    name: "AreBet — Smart Betting. Live Odds.",
     short_name: "AreBet",
-    description: "Smart football betting intelligence platform.",
+    description: "Live football odds and betting across 900+ leagues.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

@@ -309,7 +309,7 @@ function AdminContent() {
 
   return (
     <div className="md-page">
-      <PageHeader title="Admin" subtitle="System status, feed health, and signal operations" />
+      <PageHeader title="Admin" subtitle="System status and feed health" />
 
       {/* ── Feed health ────────────────────────────────────────────────── */}
       <Card className="mb-6">
